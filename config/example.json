@@ -1,0 +1,6 @@
+{
+  "ENV": "dev | prod",
+  "API_BASE_URL": "https://<url-del-back>/api",
+  "USE_MOCKS": "true | false",
+  "LOG_HTTP": "true | false"
+}
