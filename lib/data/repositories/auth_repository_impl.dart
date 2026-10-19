@@ -32,6 +32,33 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<Usuario>> registrar({
+    required String nombre,
+    required String apellidos,
+    required String correo,
+    required String password,
+  }) async {
+    final res = await _remote.registro(
+      nombre: nombre,
+      apellidos: apellidos,
+      correo: correo,
+      password: password,
+    );
+    switch (res) {
+      case Ok(:final value):
+        try {
+          await _session.guardarToken(value.token);
+        } catch (e) {
+          debugPrint('[FixFlow] No se pudo guardar el token tras registro: $e');
+          return const Result.error(ErrorDesconocido());
+        }
+        return Result.ok(value.toEntity());
+      case Error(:final error):
+        return Result.error(error);
+    }
+  }
+
+  @override
   Future<void> cerrarSesion() async {
     try {
       await _session.borrarToken();
@@ -41,3 +68,4 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 }
+

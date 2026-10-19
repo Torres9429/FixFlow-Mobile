@@ -6,5 +6,14 @@ abstract interface class AuthRepository {
   /// Si no, devuelve un `AuthFailure`.
   Future<Result<Usuario>> iniciarSesion(String correo, String password);
 
+  /// Registra un ciudadano nuevo. Si el correo ya existe, devuelve `CorreoDuplicado`.
+  Future<Result<Usuario>> registrar({
+    required String nombre,
+    required String apellidos,
+    required String correo,
+    required String password,
+  });
+
   Future<void> cerrarSesion();
 }
+

@@ -1,6 +1,7 @@
 import '../../../core/result.dart';
 import '../../../domain/errors/auth_failure.dart';
 import '../../models/login_response_model.dart';
+import '../../models/registro_response_model.dart';
 import 'auth_remote_datasource.dart';
 
 /// Back simulado para usar la app sin servidor (modo mock, ver `AppConfig.usarMocks`).
@@ -8,7 +9,7 @@ import 'auth_remote_datasource.dart';
 class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   static const passwordDemo = 'abc12345';
 
-  static const _usuarios = {
+  static final _usuarios = {
     'ciudadano@fixflow.mx': (rol: 'CIUDADANO', nombre: 'Ana'),
     'operativo@fixflow.mx': (rol: 'OPERATIVO', nombre: 'Luis'),
     'admin@fixflow.mx': (rol: 'ADMIN', nombre: 'Marta'),
@@ -29,4 +30,29 @@ class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
       nombre: usuario.nombre,
     ));
   }
+
+  @override
+  Future<Result<RegistroResponseModel>> registro({
+    required String nombre,
+    required String apellidos,
+    required String correo,
+    required String password,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+
+    // Simula correo duplicado si ya existe en los usuarios de prueba
+    if (_usuarios.containsKey(correo.toLowerCase())) {
+      return const Result.error(CorreoDuplicado());
+    }
+
+    // Registra al usuario en memoria para que pueda iniciar sesión después
+    _usuarios[correo.toLowerCase()] = (rol: 'CIUDADANO', nombre: nombre);
+
+    return Result.ok(RegistroResponseModel(
+      token: 'token-falso-ciudadano',
+      rol: 'CIUDADANO',
+      nombre: nombre,
+    ));
+  }
 }
+
