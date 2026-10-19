@@ -7,10 +7,13 @@ import '../../../domain/validators/campos_validators.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/campo_texto.dart';
 import '../../routing/home_por_rol.dart';
+import '../../routing/rutas.dart';
 import 'login_viewmodel.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.cuentaCreada = false});
+
+  final bool cuentaCreada;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -62,6 +65,32 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (widget.cuentaCreada) ...[
+                        Container(
+                          key: const Key('login_cuenta_creada'),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.resueltaBg,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline, size: 20, color: AppColors.resuelta),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Cuenta creada',
+                                  style: text.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.resuelta,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       Text(
                         'Inicia sesión',
                         style: text.headlineSmall?.copyWith(fontSize: 24, fontWeight: FontWeight.w800),
@@ -133,8 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: text.bodyLarge?.copyWith(fontSize: 15, color: AppColors.textSecondary),
                           ),
                           TextButton(
-                            // TODO(HU-01): navegar a registro
-                            onPressed: () {},
+                            onPressed: () => context.go(Rutas.registro),
                             child: const Text('Crea una'),
                           ),
                         ],

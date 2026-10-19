@@ -11,6 +11,10 @@ final class SinConexion extends AuthFailure {
   const SinConexion();
 }
 
+final class CorreoDuplicado extends AuthFailure {
+  const CorreoDuplicado();
+}
+
 final class ErrorDesconocido extends AuthFailure {
   const ErrorDesconocido();
 }

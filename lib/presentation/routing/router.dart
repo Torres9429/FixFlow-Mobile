@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../auth/login/login_screen.dart';
 import '../auth/login/login_viewmodel.dart';
+import '../auth/registro/registro_screen.dart';
+import '../auth/registro/registro_viewmodel.dart';
 import '../home/home_admin_screen.dart';
 import '../home/home_ciudadano_screen.dart';
 import '../home/home_operativo_screen.dart';
@@ -14,9 +16,19 @@ GoRouter crearRouter() => GoRouter(
       routes: [
         GoRoute(
           path: Rutas.login,
+          builder: (context, state) {
+            final cuentaCreada = state.uri.queryParameters['cuentaCreada'] == 'true';
+            return ChangeNotifierProvider(
+              create: (context) => LoginViewModel(authRepository: context.read<AuthRepository>()),
+              child: LoginScreen(cuentaCreada: cuentaCreada),
+            );
+          },
+        ),
+        GoRoute(
+          path: Rutas.registro,
           builder: (context, state) => ChangeNotifierProvider(
-            create: (context) => LoginViewModel(authRepository: context.read<AuthRepository>()),
-            child: const LoginScreen(),
+            create: (context) => RegistroViewModel(authRepository: context.read<AuthRepository>()),
+            child: const RegistroScreen(),
           ),
         ),
         GoRoute(path: Rutas.homeCiudadano, builder: (context, state) => const HomeCiudadanoScreen()),
@@ -24,3 +36,4 @@ GoRouter crearRouter() => GoRouter(
         GoRoute(path: Rutas.homeAdmin, builder: (context, state) => const HomeAdminScreen()),
       ],
     );
+
