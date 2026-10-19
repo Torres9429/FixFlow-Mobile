@@ -56,6 +56,4 @@ La DoD **incluye** "se cumplen todos los criterios de aceptación", pero no los 
 ## Convenciones para Issues
 
 - Título: `HU-XX — Título de la HU` (idéntico al encabezado del archivo).
-- Cuerpo: enlace al archivo de la HU. No se copian la historia ni los criterios, para que no se desincronicen.
 - Etiquetas sugeridas: `user-story` y el módulo (`mod:captura-sensores`, `mod:seguimiento-ciudadano`, …).
-- El PR que implementa la HU referencia el Issue (`Closes #N`) e indica en su descripción cómo se verificó cada criterio de aceptación.

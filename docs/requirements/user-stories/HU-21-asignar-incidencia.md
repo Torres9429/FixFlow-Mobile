@@ -26,10 +26,11 @@ actor: Administrador municipal
 
 ## Dependencias
 
-- **Depende de:** HU-17.
+- **Depende de:** HU-17, HU-24 (sin operativos activos no hay a quién asignar).
 - **Relacionada con:** HU-14 (lista de asignadas), HU-22.
 
 ## Notas funcionales
 
-- Reglas de negocio: RN-14 *(pendiente)*, RN-15, RN-16 *(parcial)*, RN-18.
+- Reglas de negocio: RN-14, RN-15, RN-16, RN-18.
 - Requisitos funcionales: RF-23, RF-24.
+- Requisitos no funcionales: RNF-06.

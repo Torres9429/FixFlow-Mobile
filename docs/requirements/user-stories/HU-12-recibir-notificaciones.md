@@ -29,3 +29,4 @@ actor: Ciudadano
 
 - Reglas de negocio: RN-18.
 - Requisitos funcionales: RF-13.
+- Requisitos no funcionales: RNF-06.

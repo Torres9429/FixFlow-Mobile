@@ -27,5 +27,6 @@ actor: Ciudadano
 
 ## Notas funcionales
 
-- Reglas de negocio: RN-06, RN-14 *(pendiente)*.
+- Reglas de negocio: RN-06, RN-14.
 - Requisitos funcionales: RF-11.
+- Requisitos no funcionales: RNF-04.

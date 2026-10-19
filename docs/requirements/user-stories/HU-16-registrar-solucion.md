@@ -28,5 +28,6 @@ actor: Personal operativo
 
 ## Notas funcionales
 
-- Reglas de negocio: RN-14 *(pendiente)*, RN-15.
+- Reglas de negocio: RN-14, RN-15.
 - Requisitos funcionales: RF-18.
+- Requisitos no funcionales: RNF-05, RNF-08.

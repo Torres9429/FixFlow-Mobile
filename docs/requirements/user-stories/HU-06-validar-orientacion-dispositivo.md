@@ -29,6 +29,6 @@ actor: Sistema
 ## Notas funcionales
 
 - Sensor utilizado: acelerómetro (RNF-01).
-- Reglas de negocio: RN-07 *(pendiente)*, RN-11 *(parcial)*.
+- Reglas de negocio: RN-07, RN-11.
 - Requisitos funcionales: RF-07.
 - Requisitos no funcionales: RNF-01, RNF-02.

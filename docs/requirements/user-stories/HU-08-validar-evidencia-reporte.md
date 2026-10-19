@@ -29,5 +29,5 @@ actor: Sistema
 
 ## Notas funcionales
 
-- Reglas de negocio: RN-09, RN-10, RN-11 *(parcial)*, RN-12.
+- Reglas de negocio: RN-09, RN-10, RN-11, RN-12.
 - Requisitos funcionales: RF-09.

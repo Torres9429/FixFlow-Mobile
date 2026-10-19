@@ -26,5 +26,5 @@ actor: Administrador municipal
 
 ## Notas funcionales
 
-- Reglas de negocio: RN-13 *(pendiente)*.
+- Reglas de negocio: RN-13.
 - Requisitos funcionales: RF-22.

@@ -12,6 +12,8 @@ Cada HU vive en su propio archivo `HU-XX-<slug>.md`. Cada HU corresponde a un Is
 | --- | --- | --- |
 | [HU-01](HU-01-registro-ciudadano.md) | Registro de ciudadano | Ciudadano |
 | [HU-02](HU-02-inicio-sesion.md) | Inicio de sesión | Usuario registrado |
+| [HU-24](HU-24-gestionar-personal-operativo.md) | Gestionar personal operativo | Administrador municipal |
+| [HU-25](HU-25-gestionar-perfil.md) | Gestionar mi perfil | Usuario registrado |
 
 ### Reportes e incidencias
 
@@ -62,6 +64,7 @@ Cada HU vive en su propio archivo `HU-XX-<slug>.md`. Cada HU corresponde a un Is
 | [HU-19](HU-19-consultar-indicadores.md) | Consultar indicadores de atención | Administrador municipal |
 | [HU-20](HU-20-consultar-incidencias-prioritarias.md) | Consultar incidencias prioritarias | Administrador municipal |
 | [HU-21](HU-21-asignar-incidencia.md) | Asignar incidencia a personal operativo | Administrador municipal |
+| [HU-26](HU-26-gestionar-tipos-incidencia.md) | Gestionar el catálogo de tipos de incidencia | Administrador municipal |
 
 ### Historial y trazabilidad
 
@@ -109,9 +112,13 @@ graph LR
   HU20 --> HU09
   HU20 --> HU17
   HU21 --> HU17
+  HU21 --> HU24
   HU22 --> HU15
   HU23 --> HU13
   HU23 --> HU15
+  HU24 --> HU02
+  HU25 --> HU02
+  HU26 --> HU02
 ```
 
 ## Plantilla de HU
