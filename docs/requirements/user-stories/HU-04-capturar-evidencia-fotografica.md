@@ -30,4 +30,4 @@ actor: Ciudadano
 - Sensor utilizado: cámara (RNF-01).
 - Reglas de negocio: RN-09.
 - Requisitos funcionales: RF-05.
-- Requisitos no funcionales: RNF-01, RNF-02, RNF-03.
+- Requisitos no funcionales: RNF-01, RNF-02, RNF-03, RNF-05, RNF-08.

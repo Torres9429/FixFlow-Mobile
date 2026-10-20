@@ -28,6 +28,7 @@ actor: Administrador municipal
 
 ## Notas funcionales
 
+- **Zona = círculo:** el administrador elige un centro en el mapa y un radio en km (máximo 50). Se muestran las incidencias cuya ubicación cae dentro del círculo. Los filtros se combinan entre sí.
 - El filtro por zona es una consulta del administrador; no implica detección de reportes duplicados por proximidad (fuera de alcance).
-- Reglas de negocio: RN-07 *(pendiente)*, RN-13 *(pendiente)*, RN-14 *(pendiente)*.
+- Reglas de negocio: RN-07, RN-13, RN-14.
 - Requisitos funcionales: RF-20.

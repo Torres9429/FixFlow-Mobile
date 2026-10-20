@@ -26,7 +26,7 @@ requirements/
 | Historia de usuario | `HU-XX` | ¿Qué necesita un usuario y para qué? ¿Cómo se verifica? | HU-04 Capturar evidencia fotográfica en vivo |
 | Requisito funcional | `RF-XX` | ¿Qué capacidad debe ofrecer el sistema? | RF-05 Captura de fotografía en vivo |
 | Requisito no funcional | `RNF-XX` | ¿Con qué restricciones o calidad debe funcionar? | RNF-01 Sensores permitidos |
-| Regla de negocio | `RN-XX` | ¿Qué política del dominio se aplica, sin importar la pantalla? | RN-06 Evidencia solo desde cámara en vivo |
+| Regla de negocio | `RN-XX` | ¿Qué política del dominio se aplica, sin importar la pantalla? | RN-09 Evidencia principal capturada en vivo |
 | Glosario | — | ¿Qué significa este término en FixFlow? | Incidencia, Evidencia |
 
 ## Principio de no duplicación

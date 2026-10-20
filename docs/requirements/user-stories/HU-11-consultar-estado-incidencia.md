@@ -28,5 +28,5 @@ actor: Ciudadano
 ## Notas funcionales
 
 - Los términos *revisado, atendido o solucionado* de la historia no constituyen el catálogo oficial de estados (ver RN-14).
-- Reglas de negocio: RN-14 *(pendiente)*, RN-15.
+- Reglas de negocio: RN-14, RN-15.
 - Requisitos funcionales: RF-12.

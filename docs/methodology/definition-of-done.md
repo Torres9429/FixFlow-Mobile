@@ -6,19 +6,20 @@ Una HU puede moverse de **In review** a **Done** cuando cumple **todos** los pun
 
 ### Funcionalidad
 
-- [ ] Se cumplen todos los criterios de aceptación de la HU, y la verificación está descrita en el PR.
+- [ ] Se cumplen todos los criterios de aceptación de la HU
 - [ ] Solo los roles indicados en la HU pueden acceder a la funcionalidad (RN-05).
 - [ ] No se introdujo funcionalidad fuera de alcance (voz/micrófono, duplicados por proximidad, votos de urgencia).
 
 ### Código
 
-- [ ] El código está en una rama y se integró a `main` mediante un Pull Request.
+- [ ] El código está en una rama y se integró a `develop` mediante un Pull Request. `develop` se integra a `main` al cerrar el Sprint.
 - [ ] Al menos otro miembro del equipo revisó y aprobó el PR.
 - [ ] El proyecto compila sin errores y sin advertencias nuevas del analizador/linter.
 - [ ] No quedan credenciales, claves ni datos de prueba sensibles en el código.
 
 ### Pruebas
 
+- [ ] Las pruebas automatizadas que el plan de pruebas del Sprint asigna a la HU existen y pasan (`flutter test` y `integration_test/`).
 - [ ] La HU se probó manualmente en la app.
 - [ ] Si usa permisos, se probaron los casos de permiso concedido y rechazado.
 

@@ -28,6 +28,7 @@ actor: Administrador municipal
 
 ## Notas funcionales
 
+- La prioridad la asigna el **sistema** de forma automática (RN-13); el administrador no la cambia a mano, solo la consulta en el panel.
 - La *prioridad* de esta HU es un atributo de la incidencia; no tiene relación con la prioridad de tablero en GitHub Projects.
-- Reglas de negocio: RN-07 *(pendiente)*, RN-13 *(pendiente)*, RN-15.
+- Reglas de negocio: RN-07, RN-13, RN-15.
 - Requisitos funcionales: RF-10.

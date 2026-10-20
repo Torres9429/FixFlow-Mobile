@@ -28,6 +28,7 @@ actor: Usuario autorizado
 
 ## Notas funcionales
 
-- Los roles que se consideran *usuario autorizado* están pendientes de definir (ver glosario).
+- *Usuario autorizado* = el ciudadano que la reportó, el operativo asignado o un administrador municipal (ver glosario y RNF-04). El operativo ve el historial sin los datos personales del ciudadano.
 - Reglas de negocio: RN-15.
 - Requisitos funcionales: RF-25.
+- Requisitos no funcionales: RNF-04.

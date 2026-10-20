@@ -27,5 +27,6 @@ actor: Ciudadano
 
 ## Notas funcionales
 
-- Reglas de negocio: RN-14 *(pendiente)*, RN-17 *(parcial)*.
-- Requisitos funcionales: RF-14.
+- Al validar, la incidencia está en `RESUELTA`. Confirmar la lleva a `CERRADA`, que es el estado final (RN-14); si el ciudadano no responde en 7 días, el sistema la cierra solo (RF-29).
+- Reglas de negocio: RN-14, RN-17.
+- Requisitos funcionales: RF-14, RF-29.

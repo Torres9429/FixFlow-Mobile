@@ -28,6 +28,7 @@ actor: Administrador municipal
 
 ## Notas funcionales
 
-- "Atendidas" y "pendientes" dependen del catálogo de estados (RN-14).
-- Reglas de negocio: RN-13 *(pendiente)*, RN-14 *(pendiente)*, RN-15.
+- **Pendientes:** incidencias en `PENDIENTE` (sin asignar). **En atención:** `ASIGNADA`, `EN_PROCESO` o `REABIERTA`. **Atendidas:** `RESUELTA` o `CERRADA` (RN-14).
+- **Tiempo de resolución:** fecha en que pasó a `RESUELTA` − fecha de creación. Se muestran el promedio y el máximo, en horas.
+- Reglas de negocio: RN-13, RN-14, RN-15.
 - Requisitos funcionales: RF-21.
