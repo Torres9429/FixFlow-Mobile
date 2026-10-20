@@ -77,9 +77,8 @@ No hay vista pública ni anónima.
 **Tipo:** Seguridad · **Relacionado con:** HU-01, HU-02, HU-24
 
 - Las contraseñas se guardan con **BCrypt**; nunca en texto plano ni en las respuestas de la API.
-- El inicio de sesión entrega un **access token JWT de 15 minutos** (con id, correo y rol) y un **refresh token de 7 días**.
+- El inicio de sesión entrega un **access token JWT de 15 minutos** y un **refresh token de 7 días**. El access token lleva el **id y el correo** del usuario; el rol se entrega en la respuesta del login y el servidor lo revisa en cada petición.
 - Cuando el access token vence, la app pide uno nuevo con el refresh token sin que el usuario lo note. Si el refresh token venció o se revocó, la app regresa al inicio de sesión.
 - Cerrar sesión revoca el refresh token en el servidor. Desactivar una cuenta (HU-24) también revoca sus refresh tokens.
 - Los tokens se guardan en el almacenamiento seguro del teléfono (`flutter_secure_storage`).
-- Mientras no exista esta capa, el servidor identifica al usuario con un header temporal (ver el contrato de API).
 

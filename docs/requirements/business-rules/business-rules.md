@@ -119,7 +119,7 @@ Cada tipo de incidencia define la orientación del dispositivo durante la captur
 | Hacia arriba | Inclinación **≤ −20°** |
 | Sin restricción | Cualquier valor, pero la lectura del acelerómetro debe existir (HU-08) |
 
-Los umbrales son ajustables: viven en la configuración del servidor (`fixflow.orientacion.*`) y se cambian sin tocar código. Si la prueba en los teléfonos del equipo (signo del eje Z) muestra otros valores, se actualizan aquí y en el servidor.
+Los umbrales son ajustables: viven en la configuración del servidor (`fixflow.orientacion.*`) y se cambian sin tocar código. La app no los tiene escritos: los recibe en cada tipo de incidencia (`anguloMin`, `anguloMax`) para guiar la cámara en vivo, así la guía y la validación del servidor siempre coinciden. Si la prueba en los teléfonos del equipo (signo del eje Z) muestra otros valores, se actualizan aquí y en el servidor.
 
 ### RN-12 — Condiciones para enviar un reporte
 
