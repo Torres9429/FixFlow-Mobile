@@ -26,6 +26,8 @@ class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
     }
     return Result.ok(LoginResponseModel(
       token: 'token-falso-${usuario.rol.toLowerCase()}',
+      refreshToken: 'refresh-falso',
+      userId: 1,
       rol: usuario.rol,
       nombre: usuario.nombre,
     ));
@@ -54,5 +56,8 @@ class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
       nombre: nombre,
     ));
   }
+
+  @override
+  Future<void> logout(String refreshToken) async {}
 }
 

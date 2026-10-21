@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/result.dart';
 import '../../../domain/errors/auth_failure.dart';
@@ -58,5 +59,15 @@ class AuthRemoteDataSource {
           const SinConexion(),
         _ => const ErrorDesconocido(),
       };
+
+  /// Revoca el refresh token en el back. Si falla no importa: la sesión local se borra igual.
+  Future<void> logout(String refreshToken) async {
+    try {
+      await _dio.post<void>('/auth/logout', data: {'refreshToken': refreshToken});
+    } catch (e) {
+      debugPrint('[FixFlow] No se pudo cerrar sesión en el servidor: $e');
+    }
+  }
+
 }
 

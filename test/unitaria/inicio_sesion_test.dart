@@ -22,10 +22,21 @@ void main() {
     final datasource = AuthRemoteDataSource(dio);
     const credenciales = {'correo': 'ana@mail.com', 'password': 'abc12345'};
 
-    test('200 → devuelve token y rol', () async {
+    test('200 → devuelve token, refresh token y rol', () async {
       servidor.onPost(
         '/auth/login',
-        (s) => s.reply(200, {'token': 'jwt-123', 'rol': 'CIUDADANO', 'nombre': 'Ana'}),
+        (s) => s.reply(200, {
+          'text': 'Inicio de sesión exitoso',
+          'type': 'SUCCESS',
+          'result': {
+            'jwt': 'jwt-123',
+            'refreshToken': 'ref-456',
+            'userId': 1,
+            'username': 'ana@mail.com',
+            'nombre': 'Ana',
+            'role': 'CIUDADANO',
+          },
+        }),
         data: credenciales,
       );
 
@@ -33,6 +44,7 @@ void main() {
 
       expect(res, isA<Ok<LoginResponseModel>>());
       expect((res as Ok<LoginResponseModel>).value.token, 'jwt-123');
+      expect(res.value.refreshToken, 'ref-456');
       expect(res.value.rol, 'CIUDADANO');
     });
 
@@ -50,22 +62,24 @@ void main() {
     });
   });
 
-  group('HU-02: SessionStorage guarda y borra el token', () {
-    test('Después de guardar, leer devuelve el token', () async {
+  group('HU-02: SessionStorage guarda y borra la sesión', () {
+    test('Después de guardar, leer devuelve el token y el refresh token', () async {
       final session = SessionStorage(crearStorageEnMemoria());
 
-      await session.guardarToken('jwt-123');
+      await session.guardarSesion('jwt-123', 'ref-456');
 
       expect(await session.leerToken(), 'jwt-123');
+      expect(await session.leerRefreshToken(), 'ref-456');
     });
 
     test('Después de borrar, leer devuelve null', () async {
       final session = SessionStorage(crearStorageEnMemoria());
 
-      await session.guardarToken('jwt-123');
-      await session.borrarToken();
+      await session.guardarSesion('jwt-123', 'ref-456');
+      await session.borrarSesion();
 
       expect(await session.leerToken(), isNull);
+      expect(await session.leerRefreshToken(), isNull);
     });
   });
 

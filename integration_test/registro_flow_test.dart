@@ -24,7 +24,9 @@ void main() {
       await tester.pumpWidget(FixFlowApp(authRepository: repo));
       await tester.pumpAndSettle();
 
-      // PASO 1: navegar a registro desde el login
+      // PASO 1: navegar a registro desde el login (en pantallas chicas el enlace queda abajo del borde)
+      await tester.ensureVisible(find.text('Crea una'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Crea una'));
       await tester.pumpAndSettle();
 

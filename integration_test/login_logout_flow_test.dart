@@ -28,7 +28,7 @@ void main() {
 
   group('HU-02: Login y cierre de sesión de punta a punta', () {
     for (final MapEntry(key: correo, value: home) in flujos.entries) {
-      testWidgets('$correo: login → su home → cerrar sesión → login y el token queda borrado', (tester) async {
+      testWidgets('$correo: login → su home → cerrar sesión → login y la sesión queda borrada', (tester) async {
         // Repositorio real con el back simulado; el token va a un almacenamiento en memoria NUEVO
         final storage = crearStorageEnMemoria();
         final session = SessionStorage(storage);
@@ -44,17 +44,20 @@ void main() {
         await tester.tap(find.byKey(const Key('login_entrar')));
         await tester.pumpAndSettle();
 
-        // PASO 2: llega a la home de su rol con el token guardado
+        // PASO 2: llega a la home de su rol con el token y el refresh token guardados
         expect(find.byType(home), findsOneWidget);
         expect(await session.leerToken(), isNotNull);
+        expect(await session.leerRefreshToken(), isNotNull);
 
-        // PASO 3: cerrar sesión regresa al login y borra el token
+        // PASO 3: cerrar sesión regresa al login y borra los dos tokens
         await tester.tap(find.byKey(const Key('cerrar_sesion')));
         await tester.pumpAndSettle();
 
         expect(find.byType(LoginScreen), findsOneWidget);
         verify(() => storage.delete(key: 'token')).called(1);
+        verify(() => storage.delete(key: 'refreshToken')).called(1);
         expect(await session.leerToken(), isNull);
+        expect(await session.leerRefreshToken(), isNull);
       });
     }
   });
