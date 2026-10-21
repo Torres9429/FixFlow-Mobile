@@ -16,10 +16,11 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<Usuario>> iniciarSesion(String correo, String password) async {
     final res = await _remote.login(correo, password);
+
     switch (res) {
       case Ok(:final value):
         try {
-          await _session.guardarToken(value.token);
+          await _session.guardarSesion(value.token, value.refreshToken);
         } catch (e) {
           debugPrint('[FixFlow] No se pudo guardar el token: $e');
           // Sin token guardado no hay sesión: no se deja entrar
@@ -61,9 +62,11 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> cerrarSesion() async {
     try {
-      await _session.borrarToken();
+      final refresh = await _session.leerRefreshToken();
+      if (refresh != null) await _remote.logout(refresh);
+      await _session.borrarSesion();
     } catch (e) {
-      debugPrint('[FixFlow] No se pudo borrar el token: $e');
+      debugPrint('[FixFlow] No se pudo borrar la sesión: $e');
       // El usuario siempre debe poder salir, aunque falle el almacenamiento
     }
   }
