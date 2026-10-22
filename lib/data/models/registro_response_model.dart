@@ -1,17 +1,20 @@
 import '../../domain/entities/rol.dart';
 import '../../domain/entities/usuario.dart';
 
-/// Respuesta de `POST /auth/registro`: `{ "token", "rol", "nombre" }`.
+/// Respuesta de `POST /usuarios/registro`: los datos del usuario vienen dentro de `result` (sin token).
 class RegistroResponseModel {
-  const RegistroResponseModel({required this.token, required this.rol, required this.nombre});
+  const RegistroResponseModel({required this.rol, required this.nombre});
 
-  factory RegistroResponseModel.fromJson(Map<String, dynamic> json) => RegistroResponseModel(
-        token: json['token'] as String,
-        rol: json['rol'] as String,
-        nombre: json['nombre'] as String? ?? '',
-      );
+  factory RegistroResponseModel.fromJson(Map<String, dynamic> json) {
+    final r = json['result'] is Map<String, dynamic>
+        ? json['result'] as Map<String, dynamic>
+        : json;
+    return RegistroResponseModel(
+      rol: (r['rol'] as String?) ?? (r['role'] as String?) ?? 'CIUDADANO',
+      nombre: (r['nombre'] as String?) ?? '',
+    );
+  }
 
-  final String token;
   final String rol;
   final String nombre;
 

@@ -47,12 +47,6 @@ class AuthRepositoryImpl implements AuthRepository {
     );
     switch (res) {
       case Ok(:final value):
-        try {
-          await _session.guardarToken(value.token);
-        } catch (e) {
-          debugPrint('[FixFlow] No se pudo guardar el token tras registro: $e');
-          return const Result.error(ErrorDesconocido());
-        }
         return Result.ok(value.toEntity());
       case Error(:final error):
         return Result.error(error);

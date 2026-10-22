@@ -1,6 +1,5 @@
 // Test tipo Interfaz: se prueba una pantalla, lo que se ve y se toca
 
-import 'package:fix_flow/domain/repositories/auth_repository.dart';
 import 'package:fix_flow/presentation/auth/registro/registro_screen.dart';
 import 'package:fix_flow/presentation/auth/registro/registro_viewmodel.dart';
 import 'package:fix_flow/presentation/core/theme/app_theme.dart';

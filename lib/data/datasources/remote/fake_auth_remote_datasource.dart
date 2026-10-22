@@ -51,7 +51,6 @@ class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
     _usuarios[correo.toLowerCase()] = (rol: 'CIUDADANO', nombre: nombre);
 
     return Result.ok(RegistroResponseModel(
-      token: 'token-falso-ciudadano',
       rol: 'CIUDADANO',
       nombre: nombre,
     ));

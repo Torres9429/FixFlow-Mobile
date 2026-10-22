@@ -34,7 +34,7 @@ class AuthRemoteDataSource {
   }) async {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
-        '/auth/registro',
+        '/usuarios/registro',
         data: {
           'nombre': nombre,
           'apellidos': apellidos,
@@ -50,15 +50,30 @@ class AuthRemoteDataSource {
     }
   }
 
-  AuthFailure _mapear(DioException e) => switch (e.response?.statusCode) {
-        401 => const CredencialesInvalidas(),
-        409 => const CorreoDuplicado(),
-        _ when e.type == DioExceptionType.connectionTimeout ||
-                e.type == DioExceptionType.receiveTimeout ||
-                e.type == DioExceptionType.connectionError =>
-          const SinConexion(),
-        _ => const ErrorDesconocido(),
-      };
+  AuthFailure _mapear(DioException e) {
+    final statusCode = e.response?.statusCode;
+    final data = e.response?.data;
+    String? msg;
+    if (data is Map<String, dynamic>) {
+      msg = (data['text'] ?? data['mensaje'] ?? data['message'] ?? data['error'])?.toString().toLowerCase();
+    }
+    if (statusCode == 409 ||
+        (msg != null &&
+            (msg.contains('registrado') ||
+                msg.contains('duplicado') ||
+                msg.contains('ya existe')))) {
+      return const CorreoDuplicado();
+    }
+    if (statusCode == 401) {
+      return const CredencialesInvalidas();
+    }
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError) {
+      return const SinConexion();
+    }
+    return const ErrorDesconocido();
+  }
 
   /// Revoca el refresh token en el back. Si falla no importa: la sesión local se borra igual.
   Future<void> logout(String refreshToken) async {
@@ -70,4 +85,3 @@ class AuthRemoteDataSource {
   }
 
 }
-
