@@ -35,8 +35,8 @@ Se corrigen al integrar cada pantalla con el back:
 | A1 Login | `POST /auth/login` | `{correo, password}` | `{token, id, rol, nombre}` |
 | A2 Registro | `POST /auth/register` | `{nombre, apellidos, correo, password}` | Usuario creado · 409 correo existe |
 | Inicio de la app | `GET /auth/me` | — | `{id, nombre, apellidos, correo, rol, activo}` · 401 → login |
-| A3 Perfil (HU-25) | `PUT /usuarios/me` · `PATCH /usuarios/me/password` | `{nombre, apellidos}` · `{actual, nueva}` | Usuario · mensaje |
-| Catálogo de tipos (HU-26, sin pantalla aún) | `GET /admin/tipos-incidencia` · `POST /admin/tipos-incidencia` · `PUT /admin/tipos-incidencia/{id}` · `PATCH /admin/tipos-incidencia/{id}/estatus` | `{codigo, nombre, orientacion, prioridadBase}` (el código no cambia en el PUT) · `{activo}` | Tipo |
+| A3 Perfil · A3a Editar datos · A3b Contraseña (HU-25) | `PUT /usuarios/me` · `PATCH /usuarios/me/password` | `{nombre, apellidos}` · `{actual, nueva}` | Usuario · mensaje |
+| Catálogo de tipos (HU-26, sin pantalla aún) | `GET /admin/tipos-incidencia` · `POST /admin/tipos-incidencia` · `PUT /admin/tipos-incidencia/{id}` · `PATCH /admin/tipos-incidencia/{id}/estatus` | `{codigo?, nombre, orientacion, prioridadBase}` (`codigo` opcional al crear, se genera del nombre; se ignora en el PUT) · `{activo}` | Tipo |
 | B2 Nuevo reporte | `GET /tipos-incidencia` | — | `[{id, codigo, nombre, orientacion, prioridadBase}]` |
 | B3/B4 Enviar | `POST /evidencias/firma` → Cloudinary → `POST /incidencias` | `{tipoId, descripcion, latitud, longitud, inclinacion, fotoUrl}` | Detalle con `folio` (B5) · 422 → repetir captura (B3b, B7) |
 | B1 Mis reportes | `GET /incidencias/mias` | — | Página de resúmenes |

@@ -69,7 +69,7 @@ Un ciudadano solo puede consultar los reportes que él mismo registró.
 
 Toda incidencia pertenece a un tipo seleccionado de este catálogo. Cada tipo define su orientación esperada (RN-11) y su prioridad base (RN-13). El catálogo vive como datos: el administrador puede editarlo o desactivar un tipo sin cambiar el código de la app (HU-26).
 
-Cada tipo tiene un **código** único y fijo (la clave legible, por ejemplo `BACHE`: mayúsculas, números y guion bajo) y un **nombre** que ve el usuario. El código no se modifica después de crear el tipo; el nombre, la orientación y la prioridad base sí.
+Cada tipo tiene un **código** único y fijo (la clave legible, por ejemplo `BACHE`: mayúsculas, números y guion bajo) y un **nombre** que ve el usuario. Al crear un tipo, el código es opcional: si no se indica se genera del nombre (sin acentos, en mayúsculas y con guion bajo; con sufijo `_2` si ya existe). El código no se modifica después de crear el tipo; el nombre, la orientación y la prioridad base sí.
 
 | Código | Tipo | Orientación (RN-11) | Prioridad base (RN-13) |
 | --- | --- | --- | --- |

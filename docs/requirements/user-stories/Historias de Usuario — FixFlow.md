@@ -1,5 +1,7 @@
 # Historias de Usuario — FixFlow
 
+> **Documento consolidado de referencia.** Contiene HU-01 a HU-23 en su redacción original y, al final, las HU agregadas después (HU-24 a HU-26, Épica 9). La fuente de verdad son los archivos individuales `HU-XX-*.md` (ver [README.md](README.md)): ahí están las dependencias, notas y reglas de cada HU.
+
 ## Épica 1. Gestión de acceso y usuarios
 
 ### HU-01 — Registro de ciudadano
@@ -384,5 +386,57 @@
 * El personal operativo debe poder consultar el motivo de la reapertura.
 * El administrador debe recibir o poder consultar la actualización.
 * El sistema debe conservar la trazabilidad de la reapertura.
+
+---
+
+# Épica 9. Administración de cuentas y catálogo
+
+> Historias agregadas después del documento original, al definir las reglas de negocio.
+
+### HU-24 — Gestionar personal operativo
+
+**Como** administrador municipal
+**Quiero** dar de alta y desactivar cuentas del personal operativo
+**Para** que solo el personal vigente pueda iniciar sesión y recibir incidencias.
+
+**Criterios de aceptación:**
+
+* El administrador puede registrar a un miembro del personal operativo con nombre, apellidos, correo y una contraseña temporal.
+* La cuenta creada recibe el rol Personal operativo. Nadie puede asignarse ese rol desde el registro público.
+* No se puede registrar un correo que ya exista.
+* El administrador puede consultar la lista del personal operativo con su estado (activo o inactivo) y su carga actual.
+* El administrador puede desactivar y reactivar una cuenta.
+* Una cuenta inactiva no puede iniciar sesión ni aparece entre el personal disponible para asignar.
+* Desactivar una cuenta no cambia las incidencias que ya tenía asignadas; el administrador puede reasignarlas.
+
+### HU-25 — Gestionar mi perfil
+
+**Como** usuario registrado
+**Quiero** consultar y actualizar los datos de mi cuenta y cambiar mi contraseña
+**Para** mantener mi información al día y reemplazar una contraseña temporal por una propia.
+
+**Criterios de aceptación:**
+
+* El usuario puede consultar su nombre, apellidos, correo y rol.
+* El usuario puede editar su nombre y sus apellidos.
+* El correo y el rol no se pueden modificar desde el perfil.
+* El usuario puede cambiar su contraseña indicando la actual y la nueva.
+* La nueva contraseña debe cumplir la política de contraseñas y ser distinta de la actual.
+* Si la contraseña actual no es correcta, el cambio se rechaza con un mensaje.
+
+### HU-26 — Gestionar el catálogo de tipos de incidencia
+
+**Como** administrador municipal
+**Quiero** dar de alta, editar y desactivar tipos de incidencia
+**Para** mantener el catálogo de reportes al día sin cambiar la aplicación.
+
+**Criterios de aceptación:**
+
+* El administrador puede consultar todos los tipos, activos e inactivos.
+* El administrador puede registrar un tipo con nombre, orientación esperada y prioridad base. El código se genera solo a partir del nombre si no se indica.
+* No se puede registrar un código que ya exista; un código generado que choque con otro recibe un sufijo.
+* El administrador puede editar el nombre, la orientación y la prioridad base de un tipo. El código no se puede modificar después de crearlo.
+* El administrador puede desactivar y reactivar un tipo.
+* Un tipo inactivo no aparece al crear un reporte; las incidencias existentes conservan su tipo.
 
 ---
