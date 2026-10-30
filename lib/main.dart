@@ -5,5 +5,8 @@ import 'core/di/dependencies.dart';
 
 void main() {
   final dependencias = crearDependencias();
-  runApp(FixFlowApp(authRepository: dependencias.authRepository));
+  runApp(FixFlowApp(
+    authRepository: dependencias.authRepository,
+    incidenceTypeRepository: dependencias.incidenceTypeRepository,
+  ));
 }

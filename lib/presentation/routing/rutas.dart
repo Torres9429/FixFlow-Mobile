@@ -4,4 +4,5 @@ abstract final class Rutas {
   static const homeCiudadano = '/home/ciudadano';
   static const homeOperativo = '/home/operativo';
   static const homeAdmin = '/home/admin';
+  static const nuevoReporte = '/reporte/nuevo';
 }
