@@ -7,10 +7,11 @@ import '../routing/rutas.dart';
 
 /// Estructura común de las homes mientras se diseñan las pantallas de cada rol.
 class HomeBase extends StatelessWidget {
-  const HomeBase({super.key, required this.titulo, required this.descripcion});
+  const HomeBase({super.key, required this.titulo, required this.descripcion, this.acciones = const []});
 
   final String titulo;
   final String descripcion;
+  final List<Widget> acciones;
 
   Future<void> _cerrarSesion(BuildContext context) async {
     await context.read<AuthRepository>().cerrarSesion();
@@ -30,6 +31,8 @@ class HomeBase extends StatelessWidget {
             children: [
               Text(descripcion, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 24),
+              ...acciones,
+              if (acciones.isNotEmpty) const SizedBox(height: 16),
               OutlinedButton.icon(
                 key: const Key('cerrar_sesion'),
                 onPressed: () => _cerrarSesion(context),
