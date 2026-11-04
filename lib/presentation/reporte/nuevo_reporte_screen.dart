@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../domain/entities/tipo_incidencia.dart';
 import '../../domain/repositories/incidence_type_repository.dart';
 import '../core/theme/app_colors.dart';
+import 'orientacion/medir_orientacion_screen.dart';
 import '../routing/rutas.dart';
 
 class NuevoReporteScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   TipoIncidencia? _tipo;
   XFile? _foto;
   Position? _posicion;
+  double? _anguloOrientacion;
   bool _cargandoTipos = true;
   bool _cargandoUbicacion = true;
   String? _errorTipos;
@@ -36,6 +38,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     super.initState();
     _cargarTipos();
     _cargarUbicacion();
+    _recuperarFotoPerdida();
   }
 
   @override
@@ -53,7 +56,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
         _cargandoTipos = false;
         _errorTipos = null;
       });
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _cargandoTipos = false;
@@ -98,6 +101,24 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     } catch (_) {
       if (!mounted) return;
       _mostrarAviso('No se pudo abrir la cámara. Verifica el permiso.');
+    }
+
+  }
+
+  Future<void> _recuperarFotoPerdida() async {
+    try {
+      final respuesta = await _picker.retrieveLostData();
+      if (!mounted || respuesta.isEmpty) return;
+      final archivos = respuesta.files;
+      if (archivos != null && archivos.isNotEmpty) {
+        setState(() => _foto = archivos.first);
+        return;
+      }
+      if (respuesta.exception != null) {
+        _mostrarAviso('No se pudo recuperar la captura de la cámara.');
+      }
+    } catch (_) {
+      if (mounted) _mostrarAviso('No se pudo recuperar la captura de la cámara.');
     }
   }
 
@@ -190,11 +211,36 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
             ),
             const SizedBox(height: 10),
             _EvidencePreview(foto: _foto, onTap: _capturarFoto),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () async {
+                  final mediciones = await Navigator.of(context).push<Map<String, double>>(
+                    MaterialPageRoute(builder: (_) => const MedirOrientacionScreen()),
+                  );
+                  if (!mounted || mediciones == null || mediciones.isEmpty) return;
+                  setState(() {
+                    _anguloOrientacion = mediciones['suelo'] ??
+                        mediciones['frente'] ??
+                        mediciones['arriba'];
+                  });
+                },
+                icon: const Icon(Icons.screen_rotation_alt_outlined),
+                label: const Text('Medir orientación del teléfono'),
+              ),
+            ),
             const SizedBox(height: 18),
             _StatusRow(
               label: 'Tomada con la cámara',
               value: _foto == null ? 'Pendiente' : 'Capturada',
               ok: _foto != null,
+            ),
+            _StatusRow(
+              label: 'Orientación',
+              value: _anguloOrientacion == null
+                  ? 'Pendiente'
+                  : '${_anguloOrientacion!.toStringAsFixed(1)}°',
+              ok: _anguloOrientacion != null,
             ),
             _StatusRow(label: 'Ubicación GPS', value: _cargandoUbicacion ? 'Obteniendo…' : _posicion == null ? 'No disponible' : '${_posicion!.latitude.toStringAsFixed(4)}, ${_posicion!.longitude.toStringAsFixed(4)}', ok: _posicion != null),
             if (_errorUbicacion != null)
@@ -304,11 +350,11 @@ class _StatusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(ok ? Icons.check_circle : Icons.radio_button_unchecked, color: ok ? AppColors.resuelta : AppColors.textMuted),
-        title: Text(label),
-        trailing: Text(value, style: TextStyle(color: ok ? AppColors.textSecondary : AppColors.textMuted)),
-      );
+    contentPadding: EdgeInsets.zero,
+    leading: Icon(ok ? Icons.check_circle : Icons.radio_button_unchecked, color: ok ? AppColors.resuelta : AppColors.textMuted),
+    title: Text(label),
+    trailing: Text(value, style: TextStyle(color: ok ? AppColors.textSecondary : AppColors.textMuted)),
+  );
 }
 
 class _ErrorRow extends StatelessWidget {
