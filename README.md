@@ -34,7 +34,7 @@ La app tiene dos modos: **mock**, con un back simulado que no necesita servidor,
 | Modo | Cómo | Para qué |
 | --- | --- | --- |
 | **Mock** | Botón ▶ normal, o `flutter run --dart-define-from-file=config/mock.json` | Desarrollar y probar pantallas sin back |
-| **Dev** | `flutter run --dart-define-from-file=config/dev.json` | Probar contra el back corriendo en tu PC (`http://10.0.2.2:8080/api`) |
+| **Dev** | `flutter run --dart-define-from-file=config/dev.json` | Probar contra el back corriendo en tu PC. Actualiza `API_BASE_URL` con la IPv4 de tu PC y usa `http://<IPv4>:8080/api` en un teléfono físico. |
 
 En Android Studio, el archivo de configuración se pone en *Run → Edit Configurations → Additional run args*.
 
@@ -109,6 +109,11 @@ El detalle de cada carpeta está en la [guía de arquitectura](docs/architecture
 | `go_router` | Rutas y home según el rol |
 | `dio` | Peticiones HTTP a la API |
 | `flutter_secure_storage` | Guardar el token de sesión |
+| `camera` | Acceso a la cámara del dispositivo |
+| `geolocator` | Obtener la ubicación GPS |
+| `sensors_plus` | Leer acelerómetro y sensores |
+| `google_maps_flutter` | Mostrar mapas |
+| `flutter_image_compress` | Comprimir evidencia fotográfica |
 | `mocktail` *(dev)* | Mocks en las pruebas |
 | `http_mock_adapter` *(dev)* | Simular respuestas de `dio` |
 | `integration_test` *(dev)* | Pruebas de integración en el emulador |
@@ -116,6 +121,8 @@ El detalle de cada carpeta está en la [guía de arquitectura](docs/architecture
 ## Reglas rápidas
 
 - **No suban secretos** a `config/*.json`: todo lo que va en la app se puede extraer del APK.
+- El procedimiento para medir el acelerómetro en teléfonos físicos está en
+  [docs/testing/medicion-acelerometro-rn11.md](docs/testing/medicion-acelerometro-rn11.md).
 - Colores y estilos **solo** desde `lib/presentation/core/theme/`.
 - Cada pantalla con lógica tiene su **ViewModel**, y la pantalla nunca llama directo al repositorio.
 - Las demás reglas están en la [sección 7 de la guía de arquitectura](docs/architecture/arquitectura-mobile.md#7-reglas-del-equipo).
