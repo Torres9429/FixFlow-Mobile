@@ -5,6 +5,11 @@ import 'app_colors.dart';
 abstract final class AppTheme {
   static const radius = 14.0;
 
+  static const sombra = [
+    BoxShadow(color: Color(0x0F101828), offset: Offset(0, 1), blurRadius: 2),
+    BoxShadow(color: Color(0x14101828), offset: Offset(0, 4), blurRadius: 12),
+  ];
+
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(seedColor: AppColors.primary).copyWith(
       primary: AppColors.primary,
