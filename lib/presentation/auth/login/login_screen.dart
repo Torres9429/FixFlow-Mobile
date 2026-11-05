@@ -76,10 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     key: const Key('login_cuenta_creada'),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.resueltaBg,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    decoration: BoxDecoration(color: AppColors.resueltaBg, borderRadius: BorderRadius.circular(12)),
                     child: Row(
                       children: [
                         const Icon(Icons.check_circle_outline, size: 20, color: AppColors.resuelta),
@@ -87,10 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Expanded(
                           child: Text(
                             'Cuenta creada',
-                            style: text.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.resuelta,
-                            ),
+                            style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: AppColors.resuelta),
                           ),
                         ),
                       ],
@@ -107,72 +101,70 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          CampoTexto(
-                            etiqueta: 'Correo electrónico',
-                            child: TextFormField(
-                              key: const Key('login_correo'),
-                              controller: _correo,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              autofillHints: const [AutofillHints.email],
-                              validator: validarObligatorio,
-                              decoration: const InputDecoration(
-                                hintText: 'ejemplo@gmail.com',
-                                helperText: 'Personal operativo o correo personal',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          CampoTexto(
-                            etiqueta: 'Contraseña',
-                            child: TextFormField(
-                              key: const Key('login_password'),
-                              controller: _password,
-                              obscureText: !_passwordVisible,
-                              textInputAction: TextInputAction.done,
-                              autofillHints: const [AutofillHints.password],
-                              validator: validarObligatorio,
-                              onFieldSubmitted: (_) => _entrar(),
-                              decoration: InputDecoration(
-                                hintText: '••••••••',
-                                suffixIcon: IconButton(
-                                  key: const Key('login_ver_password'),
-                                  tooltip: _passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña',
-                                  color: AppColors.textSecondary,
-                                  icon: Icon(_passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                                  onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                    child: Consumer<LoginViewModel>(
+                      builder: (context, vm, _) => Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CampoTexto(
+                              etiqueta: 'Correo electrónico',
+                              child: TextFormField(
+                                key: const Key('login_correo'),
+                                controller: _correo,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                autofillHints: const [AutofillHints.email],
+                                validator: validarObligatorio,
+                                decoration: InputDecoration(
+                                  hintText: 'ejemplo@gmail.com',
+                                  helperText: 'Personal operativo o correo personal',
+                                  // Texto vacío: el campo se pinta de rojo y el mensaje va solo bajo la contraseña
+                                  errorText: vm.error == null ? null : '',
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          Consumer<LoginViewModel>(
-                            builder: (context, vm, _) => Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (vm.error != null) ...[
-                                  _AvisoError(mensaje: vm.error!),
-                                  const SizedBox(height: 16),
-                                ],
-                                FilledButton(
-                                  key: const Key('login_entrar'),
-                                  onPressed: vm.cargando ? null : _entrar,
-                                  child: vm.cargando
-                                      ? const SizedBox.square(
-                                          dimension: 20,
-                                          child: CircularProgressIndicator(strokeWidth: 2.5),
-                                        )
-                                      : const Text('Iniciar sesión'),
+                            const SizedBox(height: 16),
+                            CampoTexto(
+                              etiqueta: 'Contraseña',
+                              child: TextFormField(
+                                key: const Key('login_password'),
+                                controller: _password,
+                                obscureText: !_passwordVisible,
+                                textInputAction: TextInputAction.done,
+                                autofillHints: const [AutofillHints.password],
+                                validator: validarObligatorio,
+                                onFieldSubmitted: (_) => _entrar(),
+                                decoration: InputDecoration(
+                                  hintText: '••••••••',
+                                  // Error del servidor (credenciales, sin conexión); el del validador tiene prioridad
+                                  errorText: vm.error,
+                                  errorMaxLines: 2,
+                                  suffixIcon: IconButton(
+                                    key: const Key('login_ver_password'),
+                                    tooltip: _passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña',
+                                    color: AppColors.textSecondary,
+                                    icon: Icon(
+                                      _passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                    ),
+                                    onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                                  ),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 20),
+                            FilledButton(
+                              key: const Key('login_entrar'),
+                              onPressed: vm.cargando ? null : _entrar,
+                              child: vm.cargando
+                                  ? const SizedBox.square(
+                                      dimension: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                                    )
+                                  : const Text('Iniciar sesión'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -185,54 +177,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       '¿No tienes cuenta?',
                       style: text.bodyLarge?.copyWith(fontSize: 15, color: AppColors.textSecondary),
                     ),
-                    TextButton(
-                      onPressed: () => context.go(Rutas.registro),
-                      child: const Text('Crea una'),
-                    ),
+                    TextButton(onPressed: () => context.go(Rutas.registro), child: const Text('Crea una')),
                   ],
                 ),
                 const SizedBox(height: 32),
                 Text(
                   'Versión 1.0.0',
                   textAlign: TextAlign.center,
-                  style: text.bodySmall?.copyWith(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textMuted),
+                  style: text.bodySmall?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _AvisoError extends StatelessWidget {
-  const _AvisoError({required this.mensaje});
-
-  final String mensaje;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.prioridadAltaBg,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline, size: 20, color: AppColors.error),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              mensaje,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.error,
-                  ),
-            ),
-          ),
-        ],
       ),
     );
   }
