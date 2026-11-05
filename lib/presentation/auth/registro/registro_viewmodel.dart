@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import '../../../core/result.dart';
 import '../../../domain/errors/auth_failure.dart';
 import '../../../domain/repositories/auth_repository.dart';
+import '../../core/mensajes.dart';
+import '../../core/notificador_seguro.dart';
 
-class RegistroViewModel extends ChangeNotifier {
+class RegistroViewModel extends ChangeNotifier with NotificadorSeguro {
   RegistroViewModel({required this._authRepository});
 
   final AuthRepository _authRepository;
@@ -38,7 +40,7 @@ class RegistroViewModel extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('[FixFlow] Error inesperado al registrar: $e');
-      error = _mensaje(const ErrorDesconocido());
+      error = _mensaje(e);
     } finally {
       cargando = false;
       notifyListeners();
@@ -46,8 +48,7 @@ class RegistroViewModel extends ChangeNotifier {
   }
 
   String _mensaje(Object falla) => switch (falla) {
-        CorreoDuplicado() => 'Ya existe una cuenta con ese correo',
-        SinConexion() => 'Sin conexión. Intenta de nuevo.',
-        _ => 'Ocurrió un error. Intenta de nuevo.',
-      };
+    CorreoDuplicado() => 'Ya existe una cuenta con ese correo',
+    _ => mensajePara(falla),
+  };
 }

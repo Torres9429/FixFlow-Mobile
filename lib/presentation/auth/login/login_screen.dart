@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 
 import '../../../domain/validators/campos_validators.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/widgets/campo_texto.dart';
+import '../../core/widgets/logo_fixflow.dart';
 import '../../routing/home_por_rol.dart';
 import '../../routing/rutas.dart';
 import 'login_viewmodel.dart';
@@ -49,103 +51,115 @@ class _LoginScreenState extends State<LoginScreen> {
     final text = Theme.of(context).textTheme;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      // Íconos de la barra de estado en blanco sobre el encabezado azul
-      value: SystemUiOverlayStyle.light,
+      // Íconos de la barra de estado en oscuro sobre el fondo blanco
+      value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: AppColors.surface,
-        body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const _Encabezado(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (widget.cuentaCreada) ...[
-                        Container(
-                          key: const Key('login_cuenta_creada'),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.resueltaBg,
-                            borderRadius: BorderRadius.circular(12),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const _Marca(),
+                const SizedBox(height: 32),
+                Text(
+                  'Hola de nuevo',
+                  style: text.headlineSmall?.copyWith(fontSize: 24, height: 30 / 24, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Ingresa tus credenciales para acceder al sistema.',
+                  style: text.bodyLarge?.copyWith(fontSize: 15, height: 22 / 15, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 20),
+                if (widget.cuentaCreada) ...[
+                  Container(
+                    key: const Key('login_cuenta_creada'),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(color: AppColors.resueltaBg, borderRadius: BorderRadius.circular(12)),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_outline, size: 20, color: AppColors.resuelta),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Cuenta creada',
+                            style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: AppColors.resuelta),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.check_circle_outline, size: 20, color: AppColors.resuelta),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Cuenta creada',
-                                  style: text.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.resuelta,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                // Tarjeta del formulario
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppTheme.radius),
+                    boxShadow: AppTheme.sombra,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Consumer<LoginViewModel>(
+                      builder: (context, vm, _) => Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CampoTexto(
+                              etiqueta: 'Correo electrónico',
+                              child: TextFormField(
+                                key: const Key('login_correo'),
+                                controller: _correo,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                autofillHints: const [AutofillHints.email],
+                                validator: validarObligatorio,
+                                decoration: InputDecoration(
+                                  hintText: 'ejemplo@gmail.com',
+                                  helperText: 'Personal operativo o correo personal',
+                                  // Texto vacío: el campo se pinta de rojo y el mensaje va solo bajo la contraseña
+                                  errorText: vm.error == null ? null : '',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            CampoTexto(
+                              etiqueta: 'Contraseña',
+                              child: TextFormField(
+                                key: const Key('login_password'),
+                                controller: _password,
+                                obscureText: !_passwordVisible,
+                                textInputAction: TextInputAction.done,
+                                autofillHints: const [AutofillHints.password],
+                                validator: validarObligatorio,
+                                onFieldSubmitted: (_) => _entrar(),
+                                decoration: InputDecoration(
+                                  hintText: '••••••••',
+                                  // Error del servidor (credenciales, sin conexión); el del validador tiene prioridad
+                                  errorText: vm.error,
+                                  errorMaxLines: 2,
+                                  suffixIcon: IconButton(
+                                    key: const Key('login_ver_password'),
+                                    tooltip: _passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña',
+                                    color: AppColors.textSecondary,
+                                    icon: Icon(
+                                      _passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                    ),
+                                    onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      Text(
-                        'Inicia sesión',
-                        style: text.headlineSmall?.copyWith(fontSize: 24, fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 18),
-                      CampoTexto(
-                        etiqueta: 'Correo electrónico',
-                        child: TextFormField(
-                          key: const Key('login_correo'),
-                          controller: _correo,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.email],
-                          validator: validarObligatorio,
-                          decoration: const InputDecoration(hintText: 'ana@mail.com'),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      CampoTexto(
-                        etiqueta: 'Contraseña',
-                        child: TextFormField(
-                          key: const Key('login_password'),
-                          controller: _password,
-                          obscureText: !_passwordVisible,
-                          textInputAction: TextInputAction.done,
-                          autofillHints: const [AutofillHints.password],
-                          validator: validarObligatorio,
-                          onFieldSubmitted: (_) => _entrar(),
-                          decoration: InputDecoration(
-                            helperText: 'Mínimo 8 caracteres, con letras y números.',
-                            suffixIcon: IconButton(
-                              key: const Key('login_ver_password'),
-                              tooltip: _passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña',
-                              color: AppColors.textMuted,
-                              icon: Icon(_passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                              onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
                             ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Consumer<LoginViewModel>(
-                        builder: (context, vm, _) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (vm.error != null) ...[
-                              _AvisoError(mensaje: vm.error!),
-                              const SizedBox(height: 16),
-                            ],
+                            const SizedBox(height: 20),
                             FilledButton(
                               key: const Key('login_entrar'),
                               onPressed: vm.cargando ? null : _entrar,
                               child: vm.cargando
                                   ? const SizedBox.square(
-                                      dimension: 22,
+                                      dimension: 20,
                                       child: CircularProgressIndicator(strokeWidth: 2.5),
                                     )
                                   : const Text('Iniciar sesión'),
@@ -153,25 +167,32 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '¿No tienes cuenta?',
-                            style: text.bodyLarge?.copyWith(fontSize: 15, color: AppColors.textSecondary),
-                          ),
-                          TextButton(
-                            onPressed: () => context.go(Rutas.registro),
-                            child: const Text('Crea una'),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '¿No tienes cuenta?',
+                      style: text.bodyLarge?.copyWith(fontSize: 15, color: AppColors.textSecondary),
+                    ),
+                    TextButton(onPressed: () => context.go(Rutas.registro), child: const Text('Crea una')),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  'Versión 1.0.0',
+                  textAlign: TextAlign.center,
+                  style: text.bodySmall?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -179,111 +200,28 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class _AvisoError extends StatelessWidget {
-  const _AvisoError({required this.mensaje});
-
-  final String mensaje;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.prioridadAltaBg,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline, size: 20, color: AppColors.error),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              mensaje,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.error,
-                  ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Encabezado extends StatelessWidget {
-  const _Encabezado();
+/// Logo de la llave con el nombre de la app, centrado arriba del saludo.
+class _Marca extends StatelessWidget {
+  const _Marca();
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
 
-    return Container(
-      height: 300,
-      clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(color: AppColors.primary),
-      child: Stack(
-        children: [
-          // Decoración: círculo naranja y cuadro girado
-          Positioned(
-            right: -80,
-            top: -70,
-            child: Container(
-              width: 230,
-              height: 230,
-              decoration: const BoxDecoration(color: AppColors.accent, shape: BoxShape.circle),
-            ),
-          ),
-          Positioned(
-            right: 120,
-            top: 56,
-            child: Transform.rotate(
-              angle: 18 * 3.1415926535 / 180,
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.accent, width: 4),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 0, 28, 36),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.location_on_outlined, size: 30, color: AppColors.primary),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'FixFlow',
-                  style: text.displaySmall?.copyWith(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.7,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Reporta. Sigue. Resuelve.',
-                  style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w500, color: Colors.white),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        const LogoFixFlow(conSombra: true),
+        const SizedBox(height: 12),
+        Text(
+          'FixFlow',
+          style: text.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.2),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Gestión de incidencias',
+          style: text.bodySmall?.copyWith(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
+        ),
+      ],
     );
   }
 }

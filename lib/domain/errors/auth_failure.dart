@@ -1,4 +1,4 @@
-/// Errores de autenticación que llegan a Presentación (nunca un `DioException`).
+/// Errores propios del acceso. Las fallas de red (sin conexión, servidor…) son `FallaRed`.
 sealed class AuthFailure {
   const AuthFailure();
 }
@@ -7,14 +7,6 @@ final class CredencialesInvalidas extends AuthFailure {
   const CredencialesInvalidas();
 }
 
-final class SinConexion extends AuthFailure {
-  const SinConexion();
-}
-
 final class CorreoDuplicado extends AuthFailure {
   const CorreoDuplicado();
-}
-
-final class ErrorDesconocido extends AuthFailure {
-  const ErrorDesconocido();
 }

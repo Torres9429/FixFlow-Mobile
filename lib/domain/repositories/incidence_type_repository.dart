@@ -1,5 +1,7 @@
+import '../../core/result.dart';
 import '../entities/tipo_incidencia.dart';
 
 abstract interface class IncidenceTypeRepository {
-  Future<List<TipoIncidencia>> obtenerTipos();
+  /// `GET /tipos-incidencia`: solo los activos. Si falla, devuelve una `FallaRed`.
+  Future<Result<List<TipoIncidencia>>> obtenerTipos();
 }

@@ -5,6 +5,20 @@ import 'app_colors.dart';
 abstract final class AppTheme {
   static const radius = 14.0;
 
+  static const sombra = [
+    BoxShadow(color: Color(0x0F101828), offset: Offset(0, 1), blurRadius: 2),
+    BoxShadow(color: Color(0x14101828), offset: Offset(0, 4), blurRadius: 12),
+  ];
+
+  /// Alto de la barra de pestañas, igual en los 3 roles.
+  static const alturaBarraInferior = 60.0;
+
+  /// Sombra naranja del botón Reportar.
+  static const sombraReportar = [BoxShadow(color: Color(0x59FF5A1F), offset: Offset(0, 4), blurRadius: 12)];
+
+  /// Sombra hacia arriba de la barra inferior.
+  static const sombraBarraInferior = [BoxShadow(color: Color(0x0D000000), offset: Offset(0, -2), blurRadius: 12)];
+
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(seedColor: AppColors.primary).copyWith(
       primary: AppColors.primary,
@@ -29,19 +43,37 @@ abstract final class AppTheme {
     final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius));
 
     OutlineInputBorder inputBorder(Color color, double width) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radius),
-          borderSide: BorderSide(color: color, width: width),
-        );
+      borderRadius: BorderRadius.circular(radius),
+      borderSide: BorderSide(color: color, width: width),
+    );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       textTheme: textTheme,
+      // Barra superior blanca, sin elevación ni cambio de color al desplazarse (design.md §7)
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        titleTextStyle: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: Colors.white),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        titleTextStyle: textTheme.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.surface,
+        indicatorColor: Colors.transparent,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (estados) =>
+              IconThemeData(color: estados.contains(WidgetState.selected) ? AppColors.primary : AppColors.textMuted),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (estados) => textTheme.labelMedium?.copyWith(
+            fontSize: 12,
+            fontWeight: estados.contains(WidgetState.selected) ? FontWeight.w600 : FontWeight.w500,
+            color: estados.contains(WidgetState.selected) ? AppColors.primary : AppColors.textMuted,
+          ),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

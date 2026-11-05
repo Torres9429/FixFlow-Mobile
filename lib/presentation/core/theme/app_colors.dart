@@ -13,8 +13,9 @@ abstract final class AppColors {
   static const onAccent = Color(0xFF1B1F24); // texto sobre el acento
 
   // Superficies
-  static const background = Color(0xFFF6F4F1); // fondo de las pantallas
+  static const background = Color(0xFFFFFFFF); // fondo de las pantallas
   static const surface = Color(0xFFFFFFFF); // tarjetas y formularios
+  static const surfaceMuted = Color(0xFFF2F4F7); // esqueletos, miniatura sin foto, minimapa cargando
 
   // Texto
   static const textPrimary = Color(0xFF1B1F24);
@@ -23,7 +24,8 @@ abstract final class AppColors {
   static const placeholder = Color(0xFF6B7380);
 
   // Bordes
-  static const border = Color(0xFFC2C8D1);
+  static const border = Color(0xFFC2C8D1); // campos de formulario
+  static const borderSubtle = Color(0xFFE4E8EC); // divisores, chips inactivos, barras de prioridad vacías
 
   static const error = Color(0xFFB3261E);
 

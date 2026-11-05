@@ -3,47 +3,50 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/config/app_config.dart';
 import '../local/session_storage.dart';
+import 'bitacora_interceptor.dart';
 
 /// El único `Dio` que habla con la API de FixFlow.
 class ApiClient {
   ApiClient({required SessionStorage session, this.alExpirarSesion})
-      : _session = session,
-        dio = Dio(_opciones()),
-        // Dio sin interceptores para el refresh y el reintento (evita ciclos y bloqueos)
-        _plano = Dio(_opciones()) {
-    dio.interceptors.add(QueuedInterceptorsWrapper(
-      onRequest: (options, handler) async {
-        try {
-          final token = await session.leerToken();
-          if (token != null) options.headers['Authorization'] = 'Bearer $token';
-        } catch (e) {
-          debugPrint('[FixFlow] No se pudo leer el token: $e');
-          // Sin token la petición sigue; el back responderá 401 si lo necesita
-        }
-        // Siempre hay que llamar al handler o la petición se queda colgada
-        handler.next(options);
-      },
-      onError: (e, handler) async {
-        final esAuth = e.requestOptions.path.startsWith('/auth/');
-        if (e.response?.statusCode != 401 || esAuth) return handler.next(e);
+    : _session = session,
+      dio = Dio(_opciones()),
+      // Dio sin interceptores para el refresh y el reintento (evita ciclos y bloqueos)
+      _plano = Dio(_opciones()) {
+    dio.interceptors.add(
+      QueuedInterceptorsWrapper(
+        onRequest: (options, handler) async {
+          try {
+            final token = await session.leerToken();
+            if (token != null) options.headers['Authorization'] = 'Bearer $token';
+          } catch (e) {
+            debugPrint('[FixFlow] No se pudo leer el token: $e');
+            // Sin token la petición sigue; el back responderá 401 si lo necesita
+          }
+          // Siempre hay que llamar al handler o la petición se queda colgada
+          handler.next(options);
+        },
+        onError: (e, handler) async {
+          final esAuth = e.requestOptions.path.startsWith('/auth/');
+          if (e.response?.statusCode != 401 || esAuth) return handler.next(e);
 
-        final token = await _tokenVigente(e.requestOptions);
-        if (token == null) {
-          await _session.borrarSesion();
-          alExpirarSesion?.call();
-          return handler.next(e);
-        }
-        // Repetir la petición original una sola vez con el token nuevo
-        final opciones = e.requestOptions..headers['Authorization'] = 'Bearer $token';
-        try {
-          handler.resolve(await _plano.fetch(opciones));
-        } on DioException catch (err) {
-          handler.next(err);
-        }
-      },
-    ));
-    // Sin requestBody para no imprimir contraseñas en la consola
-    if (AppConfig.logHttp) dio.interceptors.add(LogInterceptor(responseBody: true));
+          final token = await _tokenVigente(e.requestOptions);
+          if (token == null) {
+            await _session.borrarSesion();
+            alExpirarSesion?.call();
+            return handler.next(e);
+          }
+          // Repetir la petición original una sola vez con el token nuevo
+          final opciones = e.requestOptions..headers['Authorization'] = 'Bearer $token';
+          try {
+            handler.resolve(await _plano.fetch(opciones));
+          } on DioException catch (err) {
+            handler.next(err);
+          }
+        },
+      ),
+    );
+    // Solo método, ruta, código y duración: nunca encabezados ni cuerpos con tokens o contraseñas
+    if (AppConfig.logHttp) dio.interceptors.add(BitacoraInterceptor());
   }
 
   final Dio dio;
@@ -57,6 +60,8 @@ class ApiClient {
     baseUrl: AppConfig.apiBaseUrl,
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 15),
+    // Para la subida de fotos a Cloudinary (RNF-05)
+    sendTimeout: const Duration(seconds: 30),
     contentType: Headers.jsonContentType,
   );
 
@@ -71,10 +76,7 @@ class ApiClient {
     final refresh = await _session.leerRefreshToken();
     if (refresh == null) return null;
     try {
-      final res = await _plano.post<Map<String, dynamic>>(
-        '/auth/refresh',
-        data: {'refreshToken': refresh},
-      );
+      final res = await _plano.post<Map<String, dynamic>>('/auth/refresh', data: {'refreshToken': refresh});
       final r = res.data!['result'] as Map<String, dynamic>;
       // Cada refresh token sirve una sola vez: hay que guardar el nuevo
       await _session.guardarSesion(r['jwt'] as String, r['refreshToken'] as String);
@@ -85,4 +87,3 @@ class ApiClient {
     }
   }
 }
-

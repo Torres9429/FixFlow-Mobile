@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 
+import '../../core/result.dart';
 import '../../domain/entities/tipo_incidencia.dart';
 import '../../domain/repositories/incidence_type_repository.dart';
+import '../datasources/remote/traducir_error.dart';
 
 class IncidenceTypeRepositoryImpl implements IncidenceTypeRepository {
   IncidenceTypeRepositoryImpl(this._dio);
@@ -9,24 +11,28 @@ class IncidenceTypeRepositoryImpl implements IncidenceTypeRepository {
   final Dio _dio;
 
   @override
-  Future<List<TipoIncidencia>> obtenerTipos() async {
-    final response = await _dio.get<dynamic>('/tipos-incidencia');
-    final raw = response.data;
-    final data = raw is Map<String, dynamic> ? raw['result'] : raw;
-    if (data is! List<dynamic>) {
-      throw const FormatException('El servidor no devolvió tipos de incidencia.');
+  Future<Result<List<TipoIncidencia>>> obtenerTipos() async {
+    try {
+      final res = await _dio.get<Map<String, dynamic>>('/tipos-incidencia');
+      final tipos = (res.data!['result'] as List<dynamic>)
+          .map((item) => _tipoDesde(item as Map<String, dynamic>))
+          .toList(growable: false);
+      return Result.ok(tipos);
+    } catch (e) {
+      return Result.error(traducirError(e));
     }
-
-    return data.map((item) {
-      if (item is! Map<String, dynamic>) {
-        throw const FormatException('Tipo de incidencia inválido.');
-      }
-      final id = item['id']?.toString();
-      final nombre = item['nombre']?.toString() ?? item['name']?.toString();
-      if (id == null || nombre == null || nombre.trim().isEmpty) {
-        throw const FormatException('Tipo de incidencia incompleto.');
-      }
-      return TipoIncidencia(id: id, nombre: nombre);
-    }).toList(growable: false);
   }
+
+  /// `{id, codigo, nombre, orientacion, prioridadBase, anguloMin, anguloMax}` (contrato-api, B2).
+  TipoIncidencia _tipoDesde(Map<String, dynamic> j) => TipoIncidencia(
+    id: (j['id'] as Object).toString(),
+    nombre: j['nombre'] as String,
+    codigo: j['codigo'] as String,
+    orientacion: switch (j['orientacion']) {
+      'SUELO' => OrientacionFoto.suelo,
+      'ARRIBA' => OrientacionFoto.arriba,
+      'SIN_RESTRICCION' => OrientacionFoto.sinRestriccion,
+      final otro => throw FormatException('Orientación desconocida: $otro'),
+    },
+  );
 }

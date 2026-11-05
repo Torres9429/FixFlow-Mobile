@@ -15,5 +15,7 @@ abstract interface class AuthRepository {
   });
 
   Future<void> cerrarSesion();
-}
 
+  /// Nombre del usuario con sesión, o `null` si no se guardó.
+  Future<String?> nombreUsuario();
+}

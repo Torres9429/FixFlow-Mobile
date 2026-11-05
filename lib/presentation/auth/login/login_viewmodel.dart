@@ -5,8 +5,10 @@ import '../../../domain/entities/rol.dart';
 import '../../../domain/entities/usuario.dart';
 import '../../../domain/errors/auth_failure.dart';
 import '../../../domain/repositories/auth_repository.dart';
+import '../../core/mensajes.dart';
+import '../../core/notificador_seguro.dart';
 
-class LoginViewModel extends ChangeNotifier {
+class LoginViewModel extends ChangeNotifier with NotificadorSeguro {
   LoginViewModel({required this._authRepository});
 
   final AuthRepository _authRepository;
@@ -34,7 +36,7 @@ class LoginViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('[FixFlow] Error inesperado al iniciar sesión: $e');
       // Red de seguridad: el botón nunca debe quedarse cargando
-      error = _mensaje(const ErrorDesconocido());
+      error = _mensaje(e);
     } finally {
       cargando = false;
       notifyListeners();
@@ -42,8 +44,7 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   String _mensaje(Object falla) => switch (falla) {
-        CredencialesInvalidas() => 'Correo o contraseña no válidos',
-        SinConexion() => 'Sin conexión. Intenta de nuevo.',
-        _ => 'Ocurrió un error. Intenta de nuevo.',
-      };
+    CredencialesInvalidas() => 'Correo o contraseña no válidos',
+    _ => mensajePara(falla),
+  };
 }
