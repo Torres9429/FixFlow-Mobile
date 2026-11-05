@@ -1,17 +1,23 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/result.dart';
+import '../../domain/entities/reporte_nuevo.dart';
 import '../../domain/entities/tipo_incidencia.dart';
+import '../../domain/repositories/evidencia_repository.dart';
 import '../../domain/repositories/incidence_type_repository.dart';
+import '../../domain/repositories/inclinacion_repository.dart';
+import '../../domain/repositories/reportes_ciudadano_repository.dart';
+import '../core/mensajes.dart';
 import '../core/theme/app_colors.dart';
-import 'orientacion/medir_orientacion_screen.dart';
-import '../routing/rutas.dart';
+import '../core/theme/app_theme.dart';
+import 'revision/revision_reporte_screen.dart';
+import 'revision/revision_reporte_viewmodel.dart';
 
+/// B2 Nuevo reporte, paso 1 de 2: tipo y descripción. La foto se toma al continuar.
 class NuevoReporteScreen extends StatefulWidget {
   const NuevoReporteScreen({super.key});
 
@@ -20,14 +26,16 @@ class NuevoReporteScreen extends StatefulWidget {
 }
 
 class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
+  static const _maxDescripcion = 500;
+
   final _formKey = GlobalKey<FormState>();
   final _descripcion = TextEditingController();
   final _picker = ImagePicker();
   List<TipoIncidencia> _tipos = const [];
   TipoIncidencia? _tipo;
   XFile? _foto;
+  DateTime? _capturadaEn;
   Position? _posicion;
-  double? _anguloOrientacion;
   bool _cargandoTipos = true;
   bool _cargandoUbicacion = true;
   String? _errorTipos;
@@ -48,21 +56,21 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   }
 
   Future<void> _cargarTipos() async {
-    try {
-      final tipos = await context.read<IncidenceTypeRepository>().obtenerTipos();
-      if (!mounted) return;
-      setState(() {
-        _tipos = tipos;
-        _cargandoTipos = false;
-        _errorTipos = null;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _cargandoTipos = false;
-        _errorTipos = 'No se pudieron cargar los tipos de incidencia.';
-      });
-    }
+    setState(() {
+      _cargandoTipos = true;
+      _errorTipos = null;
+    });
+    final res = await context.read<IncidenceTypeRepository>().obtenerTipos();
+    if (!mounted) return;
+    setState(() {
+      _cargandoTipos = false;
+      switch (res) {
+        case Ok(:final value):
+          _tipos = value;
+        case Error(error: final falla):
+          _errorTipos = mensajePara(falla);
+      }
+    });
   }
 
   Future<void> _cargarUbicacion() async {
@@ -93,25 +101,35 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     }
   }
 
-  Future<void> _capturarFoto() async {
+  Future<XFile?> _capturarFoto() async {
     try {
       final foto = await _picker.pickImage(source: ImageSource.camera, imageQuality: 85);
-      if (!mounted || foto == null) return;
-      setState(() => _foto = foto);
+      if (!mounted || foto == null) return null;
+      setState(() {
+        _foto = foto;
+        _capturadaEn = DateTime.now();
+      });
+      return foto;
     } catch (_) {
-      if (!mounted) return;
-      _mostrarAviso('No se pudo abrir la cámara. Verifica el permiso.');
+      if (mounted) _mostrarAviso('No se pudo abrir la cámara. Verifica el permiso.');
+      return null;
     }
-
   }
 
+  /// Si Android cerró la app mientras la cámara estaba abierta, recupera la foto tomada.
   Future<void> _recuperarFotoPerdida() async {
     try {
       final respuesta = await _picker.retrieveLostData();
       if (!mounted || respuesta.isEmpty) return;
       final archivos = respuesta.files;
       if (archivos != null && archivos.isNotEmpty) {
-        setState(() => _foto = archivos.first);
+        final recuperada = archivos.first;
+        final fecha = await recuperada.lastModified();
+        if (!mounted) return;
+        setState(() {
+          _foto = recuperada;
+          _capturadaEn = fecha;
+        });
         return;
       }
       if (respuesta.exception != null) {
@@ -126,192 +144,267 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
   }
 
-  void _revisar() {
+  /// Valida el paso 1, abre la cámara (o usa la foto recuperada) y pasa a revisar.
+  Future<void> _continuar() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    if (_foto == null) {
-      _mostrarAviso('Agrega evidencia fotográfica antes de continuar.');
-      return;
-    }
-    if (_posicion == null) {
-      _mostrarAviso('La ubicación GPS es obligatoria para enviar el reporte.');
-      return;
-    }
     final tipo = _tipo;
-    final foto = _foto;
+    if (tipo == null) return;
+
     final posicion = _posicion;
-    if (tipo == null || foto == null || posicion == null) {
-      _mostrarAviso('Completa el tipo, la evidencia y la ubicación antes de continuar.');
+    if (posicion == null) {
+      _mostrarAviso(
+        _cargandoUbicacion
+            ? 'Todavía estamos obteniendo tu ubicación. Intenta en un momento.'
+            : 'La ubicación GPS es obligatoria para enviar el reporte. Actívala e intenta de nuevo.',
+      );
+      if (_errorUbicacion != null) _cargarUbicacion();
       return;
     }
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => RevisionReporteScreen(
-        tipo: tipo,
-        descripcion: _descripcion.text.trim(),
-        foto: foto,
-        posicion: posicion,
+
+    // Se leen antes de los await para no usar el context después
+    final inclinacionRepository = context.read<InclinacionRepository>();
+    final evidenciaRepository = context.read<EvidenciaRepository>();
+    final reportesRepository = context.read<ReportesCiudadanoRepository>();
+
+    final foto = _foto ?? await _capturarFoto();
+    if (!mounted || foto == null) return;
+    // PROVISIONAL: con la cámara en vivo (#20/#23) la inclinación será la del momento del disparo
+    final inclinacion = await inclinacionRepository.leerInclinacion();
+    if (!mounted) return;
+
+    final reporte = ReporteNuevo(
+      tipo: tipo,
+      descripcion: _descripcion.text.trim(),
+      latitud: posicion.latitude,
+      longitud: posicion.longitude,
+      inclinacion: inclinacion,
+      rutaFoto: foto.path,
+      capturadaEn: _capturadaEn ?? DateTime.now(),
+    );
+    final repetirFoto = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider(
+          create: (_) => RevisionReporteViewModel(
+            reporte: reporte,
+            evidenciaRepository: evidenciaRepository,
+            reportesRepository: reportesRepository,
+          ),
+          child: const RevisionReporteScreen(),
+        ),
       ),
-    ));
+    );
+    if (!mounted) return;
+    // Al regresar de revisar, la siguiente vez se toma una foto nueva
+    setState(() => _foto = null);
+    // «Repetir foto» en B4: se vuelve a abrir la cámara con el mismo tipo y descripción
+    if (repetirFoto == true) await _continuar();
   }
 
   @override
   Widget build(BuildContext context) {
+    final texto = Theme.of(context).textTheme;
+    final tituloSeccion = texto.titleMedium?.copyWith(fontSize: 17, height: 24 / 17, fontWeight: FontWeight.w700);
+    final meta = texto.bodySmall?.copyWith(
+      fontSize: 13,
+      height: 18 / 13,
+      fontWeight: FontWeight.w500,
+      color: AppColors.textMuted,
+    );
+
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Regresar',
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        leading: IconButton(tooltip: 'Regresar', icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
         title: const Text('Nuevo reporte'),
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           children: [
-            Text('Tipo de incidencia', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 14),
+            Row(
+              children: [
+                Text('Paso 1 de 2', style: meta?.copyWith(fontWeight: FontWeight.w600)),
+                const Spacer(),
+                const _Progreso(),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text('Tipo de incidencia', style: tituloSeccion),
+            const SizedBox(height: 4),
+            Text(
+              'Selecciona la categoría que mejor describa la situación',
+              style: texto.bodyLarge?.copyWith(fontSize: 15, height: 22 / 15, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
             if (_cargandoTipos)
-              const Center(child: CircularProgressIndicator())
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: CircularProgressIndicator()),
+              )
             else if (_errorTipos != null)
               _ErrorRow(mensaje: _errorTipos!, onRetry: _cargarTipos)
-            else
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: _tipos.map((tipo) => ChoiceChip(
-                  key: Key('tipo_${tipo.id}'),
-                  label: Text(tipo.nombre),
-                  selected: _tipo?.id == tipo.id,
-                  onSelected: (_) => setState(() => _tipo = tipo),
-                )).toList(),
-              ),
-            if (!_cargandoTipos && _errorTipos == null)
+            else ...[
+              _TipoElegido(tipo: _tipo),
+              const SizedBox(height: 12),
+              _CuadriculaTipos(tipos: _tipos, elegido: _tipo, onElegir: (tipo) => setState(() => _tipo = tipo)),
               FormField<TipoIncidencia>(
-                initialValue: _tipo,
                 validator: (_) => _tipo == null ? 'Selecciona un tipo de incidencia' : null,
                 builder: (field) => field.hasError
                     ? Padding(
-                        padding: const EdgeInsets.only(top: 8, left: 12),
-                        child: Text(field.errorText!, style: TextStyle(color: AppColors.error)),
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(field.errorText!, style: meta?.copyWith(color: AppColors.error)),
                       )
                     : const SizedBox.shrink(),
               ),
-            const SizedBox(height: 30),
+            ],
+            const SizedBox(height: 32),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Evidencia', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                TextButton.icon(
-                  onPressed: _capturarFoto,
-                  icon: const Icon(Icons.camera_alt_outlined),
-                  label: Text(_foto == null ? 'Abrir cámara' : 'Repetir captura'),
+                Expanded(child: Text('Descripción', style: tituloSeccion)),
+                Text('Obligatoria', style: meta),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _CampoDescripcion(controller: _descripcion, maximo: _maxDescripcion),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: Text('Sé específico para facilitar la atención', style: meta)),
+                ValueListenableBuilder(
+                  valueListenable: _descripcion,
+                  builder: (_, valor, _) => Text(
+                    '${valor.text.length}/$_maxDescripcion',
+                    style: meta?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            _EvidencePreview(foto: _foto, onTap: _capturarFoto),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () async {
-                  final mediciones = await Navigator.of(context).push<Map<String, double>>(
-                    MaterialPageRoute(builder: (_) => const MedirOrientacionScreen()),
-                  );
-                  if (!mounted || mediciones == null || mediciones.isEmpty) return;
-                  setState(() {
-                    _anguloOrientacion = mediciones['suelo'] ??
-                        mediciones['frente'] ??
-                        mediciones['arriba'];
-                  });
-                },
-                icon: const Icon(Icons.screen_rotation_alt_outlined),
-                label: const Text('Medir orientación del teléfono'),
-              ),
-            ),
-            const SizedBox(height: 18),
-            _StatusRow(
-              label: 'Tomada con la cámara',
-              value: _foto == null ? 'Pendiente' : 'Capturada',
-              ok: _foto != null,
-            ),
-            _StatusRow(
-              label: 'Orientación',
-              value: _anguloOrientacion == null
-                  ? 'Pendiente'
-                  : '${_anguloOrientacion!.toStringAsFixed(1)}°',
-              ok: _anguloOrientacion != null,
-            ),
-            _StatusRow(label: 'Ubicación GPS', value: _cargandoUbicacion ? 'Obteniendo…' : _posicion == null ? 'No disponible' : '${_posicion!.latitude.toStringAsFixed(4)}, ${_posicion!.longitude.toStringAsFixed(4)}', ok: _posicion != null),
-            if (_errorUbicacion != null)
-              TextButton.icon(onPressed: _cargarUbicacion, icon: const Icon(Icons.refresh), label: const Text('Reintentar ubicación')),
-            const SizedBox(height: 22),
-            Text('Descripción del problema', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 10),
-            TextFormField(
-              key: const Key('reporte_descripcion'),
-              controller: _descripcion,
-              minLines: 4,
-              maxLines: 6,
-              maxLength: 500,
-              validator: (value) => value == null || value.trim().isEmpty ? 'Campo obligatorio' : null,
-              decoration: const InputDecoration(hintText: 'Describe el problema con el mayor detalle posible.'),
-            ),
-            const SizedBox(height: 4),
-            Text('La fecha y hora se registran automáticamente al enviar.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted)),
-            const SizedBox(height: 28),
-            FilledButton(
-              key: const Key('reporte_revisar_enviar'),
-              onPressed: _revisar,
-              child: const Text('Revisar y enviar'),
+            const SizedBox(height: 24),
+            // Aviso corto de lo que sigue; el detalle de la captura vive en la cámara
+            Row(
+              children: [
+                const Icon(Icons.photo_camera_outlined, size: 20, color: AppColors.textSecondary),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Al continuar se abre la cámara con guía de inclinación y GPS.', style: meta)),
+              ],
             ),
           ],
+        ),
+      ),
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(color: AppColors.surface, boxShadow: AppTheme.sombraBarraInferior),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: FilledButton(
+              key: const Key('reporte_revisar_enviar'),
+              onPressed: _continuar,
+              child: const Text('Continuar a captura'),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class RevisionReporteScreen extends StatelessWidget {
-  const RevisionReporteScreen({super.key, required this.tipo, required this.descripcion, required this.foto, required this.posicion});
-
-  final TipoIncidencia tipo;
-  final String descripcion;
-  final XFile foto;
-  final Position posicion;
+/// Barra de pasos: el paso 1 largo y en azul, el 2 corto y gris.
+class _Progreso extends StatelessWidget {
+  const _Progreso();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Revisar reporte')),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
+    Widget paso(double ancho, Color color) => Container(
+      width: ancho,
+      height: 6,
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(999)),
+    );
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [paso(28, AppColors.primary), const SizedBox(width: 6), paso(8, AppColors.borderSubtle)],
+    );
+  }
+}
+
+/// Icono de cada tipo del catálogo; los tipos nuevos usan el genérico.
+IconData _iconoTipo(String codigo) => switch (codigo) {
+  'BACHE' => Icons.texture,
+  'LUMINARIA' => Icons.lightbulb_outline,
+  'FUGA_AGUA' => Icons.water_drop_outlined,
+  'COLADERA' => Icons.grid_on,
+  'ARBOL_CAIDO' => Icons.park_outlined,
+  'SENALAMIENTO' => Icons.signpost_outlined,
+  'BANQUETA' => Icons.directions_walk,
+  'BASURA' => Icons.delete_outline,
+  _ => Icons.report_outlined,
+};
+
+String _pistaOrientacion(OrientacionFoto orientacion) => switch (orientacion) {
+  OrientacionFoto.suelo => 'La foto se toma apuntando hacia el suelo',
+  OrientacionFoto.arriba => 'La foto se toma apuntando hacia arriba',
+  OrientacionFoto.sinRestriccion => 'Cualquier ángulo; la inclinación se guarda con la foto',
+};
+
+/// Tarjeta con el tipo elegido y cómo se tomará la foto.
+class _TipoElegido extends StatelessWidget {
+  const _TipoElegido({required this.tipo});
+
+  final TipoIncidencia? tipo;
+
+  @override
+  Widget build(BuildContext context) {
+    final texto = Theme.of(context).textTheme;
+    final tipo = this.tipo;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+        boxShadow: AppTheme.sombra,
+      ),
+      child: Row(
         children: [
-          Text('Confirma la información', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 20),
-          _ReviewItem(label: 'Tipo de incidencia', value: tipo.nombre),
-          _ReviewItem(label: 'Descripción', value: descripcion),
-          _ReviewItem(label: 'Ubicación GPS', value: '${posicion.latitude}, ${posicion.longitude}'),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Image.file(File(foto.path), height: 190, fit: BoxFit.cover),
-          ),
-          const SizedBox(height: 26),
-          FilledButton(
-            key: const Key('reporte_confirmar'),
-            onPressed: () {
-              final id = 'INC-${DateTime.now().microsecondsSinceEpoch}';
-              showDialog<void>(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => AlertDialog(
-                  title: const Text('Reporte enviado'),
-                  content: Text('Tu reporte fue registrado con el identificador $id.'),
-                  actions: [TextButton(onPressed: () => context.go(Rutas.homeCiudadano), child: const Text('Aceptar'))],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tipo?.nombre ?? 'Ningún tipo elegido',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: texto.titleMedium?.copyWith(
+                    fontSize: 16,
+                    height: 22 / 16,
+                    fontWeight: FontWeight.w700,
+                    color: tipo == null ? AppColors.textMuted : AppColors.textPrimary,
+                  ),
                 ),
-              );
-            },
-            child: const Text('Confirmar y enviar'),
+                const SizedBox(height: 4),
+                Text(
+                  tipo == null ? 'Elige una opción de la lista' : _pistaOrientacion(tipo.orientacion),
+                  style: texto.bodySmall?.copyWith(
+                    fontSize: 13,
+                    height: 18 / 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(color: AppColors.surfaceMuted, shape: BoxShape.circle),
+            child: Icon(
+              tipo == null ? Icons.category_outlined : _iconoTipo(tipo.codigo),
+              size: 22,
+              color: AppColors.primary,
+            ),
           ),
         ],
       ),
@@ -319,42 +412,125 @@ class RevisionReporteScreen extends StatelessWidget {
   }
 }
 
-class _EvidencePreview extends StatelessWidget {
-  const _EvidencePreview({required this.foto, required this.onTap});
-  final XFile? foto;
+/// Cuadrícula de 2 columnas con todos los tipos activos.
+class _CuadriculaTipos extends StatelessWidget {
+  const _CuadriculaTipos({required this.tipos, required this.elegido, required this.onElegir});
+
+  final List<TipoIncidencia> tipos;
+  final TipoIncidencia? elegido;
+  final ValueChanged<TipoIncidencia> onElegir;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, restricciones) {
+        final ancho = (restricciones.maxWidth - 8) / 2;
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final tipo in tipos)
+              SizedBox(
+                width: ancho,
+                child: _ChipTipo(tipo: tipo, activo: tipo.id == elegido?.id, onTap: () => onElegir(tipo)),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ChipTipo extends StatelessWidget {
+  const _ChipTipo({required this.tipo, required this.activo, required this.onTap});
+
+  final TipoIncidencia tipo;
+  final bool activo;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: SizedBox(
-            height: 190,
-            child: foto == null
-                ? Container(
-                    color: AppColors.primaryDark,
-                    child: const Center(child: Icon(Icons.camera_alt_outlined, color: Colors.white, size: 46)),
-                  )
-                : Image.file(File(foto!.path), fit: BoxFit.cover),
+  Widget build(BuildContext context) {
+    final radio = BorderRadius.circular(12);
+    final color = activo ? Colors.white : AppColors.textPrimary;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: radio, boxShadow: AppTheme.sombra),
+      child: Material(
+        color: activo ? AppColors.primary : AppColors.surface,
+        borderRadius: radio,
+        child: InkWell(
+          key: Key('tipo_${tipo.id}'),
+          borderRadius: radio,
+          onTap: onTap,
+          child: Semantics(
+            selected: activo,
+            child: SizedBox(
+              height: 48,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(_iconoTipo(tipo.codigo), size: 18, color: activo ? Colors.white : AppColors.textSecondary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        tipo.nombre,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
-class _StatusRow extends StatelessWidget {
-  const _StatusRow({required this.label, required this.value, required this.ok});
-  final String label;
-  final String value;
-  final bool ok;
+/// Descripción en una tarjeta blanca, sin borde de campo; el contador va afuera.
+class _CampoDescripcion extends StatelessWidget {
+  const _CampoDescripcion({required this.controller, required this.maximo});
+
+  final TextEditingController controller;
+  final int maximo;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: Icon(ok ? Icons.check_circle : Icons.radio_button_unchecked, color: ok ? AppColors.resuelta : AppColors.textMuted),
-    title: Text(label),
-    trailing: Text(value, style: TextStyle(color: ok ? AppColors.textSecondary : AppColors.textMuted)),
-  );
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+        boxShadow: AppTheme.sombra,
+      ),
+      child: TextFormField(
+        key: const Key('reporte_descripcion'),
+        controller: controller,
+        minLines: 3,
+        maxLines: 6,
+        maxLength: maximo,
+        textCapitalization: TextCapitalization.sentences,
+        validator: (value) => value == null || value.trim().isEmpty ? 'Campo obligatorio' : null,
+        decoration: const InputDecoration(
+          hintText: 'Añade detalles relevantes como referencias visuales…',
+          filled: false,
+          isDense: true,
+          contentPadding: EdgeInsets.zero,
+          counterText: '',
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+          focusedErrorBorder: InputBorder.none,
+        ),
+      ),
+    );
+  }
 }
 
 class _ErrorRow extends StatelessWidget {
@@ -363,24 +539,12 @@ class _ErrorRow extends StatelessWidget {
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-        Expanded(child: Text(mensaje, style: const TextStyle(color: AppColors.error))),
-        IconButton(onPressed: onRetry, icon: const Icon(Icons.refresh)),
-      ]);
-}
-
-class _ReviewItem extends StatelessWidget {
-  const _ReviewItem({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.textMuted)),
-          const SizedBox(height: 4),
-          Text(value, style: Theme.of(context).textTheme.bodyLarge),
-        ]),
-      );
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Text(mensaje, style: const TextStyle(color: AppColors.error)),
+      ),
+      IconButton(tooltip: 'Reintentar', onPressed: onRetry, icon: const Icon(Icons.refresh)),
+    ],
+  );
 }
