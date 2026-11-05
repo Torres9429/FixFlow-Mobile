@@ -6,6 +6,7 @@ class SessionStorage {
 
   static const _claveToken = 'token';
   static const _claveRefresh = 'refreshToken';
+  static const _claveNombre = 'nombre';
 
   final FlutterSecureStorage _storage;
 
@@ -22,9 +23,15 @@ class SessionStorage {
 
   Future<String?> leerRefreshToken() => _storage.read(key: _claveRefresh);
 
+  /// Nombre del usuario para el saludo de las homes («Hola, Ana»).
+  Future<void> guardarNombre(String nombre) => _storage.write(key: _claveNombre, value: nombre);
+
+  Future<String?> leerNombre() => _storage.read(key: _claveNombre);
+
   Future<void> borrarSesion() async {
     await _storage.delete(key: _claveToken);
     await _storage.delete(key: _claveRefresh);
+    await _storage.delete(key: _claveNombre);
   }
 
 }

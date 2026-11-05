@@ -7,6 +7,7 @@ import '../../../domain/validators/campos_validators.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/campo_texto.dart';
+import '../../core/widgets/logo_fixflow.dart';
 import '../../routing/home_por_rol.dart';
 import '../../routing/rutas.dart';
 import 'login_viewmodel.dart';
@@ -209,16 +210,7 @@ class _Marca extends StatelessWidget {
 
     return Column(
       children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: AppTheme.sombra,
-          ),
-          child: const Icon(Icons.build_outlined, size: 18, color: Colors.white),
-        ),
+        const LogoFixFlow(conSombra: true),
         const SizedBox(height: 12),
         Text(
           'FixFlow',

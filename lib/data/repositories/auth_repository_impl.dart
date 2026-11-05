@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/result.dart';
 import '../../domain/entities/usuario.dart';
-import '../../domain/errors/auth_failure.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/local/session_storage.dart';
 import '../datasources/remote/auth_remote_datasource.dart';
@@ -21,10 +20,11 @@ class AuthRepositoryImpl implements AuthRepository {
       case Ok(:final value):
         try {
           await _session.guardarSesion(value.token, value.refreshToken);
+          await _session.guardarNombre(value.nombre);
         } catch (e) {
           debugPrint('[FixFlow] No se pudo guardar el token: $e');
           // Sin token guardado no hay sesión: no se deja entrar
-          return const Result.error(ErrorDesconocido());
+          return Result.error(e);
         }
         return Result.ok(value.toEntity());
       case Error(:final error):
@@ -62,6 +62,16 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e) {
       debugPrint('[FixFlow] No se pudo borrar la sesión: $e');
       // El usuario siempre debe poder salir, aunque falle el almacenamiento
+    }
+  }
+
+  @override
+  Future<String?> nombreUsuario() async {
+    try {
+      return await _session.leerNombre();
+    } catch (e) {
+      debugPrint('[FixFlow] No se pudo leer el nombre: $e');
+      return null;
     }
   }
 }

@@ -7,6 +7,7 @@ import '../../../domain/validators/campos_validators.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/campo_texto.dart';
+import '../../core/widgets/logo_fixflow.dart';
 import '../../routing/rutas.dart';
 import 'registro_viewmodel.dart';
 
@@ -161,7 +162,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
                                   key: const Key('registro_ver_password'),
                                   tooltip: _passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña',
                                   color: AppColors.textSecondary,
-                                  icon: Icon(_passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                                  icon: Icon(
+                                    _passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  ),
                                   onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
                                 ),
                               ),
@@ -183,7 +186,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
                                   key: const Key('registro_ver_confirmar'),
                                   tooltip: _confirmarVisible ? 'Ocultar contraseña' : 'Mostrar contraseña',
                                   color: AppColors.textSecondary,
-                                  icon: Icon(_confirmarVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                                  icon: Icon(
+                                    _confirmarVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  ),
                                   onPressed: () => setState(() => _confirmarVisible = !_confirmarVisible),
                                 ),
                               ),
@@ -194,10 +199,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                             builder: (context, vm, _) => Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                if (vm.error != null) ...[
-                                  _AvisoError(mensaje: vm.error!),
-                                  const SizedBox(height: 16),
-                                ],
+                                if (vm.error != null) ...[_AvisoError(mensaje: vm.error!), const SizedBox(height: 16)],
                                 FilledButton(
                                   key: const Key('registro_crear'),
                                   onPressed: vm.cargando ? null : _crearCuenta,
@@ -224,10 +226,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                       '¿Ya tienes cuenta?',
                       style: text.bodyLarge?.copyWith(fontSize: 15, color: AppColors.textSecondary),
                     ),
-                    TextButton(
-                      onPressed: () => context.go(Rutas.login),
-                      child: const Text('Inicia sesión'),
-                    ),
+                    TextButton(onPressed: () => context.go(Rutas.login), child: const Text('Inicia sesión')),
                   ],
                 ),
               ],
@@ -248,10 +247,7 @@ class _AvisoError extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.prioridadAltaBg,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: AppColors.prioridadAltaBg, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           const Icon(Icons.error_outline, size: 20, color: AppColors.error),
@@ -259,10 +255,8 @@ class _AvisoError extends StatelessWidget {
           Expanded(
             child: Text(
               mensaje,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.error,
-                  ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600, color: AppColors.error),
             ),
           ),
         ],
@@ -281,16 +275,7 @@ class _Marca extends StatelessWidget {
 
     return Column(
       children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: AppTheme.sombra,
-          ),
-          child: const Icon(Icons.build_outlined, size: 18, color: Colors.white),
-        ),
+        const LogoFixFlow(conSombra: true),
         const SizedBox(height: 12),
         Text(
           'FixFlow',

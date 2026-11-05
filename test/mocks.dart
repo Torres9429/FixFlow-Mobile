@@ -1,10 +1,19 @@
 // Mocks compartidos por las pruebas de interfaz e integración
 
+import 'package:fix_flow/domain/repositories/admin_repository.dart';
 import 'package:fix_flow/domain/repositories/auth_repository.dart';
+import 'package:fix_flow/domain/repositories/evidencia_repository.dart';
+import 'package:fix_flow/domain/repositories/reportes_ciudadano_repository.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
+class MockReportesCiudadanoRepository extends Mock implements ReportesCiudadanoRepository {}
+
+class MockAdminRepository extends Mock implements AdminRepository {}
+
+class MockEvidenciaRepository extends Mock implements EvidenciaRepository {}
 
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
@@ -14,7 +23,12 @@ MockSecureStorage crearStorageEnMemoria() {
   final datos = <String, String>{};
   final storage = MockSecureStorage();
 
-  when(() => storage.write(key: any(named: 'key'), value: any(named: 'value'))).thenAnswer((inv) async {
+  when(
+    () => storage.write(
+      key: any(named: 'key'),
+      value: any(named: 'value'),
+    ),
+  ).thenAnswer((inv) async {
     final clave = inv.namedArguments[#key] as String;
     final valor = inv.namedArguments[#value] as String?;
     if (valor == null) {
@@ -23,8 +37,7 @@ MockSecureStorage crearStorageEnMemoria() {
       datos[clave] = valor;
     }
   });
-  when(() => storage.read(key: any(named: 'key')))
-      .thenAnswer((inv) async => datos[inv.namedArguments[#key] as String]);
+  when(() => storage.read(key: any(named: 'key'))).thenAnswer((inv) async => datos[inv.namedArguments[#key] as String]);
   when(() => storage.delete(key: any(named: 'key')))
       .thenAnswer((inv) async => datos.remove(inv.namedArguments[#key] as String));
 

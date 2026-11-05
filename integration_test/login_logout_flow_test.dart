@@ -4,10 +4,10 @@ import 'package:fix_flow/app.dart';
 import 'package:fix_flow/data/datasources/local/session_storage.dart';
 import 'package:fix_flow/data/datasources/remote/fake_auth_remote_datasource.dart';
 import 'package:fix_flow/data/repositories/auth_repository_impl.dart';
+import 'package:fix_flow/presentation/admin/admin_shell.dart';
 import 'package:fix_flow/presentation/auth/login/login_screen.dart';
-import 'package:fix_flow/presentation/home/home_admin_screen.dart';
-import 'package:fix_flow/presentation/home/home_ciudadano_screen.dart';
-import 'package:fix_flow/presentation/home/home_operativo_screen.dart';
+import 'package:fix_flow/presentation/ciudadano/ciudadano_shell.dart';
+import 'package:fix_flow/presentation/operativo/operativo_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -19,15 +19,16 @@ void main() {
   // Conecta el motor de pruebas con el emulador: es OBLIGATORIO
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  // Cuenta demo del back simulado → home a la que debe llegar
-  const flujos = {
-    'ciudadano@fixflow.mx': HomeCiudadanoScreen,
-    'operativo@fixflow.mx': HomeOperativoScreen,
-    'admin@fixflow.mx': HomeAdminScreen,
+  // Cuenta demo del back simulado → estructura de su rol y cómo se llega al perfil
+  final flujos = {
+    'ciudadano@fixflow.mx': (CiudadanoShell, find.byKey(const Key('abrir_perfil'))),
+    'operativo@fixflow.mx': (OperativoShell, find.byKey(const Key('abrir_perfil'))),
+    // El admin tiene el perfil como pestaña
+    'admin@fixflow.mx': (AdminShell, find.text('Perfil')),
   };
 
   group('HU-02: Login y cierre de sesión de punta a punta', () {
-    for (final MapEntry(key: correo, value: home) in flujos.entries) {
+    for (final MapEntry(key: correo, value: (home, irAPerfil)) in flujos.entries) {
       testWidgets('$correo: login → su home → cerrar sesión → login y la sesión queda borrada', (tester) async {
         // Repositorio real con el back simulado; el token va a un almacenamiento en memoria NUEVO
         final storage = crearStorageEnMemoria();
@@ -49,7 +50,9 @@ void main() {
         expect(await session.leerToken(), isNotNull);
         expect(await session.leerRefreshToken(), isNotNull);
 
-        // PASO 3: cerrar sesión regresa al login y borra los dos tokens
+        // PASO 3: desde el perfil, cerrar sesión regresa al login y borra los dos tokens
+        await tester.tap(irAPerfil);
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const Key('cerrar_sesion')));
         await tester.pumpAndSettle();
 

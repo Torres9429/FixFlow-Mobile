@@ -24,6 +24,10 @@ Se corrigen al integrar cada pantalla con el back:
 - **Sesión:** el interceptor de `ApiClient` agrega `Authorization: Bearer <jwt>` (ya lo hace con `token`) y, ante un 401, intenta `POST /auth/refresh` una vez antes de mandar al login.
 - **Cerrar sesión (A3c):** llamar a `POST /auth/logout` con el `refreshToken` y después borrar la sesión local.
 
+### Cambios pendientes en el back
+
+- **Filtro de B1 (HU-10):** `GET /incidencias/mias` debe aceptar `?estado=` con los mismos valores de RN-14, igual que `/operativo/incidencias`. Hoy el back ignora el parámetro y devuelve todos los reportes. Hasta que se agregue, el filtro solo funciona en el modo mock.
+
 ## Fotos (RNF-05)
 
 1. `POST /evidencias/firma` con `{"tipo": "REPORTE"}` (ciudadano) o `{"tipo": "SOLUCION"}` (operativo) → `{cloudName, apiKey, timestamp, folder, signature}`.
@@ -40,10 +44,10 @@ Se corrigen al integrar cada pantalla con el back:
 | Renovar sesión (interceptor) | `POST /auth/refresh` | `{refreshToken}` | Igual que el login · 401 → login |
 | A3c Cerrar sesión | `POST /auth/logout` | `{refreshToken}` | Mensaje |
 | A3 Perfil · A3a Editar datos · A3b Contraseña (HU-25) | `PUT /usuarios/me` · `PATCH /usuarios/me/password` | `{nombre, apellidos}` · `{actual, nueva}` | Usuario · mensaje |
-| Catálogo de tipos (HU-26, sin pantalla aún) | `GET /admin/tipos-incidencia` · `POST /admin/tipos-incidencia` · `PUT /admin/tipos-incidencia/{id}` · `PATCH /admin/tipos-incidencia/{id}/estatus` | `{codigo?, nombre, orientacion, prioridadBase}` (`codigo` opcional al crear, se genera del nombre; se ignora en el PUT) · `{activo}` | Tipo, con `incidencias`: cuántas lo usan (E12) |
+| E10 Catálogo · E11 Nuevo tipo · E12 Editar tipo (HU-26) | `GET /admin/tipos-incidencia` · `POST /admin/tipos-incidencia` · `PUT /admin/tipos-incidencia/{id}` · `PATCH /admin/tipos-incidencia/{id}/estatus` | `{codigo?, nombre, orientacion, prioridadBase}` (`codigo` opcional al crear, se genera del nombre; se ignora en el PUT) · `{activo}` | Tipo, con `incidencias`: cuántas lo usan (E10) |
 | B2 Nuevo reporte / B3 Cámara | `GET /tipos-incidencia` | — | `[{id, codigo, nombre, orientacion, prioridadBase, anguloMin, anguloMax}]`. La cámara pinta la zona verde y activa el botón cuando la inclinación queda entre `anguloMin` y `anguloMax` (RN-11); son los mismos valores con los que el servidor valida |
 | B3/B4 Enviar | `POST /evidencias/firma` → Cloudinary → `POST /incidencias` | `{tipoId, descripcion, latitud, longitud, inclinacion, fotoUrl}` | Detalle con `folio` (B5) · 422 → repetir captura (B3b, B7) |
-| B1 Mis reportes | `GET /incidencias/mias` | — | Página de resúmenes `{id, folio, tipo, tipoCodigo, estado, prioridad, motivoPrioridad, latitud, longitud, operativo, fechaCreacion, ultimaActualizacion, fotoUrl}`; `fotoUrl` es la miniatura de la foto del reporte |
+| B1 Mis reportes | `GET /incidencias/mias?estado` (`estado` pendiente en el back) | — | Página de resúmenes `{id, folio, tipo, tipoCodigo, estado, prioridad, motivoPrioridad, latitud, longitud, operativo, fechaCreacion, ultimaActualizacion, fotoUrl}`; `fotoUrl` es la miniatura de la foto del reporte |
 | C2 / D2 / E4 Detalle | `GET /incidencias/{id}` | — | Detalle (el operativo recibe `ciudadano: null`) |
 | Historial | `GET /incidencias/{id}/historial` | — | Lista cronológica |
 | C2 Confirmar | `POST /incidencias/{id}/confirmacion` | — | Detalle en `CERRADA` |
