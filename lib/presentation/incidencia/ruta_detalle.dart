@@ -9,8 +9,10 @@ import 'vista_detalle.dart';
 
 /// Subruta `:id` del detalle. Cada rol la cuelga de su home en su propio archivo de rutas,
 /// así el detalle se abre dentro de la pestaña y conserva la barra inferior.
-GoRoute rutaDetalle(VistaDetalle vista) => GoRoute(
+/// [acciones] son las pantallas que se abren desde la barra de acciones (E5 para el admin).
+GoRoute rutaDetalle(VistaDetalle vista, {List<RouteBase> acciones = const []}) => GoRoute(
   path: ':id',
+  routes: acciones,
   builder: (context, state) => ChangeNotifierProvider(
     create: (context) => DetalleIncidenciaViewModel(
       // Un id que no es número termina en «No encontramos lo que buscabas» (404 del back)

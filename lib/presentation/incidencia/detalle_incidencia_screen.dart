@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../core/estado_consulta.dart';
 import '../core/widgets/esqueleto_tarjetas.dart';
 import '../core/widgets/estado_vacio.dart';
+import '../routing/rutas.dart';
 import 'detalle_incidencia_viewmodel.dart';
+import 'secciones/barra_acciones.dart';
 import 'secciones/encabezado_detalle.dart';
 import 'secciones/fotos_detalle.dart';
 import 'secciones/historial_detalle.dart';
@@ -24,6 +27,22 @@ class DetalleIncidenciaScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(vm.vista.titulo)),
+      // Sin acción válida no hay barra (design.md §7)
+      bottomNavigationBar: Consumer<DetalleIncidenciaViewModel>(
+        builder: (context, vm, _) => vm.puedeAsignar
+            ? BarraAcciones(
+                primario: FilledButton(
+                  key: const Key('detalle_asignar'),
+                  onPressed: () async {
+                    await context.push(Rutas.asignarAdmin(vm.id));
+                    // Al volver de E5 la incidencia ya puede estar Asignada
+                    await vm.iniciar();
+                  },
+                  child: const Text('Asignar'),
+                ),
+              )
+            : const SizedBox.shrink(),
+      ),
       body: Consumer<DetalleIncidenciaViewModel>(
         builder: (context, vm, _) => switch (vm.estado) {
           Cargando() => const Padding(padding: EdgeInsets.all(20), child: EsqueletoTarjetas()),

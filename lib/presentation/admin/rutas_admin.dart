@@ -28,7 +28,18 @@ List<RouteBase> rutasAdmin() => [
               )..iniciar(),
               child: const PanelScreen(),
             ),
-            routes: [rutaDetalle(VistaDetalle.admin)],
+            routes: [
+              rutaDetalle(
+                VistaDetalle.admin,
+                acciones: [
+                  // E5 lo construye la tarjeta «Asignar y reasignar»; aquí solo se reemplaza el builder
+                  GoRoute(
+                    path: 'asignar',
+                    builder: (context, state) => const PestanaPendiente(titulo: 'Asignar', codigo: 'E5'),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),

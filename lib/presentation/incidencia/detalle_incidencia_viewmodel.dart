@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/result.dart';
+import '../../domain/entities/estado_incidencia.dart';
 import '../../domain/entities/evento_historial.dart';
 import '../../domain/entities/incidencia_detalle.dart';
 import '../../domain/repositories/direccion_repository.dart';
@@ -39,6 +40,12 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
 
   /// Solo el admin ve quién reportó (RNF-04). Al ciudadano no le sirve ver su propio nombre.
   bool get mostrarCiudadano => vista == VistaDetalle.admin;
+
+  /// El admin asigna desde el detalle, solo mientras está Pendiente (design.md §2, Quién puede hacer qué).
+  bool get puedeAsignar => switch (estado) {
+    Listo(:final datos) => vista == VistaDetalle.admin && datos.detalle.resumen.estado == EstadoIncidencia.pendiente,
+    _ => false,
+  };
 
   List<EventoHistorial> get _historial => switch (estado) {
     Listo(:final datos) => datos.historial,
