@@ -13,9 +13,12 @@ import '../../routing/rutas.dart';
 import 'login_viewmodel.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.cuentaCreada = false});
+  const LoginScreen({super.key, this.cuentaCreada = false, this.sesionVencida = false});
 
   final bool cuentaCreada;
+
+  /// Se llegó aquí porque la sesión venció y no se pudo renovar (RNF-09).
+  final bool sesionVencida;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -86,6 +89,32 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             'Cuenta creada',
                             style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: AppColors.resuelta),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (widget.sesionVencida) ...[
+                  Container(
+                    key: const Key('login_sesion_vencida'),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.prioridadMediaBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock_clock_outlined, size: 20, color: AppColors.prioridadMedia),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Tu sesión terminó. Inicia sesión de nuevo.',
+                            style: text.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.prioridadMedia,
+                            ),
                           ),
                         ),
                       ],

@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../domain/repositories/admin_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../core/widgets/pestana_pendiente.dart';
+import '../incidencia/ruta_detalle.dart';
+import '../incidencia/vista_detalle.dart';
 import '../perfil/perfil_screen.dart';
 import '../routing/rutas.dart';
 import 'admin_shell.dart';
@@ -26,6 +28,7 @@ List<RouteBase> rutasAdmin() => [
               )..iniciar(),
               child: const PanelScreen(),
             ),
+            routes: [rutaDetalle(VistaDetalle.admin)],
           ),
         ],
       ),

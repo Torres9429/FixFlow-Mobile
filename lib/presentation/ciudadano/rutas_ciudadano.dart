@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/reportes_ciudadano_repository.dart';
 import '../core/widgets/pestana_pendiente.dart';
+import '../incidencia/ruta_detalle.dart';
+import '../incidencia/vista_detalle.dart';
 import '../routing/rutas.dart';
 import 'ciudadano_shell.dart';
 import 'mis_reportes/mis_reportes_screen.dart';
@@ -28,6 +30,7 @@ List<RouteBase> rutasCiudadano() => [
               )..iniciar(),
               child: const MisReportesScreen(),
             ),
+            routes: [rutaDetalle(VistaDetalle.ciudadano)],
           ),
         ],
       ),

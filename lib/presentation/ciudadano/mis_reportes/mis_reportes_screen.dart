@@ -94,7 +94,11 @@ class MisReportesScreen extends StatelessWidget {
     return [
       ...conSeparacion(
         vm.reportes.map(
-          (r) => IncidenciaCard(incidencia: r, meta: '${r.folio} · ${formatearFechaCorta(r.ultimaActualizacion)}'),
+          (r) => IncidenciaCard(
+            incidencia: r,
+            meta: '${r.folio} · ${formatearFechaCorta(r.ultimaActualizacion)}',
+            onTap: () => context.push(Rutas.detalleCiudadano(r.id)),
+          ),
         ),
       ),
       if (vm.cargandoMas)

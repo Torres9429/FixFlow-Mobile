@@ -11,5 +11,16 @@ String formatearFechaCorta(DateTime fecha, {DateTime? ahora}) {
 
   if (dias == 0) return 'hoy, $hora';
   if (dias == 1) return 'ayer, $hora';
-  return '${fecha.day} ${_meses[fecha.month - 1]} ${fecha.year}, $hora';
+  return formatearFechaLarga(fecha);
+}
+
+/// Fecha completa del encabezado y las fotos del detalle: «28 oct 2026, 09:15».
+String formatearFechaLarga(DateTime fecha) =>
+    '${fecha.day} ${_meses[fecha.month - 1]} ${fecha.year}, ${_dosDigitos(fecha.hour)}:${_dosDigitos(fecha.minute)}';
+
+/// Fecha del historial (design.md §7): «hoy, 14:00», «ayer, 14:00» o «29 oct, 14:00».
+String formatearFechaSinAnio(DateTime fecha, {DateTime? ahora}) {
+  final corta = formatearFechaCorta(fecha, ahora: ahora);
+  if (corta.startsWith('hoy') || corta.startsWith('ayer')) return corta;
+  return '${fecha.day} ${_meses[fecha.month - 1]}, ${_dosDigitos(fecha.hour)}:${_dosDigitos(fecha.minute)}';
 }
