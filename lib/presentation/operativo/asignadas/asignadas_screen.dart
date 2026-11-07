@@ -52,19 +52,19 @@ class AsignadasScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
           ],
-          contenido: _contenido(vm),
+          contenido: _contenido(context, vm),
         ),
       ),
     );
   }
 
-  List<Widget> _contenido(AsignadasViewModel vm) => switch (vm.estado) {
+  List<Widget> _contenido(BuildContext context, AsignadasViewModel vm) => switch (vm.estado) {
     Cargando() => const [Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: EsqueletoTarjetas())],
     ConError(:final mensaje) => [EstadoVacio.error(mensaje: mensaje, onReintentar: vm.cargar)],
-    Listo() => _lista(vm),
+    Listo() => _lista(context, vm),
   };
 
-  List<Widget> _lista(AsignadasViewModel vm) {
+  List<Widget> _lista(BuildContext context, AsignadasViewModel vm) {
     if (vm.asignadas.isEmpty) {
       return [
         EstadoVacio(
@@ -83,6 +83,7 @@ class AsignadasScreen extends StatelessWidget {
           return IncidenciaCard(
             incidencia: i,
             meta: [i.folio, formatearFechaCorta(i.ultimaActualizacion), ?distancia].join(' · '),
+            onTap: () => context.push(Rutas.detalleOperativo(i.id)),
           );
         }),
       ),

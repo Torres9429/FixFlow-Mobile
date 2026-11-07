@@ -15,6 +15,8 @@ void main() {
       ubicacionRepository: dependencias.ubicacionRepository,
       evidenciaRepository: dependencias.evidenciaRepository,
       inclinacionRepository: dependencias.inclinacionRepository,
+      incidenciasRepository: dependencias.incidenciasRepository,
+      direccionRepository: dependencias.direccionRepository,
       sesionExpirada: dependencias.sesionExpirada,
     ),
   );

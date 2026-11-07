@@ -335,19 +335,34 @@ El operativo registra **una sola foto** y una descripción obligatoria de hasta 
 
 ### Secciones del detalle (C2, D2, D4, E4)
 
-De arriba hacia abajo, sobre el fondo y sin envolver todo en una tarjeta:
+Barra superior con flecha de regreso y el título «Detalle del reporte» (C2) o «Detalle de la incidencia» (D2, E4). El detalle se abre dentro de la pestaña de donde vino, así que la barra inferior sigue visible.
 
-1. **Encabezado:** chips de estado y prioridad, el tipo como Título de pantalla, la meta «FX-2026-000123 · Reportado el 28 oct 2026, 09:15» y la descripción en cuerpo.
-2. **Ubicación:** la dirección en cuerpo y, debajo, un minimapa de 160 de alto con el punto de la captura.
-3. **Fotos:**
-   - Dos columnas en proporción 4:3, «Reporte» y «Solución», con la etiqueta en una píldora blanca sobre la esquina superior izquierda.
+De arriba hacia abajo, con 24 entre secciones y 20 de margen lateral. **Cada sección va en su propio bloque** `#F2F4F7` con radio 14 y 16 de padding, no todo en una sola tarjeta. Salvo el encabezado, cada bloque lleva arriba su título en 17/700 y, si aplica, un dato en meta a la derecha.
+
+1. **Encabezado** (sin título de sección):
+   - Primera fila: la píldora de estado a la izquierda y, a la derecha, el símbolo de prioridad seguido de «Prioridad alta» en 15/600. La prioridad **nunca** va como píldora.
+   - Debajo, alineado a la derecha, el motivo de la prioridad en meta («Tipo de incidencia: Fuga de agua», «Sin resolver por más de 7 días»).
+   - El tipo como Título de pantalla (24/800), la meta «FX-2026-000123 · Reportado el 28 oct 2026, 09:15» y la descripción en cuerpo `#3D4652`.
+2. **Ubicación:**
+   - Icono de ubicación de 20, la dirección en cuerpo y, debajo, las coordenadas en meta («18.92420, -99.22160»).
+   - La dirección la calcula el teléfono; mientras llega, o si no se pudo, solo se ven las coordenadas.
+   - Debajo, un minimapa de 160 de alto con el punto de la captura.
+3. **Fotos de evidencia** (a la derecha, «1 foto» o «2 fotos»):
+   - Dos columnas en proporción 4:3 con radio 14, «Reporte» y «Solución», con la etiqueta en una píldora blanca sobre la esquina superior izquierda. Van sobre el fondo, sin bloque gris.
    - Debajo de cada una, solo la fecha.
    - Si todavía no hay solución, la foto del reporte va a todo el ancho.
-4. **Historial:**
-   - Línea vertical de 2 px `#E4E8EC`, con un punto de 10 del color del estado nuevo.
-   - Cada evento lleva un título en 15/600 («Pasó a En proceso», «Solución registrada»), el comentario en `#3D4652` y la meta «29 oct, 14:00 · Luis Ramírez». Las acciones automáticas van firmadas por «Sistema».
+4. **Solución** (solo si ya se registró): la descripción en cuerpo y la meta «Luis Ramírez · hoy, 10:45».
+5. **Motivo de la reapertura** (solo si se reabrió; a la derecha, «1 reapertura» o «2 reaperturas»): el motivo que escribió el ciudadano, en cuerpo.
+6. **Personas:**
+   - «Responsable» en meta y el nombre en 15/600 a la derecha; mientras está Pendiente, «Sin asignar» en `#59616C`.
+   - Solo en E4, separado por un divisor: «Reportó» con el nombre del ciudadano. C2 y D2 no lo muestran (Privacidad).
+7. **Historial de atención:**
+   - Del evento más reciente al más antiguo.
+   - Línea vertical de 2 px `#E4E8EC`, con un punto de 10 del color del estado nuevo; si el evento no cambia el estado (reasignación, cambio de prioridad), el punto va en `#6B7380`.
+   - Cada evento lleva un título en 15/600, el comentario en `#3D4652` y la meta «29 oct, 14:00 · Luis Ramírez». Las acciones automáticas van firmadas por «Sistema».
+   - Títulos: «Reporte creado», «Asignada a Luis Ramírez», «Reasignada a Diana Ortega», «Pasó a En proceso», «Solución registrada», «Reabierta» y «Pasó a prioridad alta».
    - Con más de 4 eventos se muestran los 3 más recientes y «Ver todo».
-5. **Barra de acciones:**
+8. **Barra de acciones:**
    - Fija abajo, fondo blanco, borde superior `#E4E8EC` y 16 de padding.
    - Lleva un botón primario y, si aplica, uno secundario con contorno.
    - Si no hay acción válida, no hay barra.
@@ -389,7 +404,7 @@ Los botones no llevan iconos ni flechas junto al texto.
 - Debajo:
   - Tiempo de resolución: promedio y máximo, en horas.
   - Conteo por prioridad: una barra apilada horizontal con los 3 colores de prioridad y su leyenda.
-- Al final, «Prioridad alta sin atender»: hasta 5 tarjetas, cada una con «Asignar», y «Ver todas».
+- Al final, «Prioridad alta sin atender»: hasta 5 tarjetas, sin botón (cada una abre E4, donde se asigna), y «Ver todas».
 - Acceso «Catálogo de tipos» como fila con chevron.
 
 ### Cámara (B3, B3b, B3c, B3d, D3a)
@@ -552,16 +567,16 @@ Cada pantalla es un tablero de 390 × 844 con su código y nombre en el título,
 
 - **E1 Panel (pestaña Inicio):**
   - Muestra: «Hola, Marta», el panel del admin con los datos de ejemplo y la campana.
-  - Acciones: Asignar → E5; Ver todas → E2; Catálogo de tipos → E10; campana → E7.
+  - Acciones: tarjeta → E4; Ver todas → E2; Catálogo de tipos → E10; campana → E7.
 - **E2 Incidencias (pestaña):**
   - Muestra: buscador «Buscar por folio o tipo», filtros Estado · Tipo · Prioridad · Zona y tarjetas de varios estados.
-  - Acciones: Zona → E3; tarjeta Pendiente → E5; tarjeta en otro estado → E4.
+  - Acciones: Zona → E3; tarjeta → E4.
 - **E3 Filtrar por zona:**
   - Muestra: mapa con un círculo cuyo centro se mueve tocando el mapa, control de radio de 0.5 a 10 km y «8 incidencias dentro de la zona».
   - Acciones: Aplicar zona → E2; Borrar zona → E2 sin zona.
 - **E4 Detalle con historial:**
   - Muestra: secciones del detalle para 000123 en En proceso, con el motivo de prioridad, el nombre del ciudadano (el admin sí lo ve) y el responsable Luis Ramírez.
-  - Acciones: Reasignar → E6.
+  - Barra fija con una sola acción, según el estado: en Pendiente, «Asignar» → E5; en Asignada, En proceso o Reabierta, «Reasignar» → E6. En Resuelta o Cerrada no hay barra.
 - **E5 Asignar:**
   - Muestra: resumen de 000140 (Pendiente, Prioridad alta, «Sin resolver por más de 7 días», dirección con minimapa), lista de operativos activos con «N incidencias activas» (Luis 3, Diana 1, Jorge 2) e historial corto.
   - Acciones: «Asignar a Diana Ortega» → E4 en Asignada.
@@ -599,7 +614,7 @@ Cada pantalla es un tablero de 390 × 844 con su código y nombre en el título,
 
 - **Acceso:** A1 → B1, D1 o E1 según el rol. A1 → A2 → A1. Perfil (A3) → A3a, A3b o A3c → A3 o A1.
 - **Reporte:** B1 → B2 → B3 (B3b si el ángulo no es válido; B3c o B3d según el tipo) → B2 → B4 → B5 → C2. Sin permiso de cámara → B6. Sin GPS → B7.
-- **Asignación:** E1 o E2 → E5 → E4. El operativo recibe «Nueva incidencia asignada» en D6.
+- **Asignación:** E1 o E2 → E4 → Asignar → E5 → E4. El operativo recibe «Nueva incidencia asignada» en D6.
 - **Atención:** D1 → D2 → Iniciar atención → Registrar solución → D3 → D3a → D3 → D1. El ciudadano recibe «Tu reporte fue resuelto» en C1.
 - **Cierre:** C1 o B1 → C2 → Confirmar resolución → Cerrada. O bien: El problema sigue → C3 → Reabierta. El operativo y el admin reciben «Incidencia reabierta» (D6 → D4, E7 → E4).
 - **Personal:** E8 → E9 → E8. E8 → E8a → E8.

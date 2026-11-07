@@ -47,6 +47,8 @@ abstract final class IncidenciaResumenModel {
 
   static Prioridad prioridadDesde(String v) => _prioridad(v);
 
+  static EstadoIncidencia estadoDesde(String v) => _estado(v);
+
   static EstadoIncidencia _estado(String v) => switch (v) {
     'PENDIENTE' => EstadoIncidencia.pendiente,
     'ASIGNADA' => EstadoIncidencia.asignada,

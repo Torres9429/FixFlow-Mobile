@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../data/datasources/device/direccion_datasource.dart';
 import '../../data/datasources/device/inclinacion_datasource.dart';
 import '../../data/datasources/device/ubicacion_datasource.dart';
 import '../../data/datasources/local/session_storage.dart';
@@ -10,16 +11,21 @@ import '../../data/repositories/admin_repository_impl.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/evidencia_repository_impl.dart';
 import '../../data/repositories/fakes/fake_admin_repository.dart';
+import '../../data/repositories/fakes/fake_direccion_repository.dart';
 import '../../data/repositories/fakes/fake_evidencia_repository.dart';
+import '../../data/repositories/fakes/fake_incidencias_repository.dart';
 import '../../data/repositories/fakes/fake_inclinacion_repository.dart';
 import '../../data/repositories/fakes/fake_operativo_repository.dart';
 import '../../data/repositories/fakes/fake_reportes_ciudadano_repository.dart';
 import '../../data/repositories/fakes/fake_ubicacion_repository.dart';
+import '../../data/repositories/incidencias_repository_impl.dart';
 import '../../data/repositories/operativo_repository_impl.dart';
 import '../../data/repositories/reportes_ciudadano_repository_impl.dart';
 import '../../domain/repositories/admin_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/direccion_repository.dart';
 import '../../domain/repositories/evidencia_repository.dart';
+import '../../domain/repositories/incidencias_repository.dart';
 import '../../domain/repositories/incidence_type_repository.dart';
 import '../../domain/repositories/inclinacion_repository.dart';
 import '../../domain/repositories/operativo_repository.dart';
@@ -41,6 +47,8 @@ class Dependencias {
     required this.ubicacionRepository,
     required this.evidenciaRepository,
     required this.inclinacionRepository,
+    required this.incidenciasRepository,
+    required this.direccionRepository,
     required this.sesionExpirada,
   });
 
@@ -52,6 +60,8 @@ class Dependencias {
   final UbicacionRepository ubicacionRepository;
   final EvidenciaRepository evidenciaRepository;
   final InclinacionRepository inclinacionRepository;
+  final IncidenciasRepository incidenciasRepository;
+  final DireccionRepository direccionRepository;
   final SesionExpirada sesionExpirada;
 }
 
@@ -73,6 +83,8 @@ Dependencias crearDependencias() {
     ubicacionRepository: mock ? FakeUbicacionRepository() : UbicacionDataSource(),
     evidenciaRepository: mock ? FakeEvidenciaRepository() : EvidenciaRepositoryImpl(api.dio),
     inclinacionRepository: mock ? FakeInclinacionRepository() : InclinacionDataSource(),
+    incidenciasRepository: mock ? FakeIncidenciasRepository() : IncidenciasRepositoryImpl(api.dio),
+    direccionRepository: mock ? FakeDireccionRepository() : DireccionDataSource(),
     sesionExpirada: sesionExpirada,
   );
 }

@@ -5,6 +5,8 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/operativo_repository.dart';
 import '../../domain/repositories/ubicacion_repository.dart';
 import '../core/widgets/pestana_pendiente.dart';
+import '../incidencia/ruta_detalle.dart';
+import '../incidencia/vista_detalle.dart';
 import '../routing/rutas.dart';
 import 'asignadas/asignadas_screen.dart';
 import 'asignadas/asignadas_viewmodel.dart';
@@ -27,6 +29,7 @@ List<RouteBase> rutasOperativo() => [
               )..iniciar(),
               child: const AsignadasScreen(),
             ),
+            routes: [rutaDetalle(VistaDetalle.operativo)],
           ),
         ],
       ),
