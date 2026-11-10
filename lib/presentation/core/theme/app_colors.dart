@@ -29,6 +29,10 @@ abstract final class AppColors {
 
   static const error = Color(0xFFB3261E);
 
+  // Cámara e inclinación (design.md §3 y §7)
+  static const guiaValida = Color(0xFF7ED69A); // Guía de inclinación válida en la cámara
+  static const guiaInvalida = Color(0xFFFFB74D); // Fuera de rango (ámbar / amarillo)
+
   // Prioridad (fondo, texto)
   static const prioridadAltaBg = Color(0xFFFDE4E1);
   static const prioridadAlta = Color(0xFFB3261E);
