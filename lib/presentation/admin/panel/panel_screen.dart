@@ -91,7 +91,11 @@ class PanelScreen extends StatelessWidget {
       else
         ...conSeparacion(
           prioritarias.map(
-            (i) => IncidenciaCard(incidencia: i, meta: '${i.folio} · ${formatearFechaCorta(i.ultimaActualizacion)}'),
+            (i) => IncidenciaCard(
+              incidencia: i,
+              meta: '${i.folio} · ${formatearFechaCorta(i.ultimaActualizacion)}',
+              onTap: () => context.push(Rutas.detalleAdmin(i.id)),
+            ),
           ),
         ),
     ];

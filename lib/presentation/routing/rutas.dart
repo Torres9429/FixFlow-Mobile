@@ -22,4 +22,10 @@ abstract final class Rutas {
 
   // Perfil del ciudadano y del operativo, desde el botón de la barra superior
   static const perfil = '/perfil'; // A3
+
+  // Detalle de la incidencia, dentro de la pestaña de donde se abre
+  static String detalleCiudadano(int id) => '$homeCiudadano/$id'; // C2
+  static String detalleOperativo(int id) => '$homeOperativo/$id'; // D2
+  static String detalleAdmin(int id) => '$homeAdmin/$id'; // E4
+  static String asignarAdmin(int id) => '${detalleAdmin(id)}/asignar'; // E5, desde el detalle
 }

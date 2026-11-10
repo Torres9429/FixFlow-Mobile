@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/sesion/sesion_expirada.dart';
 import '../../domain/entities/reporte_creado.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../admin/rutas_admin.dart';
@@ -15,16 +16,23 @@ import '../reporte/enviado/reporte_enviado_screen.dart';
 import '../reporte/nuevo_reporte_screen.dart';
 import 'rutas.dart';
 
-GoRouter crearRouter() => GoRouter(
+/// [sesionExpirada] es el estado de la sesión: cuando cambia, el router vuelve a evaluar [GoRouter.redirect]
+/// y, si venció, manda al login (RNF-09). Sin él (en las pruebas) no se redirige.
+GoRouter crearRouter({SesionExpirada? sesionExpirada}) => GoRouter(
   initialLocation: Rutas.login,
+  refreshListenable: sesionExpirada,
+  redirect: (context, state) => (sesionExpirada?.consumirAviso() ?? false) ? '${Rutas.login}?sesionVencida=true' : null,
   routes: [
     GoRoute(
       path: Rutas.login,
       builder: (context, state) {
-        final cuentaCreada = state.uri.queryParameters['cuentaCreada'] == 'true';
+        final parametros = state.uri.queryParameters;
         return ChangeNotifierProvider(
           create: (context) => LoginViewModel(authRepository: context.read<AuthRepository>()),
-          child: LoginScreen(cuentaCreada: cuentaCreada),
+          child: LoginScreen(
+            cuentaCreada: parametros['cuentaCreada'] == 'true',
+            sesionVencida: parametros['sesionVencida'] == 'true',
+          ),
         );
       },
     ),

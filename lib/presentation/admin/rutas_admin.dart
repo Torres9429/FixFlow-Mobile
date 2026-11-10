@@ -3,12 +3,18 @@ import 'package:provider/provider.dart';
 
 import '../../domain/repositories/admin_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/direccion_repository.dart';
+import '../../domain/repositories/incidencias_repository.dart';
 import '../core/widgets/pestana_pendiente.dart';
+import '../incidencia/ruta_detalle.dart';
+import '../incidencia/vista_detalle.dart';
 import '../perfil/perfil_screen.dart';
 import '../routing/rutas.dart';
 import 'admin_shell.dart';
 import 'panel/panel_screen.dart';
 import 'panel/panel_viewmodel.dart';
+import 'asignacion/asignacion_screen.dart';
+import 'asignacion/asignacion_viewmodel.dart';
 
 /// Rutas del admin. Solo quien trabaja este rol toca este archivo.
 List<RouteBase> rutasAdmin() => [
@@ -26,6 +32,28 @@ List<RouteBase> rutasAdmin() => [
               )..iniciar(),
               child: const PanelScreen(),
             ),
+            routes: [
+              rutaDetalle(
+                VistaDetalle.admin,
+                acciones: [
+                  // E5 lo construye la tarjeta «Asignar y reasignar»; aquí solo se reemplaza el builder
+                  GoRoute(
+                    path: 'asignar',
+                    builder: (context, state) => ChangeNotifierProvider(
+                      create: (context) => AsignacionViewModel(
+                        id: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
+                        adminRepository: context.read<AdminRepository>(),
+                        direccionRepository: context
+                            .read<DireccionRepository>(),
+                        incidenciasRepository: context
+                            .read<IncidenciasRepository>(),
+                      )..iniciar(),
+                      child: const AsignacionScreen(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),

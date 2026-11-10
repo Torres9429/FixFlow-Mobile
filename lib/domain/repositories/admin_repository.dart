@@ -2,6 +2,7 @@ import '../../core/result.dart';
 import '../entities/estado_incidencia.dart';
 import '../entities/incidencia_resumen.dart';
 import '../entities/indicadores.dart';
+import '../entities/operativo.dart';
 import '../entities/pagina.dart';
 import '../entities/prioridad.dart';
 
@@ -17,4 +18,10 @@ abstract interface class AdminRepository {
     int pagina = 0,
     int tamano = 20,
   });
+
+  /// `GET /operativos?activos=true` (HU-21).
+  Future<Result<List<Operativo>>> operativosDisponibles();
+
+  /// `POST /incidencias/{id}/asignacion` (HU-21).
+  Future<Result<void>> asignarIncidencia(int incidenciaId, int operativoId);
 }
