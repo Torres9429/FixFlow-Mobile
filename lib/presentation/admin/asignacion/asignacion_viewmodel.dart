@@ -47,13 +47,14 @@ class AsignacionViewModel extends ChangeNotifier with NotificadorSeguro {
   String? errorFormulario;
 
   bool get esReasignacion => switch (estado) {
-    Listo(:final datos) => datos.detalle.resumen.operativo != null,
+    Listo(:final datos) => datos.detalle.tieneResponsable,
     _ => false,
   };
 
   Future<void> iniciar() async {
     estado = const Cargando();
     direccion = null;
+    operativoSeleccionado = null;
     notifyListeners();
     final (detalle, operativos) = await (
       _incidenciasRepository.detalle(id),
@@ -67,6 +68,13 @@ class AsignacionViewModel extends ChangeNotifier with NotificadorSeguro {
       (Error(error: final e), _) ||
       (_, Error(error: final e)) => ConError(mensajePara(e)),
     };
+    if (estado case Listo(:final datos)) {
+      final responsableId = datos.detalle.operativoAsignadoId;
+      if (responsableId != null &&
+          datos.operativos.any((operativo) => operativo.id == responsableId)) {
+        operativoSeleccionado = responsableId;
+      }
+    }
     notifyListeners();
     if (estado case Listo(:final datos)) {
       direccion = await _direccionRepository.direccion(

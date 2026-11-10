@@ -581,7 +581,7 @@ Cada pantalla es un tablero de 390 × 844 con su código y nombre en el título,
   - Muestra: resumen de 000140 (Pendiente, Prioridad alta, «Sin resolver por más de 7 días», dirección con minimapa), lista de operativos activos con «N incidencias activas» (Luis 3, Diana 1, Jorge 2) e historial corto.
   - Acciones: «Asignar a Diana Ortega» → E4 en Asignada.
 - **E6 Reasignar:**
-  - Muestra: el responsable actual y la lista para elegir al nuevo responsable con su carga. Nota: «Diana Ortega recibirá un aviso y el cambio quedará en el historial». Sin campo de motivo.
+  - Muestra: el botón del detalle dice «Reasignar» si ya hay responsable; en E6 se muestra el nombre del responsable actual preseleccionado y la lista para elegir al nuevo con su carga. Nota: «Diana Ortega recibirá un aviso y el cambio quedará en el historial». Sin campo de motivo.
   - Acciones: «Reasignar a Diana Ortega» → E4.
 - **E7 Avisos:**
   - Muestra: solo avisos «Incidencia reabierta», con «Marcar todo como leído».

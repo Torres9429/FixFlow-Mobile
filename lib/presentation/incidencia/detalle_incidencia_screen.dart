@@ -38,7 +38,7 @@ class DetalleIncidenciaScreen extends StatelessWidget {
                     // Al volver de E5 la incidencia ya puede estar Asignada
                     await vm.iniciar();
                   },
-                  child: const Text('Asignar'),
+                  child: Text(vm.tieneResponsable ? 'Reasignar' : 'Asignar'),
                 ),
               )
             : const SizedBox.shrink(),

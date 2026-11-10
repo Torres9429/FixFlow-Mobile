@@ -57,6 +57,11 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
     _ => false,
   };
 
+  bool get tieneResponsable => switch (estado) {
+    Listo(:final datos) => datos.detalle.tieneResponsable,
+    _ => false,
+  };
+
   List<EventoHistorial> get _historial => switch (estado) {
     Listo(:final datos) => datos.historial,
     _ => const [],

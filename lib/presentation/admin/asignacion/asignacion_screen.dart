@@ -54,10 +54,15 @@ class _Contenido extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final texto = Theme.of(context).textTheme;
+    final responsable = detalle.responsableActual;
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       children: [
         _IncidenciaResumen(detalle: detalle, direccion: vm.direccion),
+        if (vm.esReasignacion && responsable != null) ...[
+          const SizedBox(height: 16),
+          _ResponsableActual(nombre: responsable),
+        ],
         const SizedBox(height: 24),
         Text(
           'Seleccionar personal operativo',
@@ -122,6 +127,45 @@ class _Contenido extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ResponsableActual extends StatelessWidget {
+  const _ResponsableActual({required this.nombre});
+
+  final String nombre;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.surfaceMuted,
+      borderRadius: BorderRadius.circular(AppTheme.radius),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.person_outline, color: AppColors.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Responsable actual',
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                nombre,
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _AvisoAsignacion extends StatelessWidget {
