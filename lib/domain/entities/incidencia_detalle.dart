@@ -13,6 +13,7 @@ class IncidenciaDetalle {
     this.motivoReapertura,
     this.ciudadano,
     this.operativoAsignado,
+    this.operativoAsignadoId,
   });
 
   /// Folio, tipo, estado, prioridad, ubicación y fechas: lo mismo que la tarjeta.
@@ -31,4 +32,18 @@ class IncidenciaDetalle {
 
   /// Nombre completo del responsable; `null` mientras está Pendiente.
   final String? operativoAsignado;
+
+  /// ID del usuario responsable, para identificarlo en la lista de operativos.
+  final int? operativoAsignadoId;
+
+  /// Nombre del responsable en el detalle o, como respaldo, en el resumen.
+  String? get responsableActual {
+    final asignado = operativoAsignado?.trim();
+    if (asignado != null && asignado.isNotEmpty) return asignado;
+
+    final delResumen = resumen.operativo?.trim();
+    return delResumen == null || delResumen.isEmpty ? null : delResumen;
+  }
+
+  bool get tieneResponsable => responsableActual != null;
 }
