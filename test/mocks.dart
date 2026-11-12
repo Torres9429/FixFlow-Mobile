@@ -3,7 +3,10 @@
 import 'package:fix_flow/domain/repositories/admin_repository.dart';
 import 'package:fix_flow/domain/repositories/auth_repository.dart';
 import 'package:fix_flow/domain/repositories/evidencia_repository.dart';
+import 'package:fix_flow/domain/repositories/incidence_type_repository.dart';
+import 'package:fix_flow/domain/repositories/inclinacion_repository.dart';
 import 'package:fix_flow/domain/repositories/reportes_ciudadano_repository.dart';
+import 'package:fix_flow/domain/repositories/ubicacion_repository.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -14,6 +17,12 @@ class MockReportesCiudadanoRepository extends Mock implements ReportesCiudadanoR
 class MockAdminRepository extends Mock implements AdminRepository {}
 
 class MockEvidenciaRepository extends Mock implements EvidenciaRepository {}
+
+class MockIncidenceTypeRepository extends Mock implements IncidenceTypeRepository {}
+
+class MockUbicacionRepository extends Mock implements UbicacionRepository {}
+
+class MockInclinacionRepository extends Mock implements InclinacionRepository {}
 
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
