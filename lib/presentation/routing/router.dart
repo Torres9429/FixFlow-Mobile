@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/sesion/sesion_expirada.dart';
+import '../../domain/entities/perfil.dart';
 import '../../domain/entities/reporte_creado.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../admin/rutas_admin.dart';
@@ -11,6 +12,8 @@ import '../auth/registro/registro_screen.dart';
 import '../auth/registro/registro_viewmodel.dart';
 import '../ciudadano/rutas_ciudadano.dart';
 import '../operativo/rutas_operativo.dart';
+import '../perfil/editar_datos/editar_datos_screen.dart';
+import '../perfil/editar_datos/editar_datos_viewmodel.dart';
 import '../perfil/perfil_screen.dart';
 import '../perfil/perfil_viewmodel.dart';
 import '../reporte/enviado/reporte_enviado_screen.dart';
@@ -61,6 +64,17 @@ GoRouter crearRouter({SesionExpirada? sesionExpirada}) => GoRouter(
       builder: (context, state) => ChangeNotifierProvider(
         create: (context) => PerfilViewModel(authRepository: context.read<AuthRepository>())..cargar(),
         child: const PerfilScreen(),
+      ),
+    ),
+    GoRoute(
+      path: Rutas.editarDatos,
+      redirect: (context, state) => state.extra is Perfil ? null : Rutas.perfil,
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) => EditarDatosViewModel(
+          authRepository: context.read<AuthRepository>(),
+          perfil: state.extra! as Perfil,
+        ),
+        child: const EditarDatosScreen(),
       ),
     ),
   ],

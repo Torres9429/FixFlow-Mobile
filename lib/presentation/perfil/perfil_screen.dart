@@ -62,6 +62,15 @@ class _ContenidoPerfil extends StatelessWidget {
     context.go(Rutas.login);
   }
 
+  Future<void> _editarDatos(BuildContext context) async {
+    final vm = context.read<PerfilViewModel>();
+    final mensajero = ScaffoldMessenger.of(context);
+    final guardado = await context.push<Perfil>(Rutas.editarDatos, extra: perfil);
+    if (guardado == null) return;
+    vm.actualizar(guardado);
+    mensajero.showSnackBar(const SnackBar(content: Text('Tus datos se guardaron')));
+  }
+
   @override
   Widget build(BuildContext context) {
     final texto = Theme.of(context).textTheme;
@@ -87,15 +96,16 @@ class _ContenidoPerfil extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppTheme.radius),
             boxShadow: AppTheme.sombra,
           ),
-          child: const Column(
+          child: Column(
             children: [
               _FilaPerfil(
-                llave: Key('perfil_editar_datos'),
+                llave: const Key('perfil_editar_datos'),
                 titulo: 'Editar mis datos',
                 subtitulo: 'Nombre y apellidos',
+                onTap: () => _editarDatos(context),
               ),
-              Divider(height: 1, indent: 16, endIndent: 16, color: AppColors.borderSubtle),
-              _FilaPerfil(
+              const Divider(height: 1, indent: 16, endIndent: 16, color: AppColors.borderSubtle),
+              const _FilaPerfil(
                 llave: Key('perfil_cambiar_password'),
                 titulo: 'Cambiar contraseña',
                 subtitulo: 'Seguridad de la cuenta',
@@ -179,11 +189,12 @@ class _Encabezado extends StatelessWidget {
 }
 
 class _FilaPerfil extends StatelessWidget {
-  const _FilaPerfil({required this.llave, required this.titulo, required this.subtitulo});
+  const _FilaPerfil({required this.llave, required this.titulo, required this.subtitulo, this.onTap});
 
   final Key llave;
   final String titulo;
   final String subtitulo;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +206,7 @@ class _FilaPerfil extends StatelessWidget {
       title: Text(titulo, style: texto.bodyLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
       subtitle: Text(subtitulo, style: texto.bodySmall?.copyWith(fontSize: 13, color: AppColors.textMuted)),
       trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-      onTap: null,
+      onTap: onTap,
     );
   }
 }

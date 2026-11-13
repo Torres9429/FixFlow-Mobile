@@ -22,6 +22,7 @@ abstract final class Rutas {
 
   // Perfil del ciudadano y del operativo, desde el botón de la barra superior
   static const perfil = '/perfil'; // A3
+  static const editarDatos = '/perfil/datos';
 
   // Detalle de la incidencia, dentro de la pestaña de donde se abre
   static String detalleCiudadano(int id) => '$homeCiudadano/$id'; // C2
