@@ -9,6 +9,7 @@ import '../core/widgets/pestana_pendiente.dart';
 import '../incidencia/ruta_detalle.dart';
 import '../incidencia/vista_detalle.dart';
 import '../perfil/perfil_screen.dart';
+import '../perfil/perfil_viewmodel.dart';
 import '../routing/rutas.dart';
 import 'admin_shell.dart';
 import 'panel/panel_screen.dart';
@@ -74,7 +75,15 @@ List<RouteBase> rutasAdmin() => [
         ],
       ),
       StatefulShellBranch(
-        routes: [GoRoute(path: Rutas.perfilAdmin, builder: (context, state) => const PerfilScreen())],
+        routes: [
+          GoRoute(
+            path: Rutas.perfilAdmin,
+            builder: (context, state) => ChangeNotifierProvider(
+              create: (context) => PerfilViewModel(authRepository: context.read<AuthRepository>())..cargar(),
+              child: const PerfilScreen(comoPestana: true),
+            ),
+          ),
+        ],
       ),
     ],
   ),

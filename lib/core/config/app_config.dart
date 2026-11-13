@@ -2,6 +2,7 @@
 abstract final class AppConfig {
   static const env = String.fromEnvironment('ENV', defaultValue: 'dev');
   static const apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8080/api');
+  static const version = String.fromEnvironment('APP_VERSION', defaultValue: '1.0.0');
   static const logHttp = bool.fromEnvironment('LOG_HTTP', defaultValue: true);
 
   /// Back simulado: con `config/mock.json`, o si se corre sin `--dart-define-from-file`.

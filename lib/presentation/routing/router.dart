@@ -12,6 +12,7 @@ import '../auth/registro/registro_viewmodel.dart';
 import '../ciudadano/rutas_ciudadano.dart';
 import '../operativo/rutas_operativo.dart';
 import '../perfil/perfil_screen.dart';
+import '../perfil/perfil_viewmodel.dart';
 import '../reporte/enviado/reporte_enviado_screen.dart';
 import '../reporte/nuevo_reporte_screen.dart';
 import 'rutas.dart';
@@ -55,6 +56,12 @@ GoRouter crearRouter({SesionExpirada? sesionExpirada}) => GoRouter(
       redirect: (context, state) => state.extra is ReporteCreado ? null : Rutas.homeCiudadano,
       builder: (context, state) => ReporteEnviadoScreen(reporte: state.extra! as ReporteCreado),
     ),
-    GoRoute(path: Rutas.perfil, builder: (context, state) => const PerfilScreen()),
+    GoRoute(
+      path: Rutas.perfil,
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) => PerfilViewModel(authRepository: context.read<AuthRepository>())..cargar(),
+        child: const PerfilScreen(),
+      ),
+    ),
   ],
 );
