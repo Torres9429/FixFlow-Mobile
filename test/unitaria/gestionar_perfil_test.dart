@@ -42,6 +42,12 @@ void main() {
     test('Válida y distinta → sin error', () {
       expect(validarPasswordNueva(() => 'abc12345')('nueva2026'), isNull);
     });
+
+    test('Los requisitos se marcan conforme se cumplen', () {
+      expect(requisitosPassword('', 'abc12345'), (largo: false, letrasYNumeros: false, distinta: false));
+      expect(requisitosPassword('abc12345', 'abc12345'), (largo: true, letrasYNumeros: true, distinta: false));
+      expect(requisitosPassword('nueva2026', 'abc12345'), (largo: true, letrasYNumeros: true, distinta: true));
+    });
   });
 
   group('HU-25: AuthRemoteDataSource habla con /usuarios/me', () {

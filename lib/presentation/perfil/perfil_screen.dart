@@ -71,6 +71,13 @@ class _ContenidoPerfil extends StatelessWidget {
     mensajero.showSnackBar(const SnackBar(content: Text('Tus datos se guardaron')));
   }
 
+  Future<void> _cambiarPassword(BuildContext context) async {
+    final mensajero = ScaffoldMessenger.of(context);
+    final mensaje = await context.push<String>(Rutas.cambiarPassword);
+    if (mensaje == null) return;
+    mensajero.showSnackBar(SnackBar(content: Text(mensaje)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final texto = Theme.of(context).textTheme;
@@ -105,10 +112,11 @@ class _ContenidoPerfil extends StatelessWidget {
                 onTap: () => _editarDatos(context),
               ),
               const Divider(height: 1, indent: 16, endIndent: 16, color: AppColors.borderSubtle),
-              const _FilaPerfil(
-                llave: Key('perfil_cambiar_password'),
+              _FilaPerfil(
+                llave: const Key('perfil_cambiar_password'),
                 titulo: 'Cambiar contraseña',
                 subtitulo: 'Seguridad de la cuenta',
+                onTap: () => _cambiarPassword(context),
               ),
             ],
           ),

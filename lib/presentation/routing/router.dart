@@ -12,6 +12,8 @@ import '../auth/registro/registro_screen.dart';
 import '../auth/registro/registro_viewmodel.dart';
 import '../ciudadano/rutas_ciudadano.dart';
 import '../operativo/rutas_operativo.dart';
+import '../perfil/cambiar_password/cambiar_password_screen.dart';
+import '../perfil/cambiar_password/cambiar_password_viewmodel.dart';
 import '../perfil/editar_datos/editar_datos_screen.dart';
 import '../perfil/editar_datos/editar_datos_viewmodel.dart';
 import '../perfil/perfil_screen.dart';
@@ -75,6 +77,13 @@ GoRouter crearRouter({SesionExpirada? sesionExpirada}) => GoRouter(
           perfil: state.extra! as Perfil,
         ),
         child: const EditarDatosScreen(),
+      ),
+    ),
+    GoRoute(
+      path: Rutas.cambiarPassword,
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) => CambiarPasswordViewModel(authRepository: context.read<AuthRepository>()),
+        child: const CambiarPasswordScreen(),
       ),
     ),
   ],

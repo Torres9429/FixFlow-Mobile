@@ -35,3 +35,11 @@ String? Function(String?) validarPasswordNueva(String Function() obtenerActual) 
     return null;
   };
 }
+
+typedef RequisitosPassword = ({bool largo, bool letrasYNumeros, bool distinta});
+
+RequisitosPassword requisitosPassword(String nueva, String actual) => (
+  largo: nueva.length >= 8,
+  letrasYNumeros: RegExp(r'[a-zA-Z]').hasMatch(nueva) && RegExp(r'[0-9]').hasMatch(nueva),
+  distinta: nueva.isNotEmpty && nueva != actual,
+);
