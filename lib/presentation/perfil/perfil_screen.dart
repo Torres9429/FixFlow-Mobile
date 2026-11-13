@@ -68,14 +68,18 @@ class _ContenidoPerfil extends StatelessWidget {
     final guardado = await context.push<Perfil>(Rutas.editarDatos, extra: perfil);
     if (guardado == null) return;
     vm.actualizar(guardado);
-    mensajero.showSnackBar(const SnackBar(content: Text('Tus datos se guardaron')));
+    mensajero
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Tus datos se guardaron')));
   }
 
   Future<void> _cambiarPassword(BuildContext context) async {
     final mensajero = ScaffoldMessenger.of(context);
     final mensaje = await context.push<String>(Rutas.cambiarPassword);
     if (mensaje == null) return;
-    mensajero.showSnackBar(SnackBar(content: Text(mensaje)));
+    mensajero
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(mensaje)));
   }
 
   @override
