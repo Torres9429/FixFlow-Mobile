@@ -98,27 +98,28 @@ class _ContenidoPerfil extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         DecoratedBox(
-          decoration: BoxDecoration(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppTheme.radius), boxShadow: AppTheme.sombra),
+          child: Material(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppTheme.radius),
-            boxShadow: AppTheme.sombra,
-          ),
-          child: Column(
-            children: [
-              _FilaPerfil(
-                llave: const Key('perfil_editar_datos'),
-                titulo: 'Editar mis datos',
-                subtitulo: 'Nombre y apellidos',
-                onTap: () => _editarDatos(context),
-              ),
-              const Divider(height: 1, indent: 16, endIndent: 16, color: AppColors.borderSubtle),
-              _FilaPerfil(
-                llave: const Key('perfil_cambiar_password'),
-                titulo: 'Cambiar contraseña',
-                subtitulo: 'Seguridad de la cuenta',
-                onTap: () => _cambiarPassword(context),
-              ),
-            ],
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                _FilaPerfil(
+                  llave: const Key('perfil_editar_datos'),
+                  titulo: 'Editar mis datos',
+                  subtitulo: 'Nombre y apellidos',
+                  onTap: () => _editarDatos(context),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16, color: AppColors.borderSubtle),
+                _FilaPerfil(
+                  llave: const Key('perfil_cambiar_password'),
+                  titulo: 'Cambiar contraseña',
+                  subtitulo: 'Seguridad de la cuenta',
+                  onTap: () => _cambiarPassword(context),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 32),
@@ -188,7 +189,11 @@ class _Encabezado extends StatelessWidget {
           child: Text(
             nombreRol(perfil.rol),
             key: const Key('perfil_rol'),
-            style: texto.labelMedium?.copyWith(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            style: texto.labelMedium?.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
       ],
