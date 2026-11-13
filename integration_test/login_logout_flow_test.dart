@@ -53,7 +53,10 @@ void main() {
         // PASO 3: desde el perfil, cerrar sesión regresa al login y borra los dos tokens
         await tester.tap(irAPerfil);
         await tester.pumpAndSettle();
+        await tester.ensureVisible(find.byKey(const Key('cerrar_sesion')));
         await tester.tap(find.byKey(const Key('cerrar_sesion')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('confirmar_cerrar_sesion')));
         await tester.pumpAndSettle();
 
         expect(find.byType(LoginScreen), findsOneWidget);

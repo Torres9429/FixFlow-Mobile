@@ -9,6 +9,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../core/widgets/estado_vacio.dart';
 import '../routing/rutas.dart';
+import 'confirmar_cierre_sesion.dart';
 import 'nombre_rol.dart';
 import 'perfil_viewmodel.dart';
 
@@ -54,7 +55,9 @@ class _ContenidoPerfil extends StatelessWidget {
   final Perfil perfil;
 
   Future<void> _cerrarSesion(BuildContext context) async {
-    await context.read<PerfilViewModel>().cerrarSesion();
+    final vm = context.read<PerfilViewModel>();
+    if (!await confirmarCierreSesion(context)) return;
+    await vm.cerrarSesion();
     if (!context.mounted) return;
     context.go(Rutas.login);
   }
@@ -101,11 +104,16 @@ class _ContenidoPerfil extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 32),
-        FilledButton(
-          key: const Key('cerrar_sesion'),
-          style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-          onPressed: () => _cerrarSesion(context),
-          child: const Text('Cerrar sesión'),
+        Selector<PerfilViewModel, bool>(
+          selector: (_, vm) => vm.cerrandoSesion,
+          builder: (context, cerrando, _) => FilledButton(
+            key: const Key('cerrar_sesion'),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: cerrando ? null : () => _cerrarSesion(context),
+            child: cerrando
+                ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2.5))
+                : const Text('Cerrar sesión'),
+          ),
         ),
         const SizedBox(height: 16),
         Text(
