@@ -26,3 +26,12 @@ String? Function(String?) validarConfirmarPassword(String Function() obtenerPass
   };
 }
 
+
+String? Function(String?) validarPasswordNueva(String Function() obtenerActual) {
+  return (String? valor) {
+    final error = validarPassword(valor);
+    if (error != null) return error;
+    if (valor == obtenerActual()) return 'Debe ser distinta de la actual';
+    return null;
+  };
+}
