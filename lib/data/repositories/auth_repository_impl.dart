@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/result.dart';
+import '../../domain/entities/perfil.dart';
 import '../../domain/entities/usuario.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/local/session_storage.dart';
@@ -74,5 +75,33 @@ class AuthRepositoryImpl implements AuthRepository {
       return null;
     }
   }
-}
 
+  @override
+  Future<Result<Perfil>> miPerfil() async {
+    final res = await _remote.miPerfil();
+    return switch (res) {
+      Ok(:final value) => Result.ok(value.toEntity()),
+      Error(:final error) => Result.error(error),
+    };
+  }
+
+  @override
+  Future<Result<Perfil>> actualizarPerfil({required String nombre, required String apellidos}) async {
+    final res = await _remote.actualizarPerfil(nombre: nombre, apellidos: apellidos);
+    switch (res) {
+      case Ok(:final value):
+        try {
+          await _session.guardarNombre(value.nombre);
+        } catch (e) {
+          debugPrint('[FixFlow] No se pudo guardar el nombre: $e');
+        }
+        return Result.ok(value.toEntity());
+      case Error(:final error):
+        return Result.error(error);
+    }
+  }
+
+  @override
+  Future<Result<String?>> cambiarPassword({required String actual, required String nueva}) =>
+      _remote.cambiarPassword(actual: actual, nueva: nueva);
+}
