@@ -95,6 +95,15 @@ abstract final class AppTheme {
           textStyle: textTheme.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
         ),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          minimumSize: const Size.fromHeight(54),
+          shape: shape,
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          textStyle: textTheme.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
+        ),
+      ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
