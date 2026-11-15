@@ -4,6 +4,7 @@ class Operativo {
     required this.id,
     required this.nombre,
     required this.apellidos,
+    required this.correo,
     required this.activo,
     required this.cargaActual,
   });
@@ -11,6 +12,7 @@ class Operativo {
   final int id;
   final String nombre;
   final String apellidos;
+  final String correo;
   final bool activo;
   final int cargaActual;
 

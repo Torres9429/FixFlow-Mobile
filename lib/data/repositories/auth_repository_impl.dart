@@ -54,6 +54,12 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<void>> cambiarPassword({
+    required String actual,
+    required String nueva,
+  }) => _remote.cambiarPassword(actual: actual, nueva: nueva);
+
+  @override
   Future<void> cerrarSesion() async {
     try {
       final refresh = await _session.leerRefreshToken();
@@ -75,4 +81,3 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 }
-

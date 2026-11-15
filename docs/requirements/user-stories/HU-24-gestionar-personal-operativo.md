@@ -16,12 +16,16 @@ actor: Administrador municipal
 ## Criterios de aceptación
 
 - [ ] El administrador puede registrar a un miembro del personal operativo con nombre, apellidos, correo y una contraseña temporal.
+- [ ] El operativo puede reemplazar la contraseña temporal desde su perfil (HU-25).
 - [ ] La cuenta creada recibe el rol **Personal operativo**. Nadie puede asignarse ese rol desde el registro público.
 - [ ] No se puede registrar un correo que ya exista.
 - [ ] El administrador puede consultar la lista del personal operativo con su estado (activo o inactivo) y su carga actual.
-- [ ] El administrador puede desactivar y reactivar una cuenta.
+- [ ] El administrador puede filtrar y buscar personal por nombre o correo.
+- [ ] El administrador puede desactivar y reactivar una cuenta, previa confirmación.
+- [ ] La vista de personal ofrece un único acceso para dar de alta a un operativo.
 - [ ] Una cuenta inactiva no puede iniciar sesión ni aparece entre el personal disponible para asignar.
 - [ ] Desactivar una cuenta no cambia las incidencias que ya tenía asignadas; el administrador puede reasignarlas (HU-21).
+- [ ] El alta no asigna cuadrillas ni sectores.
 
 ## Dependencias
 

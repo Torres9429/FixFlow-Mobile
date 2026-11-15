@@ -15,6 +15,10 @@ import 'panel/panel_screen.dart';
 import 'panel/panel_viewmodel.dart';
 import 'asignacion/asignacion_screen.dart';
 import 'asignacion/asignacion_viewmodel.dart';
+import 'personal/alta_operativo_screen.dart';
+import 'personal/alta_operativo_viewmodel.dart';
+import 'personal/personal_screen.dart';
+import 'personal/personal_viewmodel.dart';
 
 /// Rutas del admin. Solo quien trabaja este rol toca este archivo.
 List<RouteBase> rutasAdmin() => [
@@ -61,7 +65,21 @@ List<RouteBase> rutasAdmin() => [
         routes: [
           GoRoute(
             path: Rutas.personal,
-            builder: (context, state) => const PestanaPendiente(titulo: 'Personal', codigo: 'E8'),
+            builder: (context, state) => ChangeNotifierProvider(
+              create: (context) =>
+                  PersonalViewModel(context.read<AdminRepository>())..iniciar(),
+              child: const PersonalScreen(),
+            ),
+            routes: [
+              GoRoute(
+                path: 'nuevo',
+                builder: (context, state) => ChangeNotifierProvider(
+                  create: (context) =>
+                      AltaOperativoViewModel(context.read<AdminRepository>()),
+                  child: const AltaOperativoScreen(),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -69,18 +87,25 @@ List<RouteBase> rutasAdmin() => [
         routes: [
           GoRoute(
             path: Rutas.incidenciasAdmin,
-            builder: (context, state) => const PestanaPendiente(titulo: 'Incidencias', codigo: 'E2'),
+            builder: (context, state) =>
+                const PestanaPendiente(titulo: 'Incidencias', codigo: 'E2'),
           ),
         ],
       ),
       StatefulShellBranch(
-        routes: [GoRoute(path: Rutas.perfilAdmin, builder: (context, state) => const PerfilScreen())],
+        routes: [
+          GoRoute(
+            path: Rutas.perfilAdmin,
+            builder: (context, state) => const PerfilScreen(),
+          ),
+        ],
       ),
     ],
   ),
   // La campana abre los avisos encima de las pestañas
   GoRoute(
     path: Rutas.avisosAdmin,
-    builder: (context, state) => const PestanaPendiente(titulo: 'Avisos', codigo: 'E7'),
+    builder: (context, state) =>
+        const PestanaPendiente(titulo: 'Avisos', codigo: 'E7'),
   ),
 ];

@@ -14,6 +14,12 @@ abstract interface class AuthRepository {
     required String password,
   });
 
+  /// Cambia la contraseña de la sesión actual (HU-25; útil para reemplazar la temporal de HU-24).
+  Future<Result<void>> cambiarPassword({
+    required String actual,
+    required String nueva,
+  });
+
   Future<void> cerrarSesion();
 
   /// Nombre del usuario con sesión, o `null` si no se guardó.

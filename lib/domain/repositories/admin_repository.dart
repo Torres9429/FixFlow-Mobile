@@ -22,6 +22,20 @@ abstract interface class AdminRepository {
   /// `GET /operativos?activos=true` (HU-21).
   Future<Result<List<Operativo>>> operativosDisponibles();
 
+  /// `GET /operativos?activos=false` (HU-24).
+  Future<Result<List<Operativo>>> listarOperativos();
+
+  /// `POST /admin/operativos` con rol operativo y contraseña temporal (HU-24).
+  Future<Result<void>> crearOperativo({
+    required String nombre,
+    required String apellidos,
+    required String correo,
+    required String passwordTemporal,
+  });
+
+  /// `PATCH /admin/operativos/{id}/estatus` (HU-24).
+  Future<Result<void>> cambiarEstatusOperativo(int id, {required bool activo});
+
   /// `POST /incidencias/{id}/asignacion` (HU-21).
   Future<Result<void>> asignarIncidencia(int incidenciaId, int operativoId);
 }
