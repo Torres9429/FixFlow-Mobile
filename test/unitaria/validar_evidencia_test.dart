@@ -10,7 +10,7 @@ void main() {
     id: '1',
     nombre: 'Bache',
     codigo: 'BACHE',
-    orientacion: OrientacionFoto.suelo,
+    orientacion: OrientacionFoto.suelo, anguloMin: 45, anguloMax: 90,
   );
 
   ReporteNuevo crearReporte({
@@ -18,6 +18,7 @@ void main() {
     double latitud = 18.9220,
     double longitud = -99.2340,
     double? inclinacion = 60.0,
+    bool sinSensor = false,
   }) =>
       ReporteNuevo(
         tipo: bache,
@@ -25,6 +26,7 @@ void main() {
         latitud: latitud,
         longitud: longitud,
         inclinacion: inclinacion,
+        sinSensor: sinSensor,
         rutaFoto: rutaFoto,
         capturadaEn: DateTime(2026, 11, 4, 12, 0),
       );
@@ -63,13 +65,20 @@ void main() {
       expect(resultado, 'No se obtuvo la ubicación. Vuelve a capturar la foto.');
     });
 
-    test('Reporte sin datos del acelerómetro falla la validación (CA-4, RN-11)', () {
+    test('Con acelerómetro y sin lectura, la validación falla (CA-4, RN-11)', () {
       final reporte = crearReporte(inclinacion: null);
 
       final resultado = validarEvidencia(reporte);
 
       expect(resultado, isNotNull);
       expect(resultado, 'No se pudo medir la inclinación del teléfono. Vuelve a capturar la foto.');
+    });
+
+    test('Sin acelerómetro, la validación pasa sin inclinación y con cualquier tipo (CA-4, RN-11)', () {
+      // Bache pide foto hacia el suelo, pero un teléfono sin sensor no puede medirla
+      final reporte = crearReporte(inclinacion: null, sinSensor: true);
+
+      expect(validarEvidencia(reporte), isNull);
     });
   });
 }

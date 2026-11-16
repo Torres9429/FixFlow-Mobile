@@ -2,6 +2,8 @@
 
 import 'dart:io';
 
+// ignore: depend_on_referenced_packages
+import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:fix_flow/core/result.dart';
 import 'package:fix_flow/data/repositories/fake_incidence_type_repository.dart';
 import 'package:fix_flow/domain/repositories/evidencia_repository.dart';
@@ -9,6 +11,7 @@ import 'package:fix_flow/domain/repositories/incidence_type_repository.dart';
 import 'package:fix_flow/domain/repositories/inclinacion_repository.dart';
 import 'package:fix_flow/domain/repositories/reportes_ciudadano_repository.dart';
 import 'package:fix_flow/presentation/core/theme/app_theme.dart';
+import 'package:fix_flow/presentation/reporte/camara/camara_orientacion_screen.dart';
 import 'package:fix_flow/presentation/reporte/nuevo_reporte_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +34,11 @@ class MockImagePickerPlatform extends Mock
     implements ImagePickerPlatform {}
 
 class FakeImagePickerOptions extends Fake implements ImagePickerOptions {}
+
+/// En pruebas no hay cámara física: responde como un teléfono que negó el permiso (B6).
+class MockCameraPlatform extends Mock
+    with MockPlatformInterfaceMixin
+    implements CameraPlatform {}
 
 void main() {
   late MockGeolocatorPlatform mockGeolocator;
@@ -74,8 +82,15 @@ void main() {
     ImagePickerPlatform.instance = mockImagePicker;
     when(() => mockImagePicker.getLostData()).thenAnswer((_) async => LostDataResponse.empty());
 
+    final mockCamara = MockCameraPlatform();
+    CameraPlatform.instance = mockCamara;
+    when(() => mockCamara.availableCameras())
+        .thenThrow(CameraException('CameraAccessDenied', 'Permiso de cámara denegado'));
+
     mockInclinacion = MockInclinacionRepository();
     when(() => mockInclinacion.leerInclinacion()).thenAnswer((_) async => 60.0);
+    when(() => mockInclinacion.sensorDisponible()).thenAnswer((_) async => true);
+    when(() => mockInclinacion.observarInclinacion()).thenAnswer((_) => Stream.value(60.0));
 
     mockEvidencia = MockEvidenciaRepository();
     when(() => mockEvidencia.subirFoto(any()))
@@ -142,22 +157,14 @@ void main() {
       expect(find.text('Campo obligatorio'), findsOneWidget);
 
       // La cámara nunca se abrió
-      verifyNever(() => mockImagePicker.getImageFromSource(
-            source: ImageSource.camera,
-            options: any(named: 'options'),
-          ));
+      expect(find.byType(CamaraOrientacionScreen), findsNothing);
     });
   });
 
   group('HU-04: Capturar evidencia fotográfica en vivo en interfaz (CA-3, CA-4)', () {
-    testWidgets('Permiso de cámara concedido → se abre la cámara (CA-3)', (tester) async {
+    testWidgets('Al continuar se abre la cámara en vivo de la app, no la galería (CA-1, CA-3)', (tester) async {
       configurarPantallaGrande(tester);
       stubGpsConcedido();
-
-      when(() => mockImagePicker.getImageFromSource(
-            source: ImageSource.camera,
-            options: any(named: 'options'),
-          )).thenAnswer((_) async => XFile(archivoFotoTemp.path));
 
       await tester.pumpWidget(montarPantalla());
       await tester.pumpAndSettle();
@@ -175,21 +182,13 @@ void main() {
       await tester.tap(find.byKey(const Key('reporte_revisar_enviar')));
       await tester.pumpAndSettle();
 
-      // Al conceder el permiso, se abre la cámara en vivo
-      verify(() => mockImagePicker.getImageFromSource(
-            source: ImageSource.camera,
-            options: any(named: 'options'),
-          )).called(1);
+      // Se abre la cámara propia de la app (B3), no image_picker ni la galería
+      expect(find.byType(CamaraOrientacionScreen), findsOneWidget);
     });
 
-    testWidgets('Permiso de cámara rechazado → se muestra aviso (CA-4)', (tester) async {
+    testWidgets('Cámara sin permiso o no disponible → se muestra B6 (CA-4)', (tester) async {
       configurarPantallaGrande(tester);
       stubGpsConcedido();
-
-      when(() => mockImagePicker.getImageFromSource(
-            source: ImageSource.camera,
-            options: any(named: 'options'),
-          )).thenThrow(Exception('Permiso de cámara denegado'));
 
       await tester.pumpWidget(montarPantalla());
       await tester.pumpAndSettle();
@@ -207,8 +206,9 @@ void main() {
       await tester.tap(find.byKey(const Key('reporte_revisar_enviar')));
       await tester.pumpAndSettle();
 
-      // Se muestra aviso indicando que no es posible continuar sin la cámara
-      expect(find.text('No se pudo abrir la cámara. Verifica el permiso.'), findsOneWidget);
+      // Sin cámara disponible (en pruebas no hay), se muestra B6 y no hay forma de tomar la foto
+      expect(find.text('No podemos usar la cámara'), findsOneWidget);
+      expect(find.text('Dar permiso'), findsOneWidget);
     });
   });
 
@@ -216,11 +216,6 @@ void main() {
     testWidgets('Permiso de ubicación concedido → se obtienen coordenadas (CA-1)', (tester) async {
       configurarPantallaGrande(tester);
       stubGpsConcedido();
-
-      when(() => mockImagePicker.getImageFromSource(
-            source: ImageSource.camera,
-            options: any(named: 'options'),
-          )).thenAnswer((_) async => XFile(archivoFotoTemp.path));
 
       await tester.pumpWidget(montarPantalla());
       await tester.pumpAndSettle();
@@ -238,10 +233,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // La cámara se abre porque la ubicación se obtuvo correctamente
-      verify(() => mockImagePicker.getImageFromSource(
-            source: ImageSource.camera,
-            options: any(named: 'options'),
-          )).called(1);
+      expect(find.byType(CamaraOrientacionScreen), findsOneWidget);
     });
 
     testWidgets('Permiso de ubicación rechazado → se muestra aviso (CA-5)', (tester) async {
@@ -268,10 +260,35 @@ void main() {
       );
 
       // La cámara no se abre sin ubicación
-      verifyNever(() => mockImagePicker.getImageFromSource(
-            source: ImageSource.camera,
-            options: any(named: 'options'),
-          ));
+      expect(find.byType(CamaraOrientacionScreen), findsNothing);
+    });
+  });
+
+  group('HU-06: Teléfono sin acelerómetro (CA-1, CA-7, RN-11)', () {
+    testWidgets('Se muestra el aviso y el tipo elegido va sin guía de inclinación', (tester) async {
+      configurarPantallaGrande(tester);
+      stubGpsConcedido();
+      when(() => mockInclinacion.sensorDisponible()).thenAnswer((_) async => false);
+
+      await tester.pumpWidget(montarPantalla());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('aviso_sin_sensor')), findsOneWidget);
+
+      // Bache pide foto hacia el suelo, pero sin sensor se puede elegir y no lleva guía
+      await tester.tap(find.byKey(const Key('tipo_1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Foto sin guía de inclinación'), findsOneWidget);
+    });
+
+    testWidgets('Con acelerómetro no aparece el aviso', (tester) async {
+      configurarPantallaGrande(tester);
+      stubGpsConcedido();
+
+      await tester.pumpWidget(montarPantalla());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('aviso_sin_sensor')), findsNothing);
     });
   });
 }

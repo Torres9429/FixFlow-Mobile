@@ -10,6 +10,7 @@ class ReporteNuevo {
     required this.rutaFoto,
     required this.capturadaEn,
     this.inclinacion,
+    this.sinSensor = false,
   });
 
   final TipoIncidencia tipo;
@@ -21,6 +22,9 @@ class ReporteNuevo {
 
   /// Grados: +90 es el suelo, 0 el horizonte y −90 el cielo. `null` si el acelerómetro no respondió.
   final double? inclinacion;
+
+  /// El teléfono no tiene acelerómetro: no se manda la inclinación ni se valida la orientación (RN-11, B3e).
+  final bool sinSensor;
 
   /// Archivo local de la foto tomada en vivo (RN-09).
   final String rutaFoto;

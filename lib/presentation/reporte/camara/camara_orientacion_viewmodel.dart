@@ -3,30 +3,45 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../domain/entities/tipo_incidencia.dart';
+import '../../../domain/errors/sensor_no_disponible.dart';
 import '../../../domain/repositories/inclinacion_repository.dart';
+import '../../core/notificador_seguro.dart';
 
 /// ViewModel para la pantalla de cámara en vivo y guía de orientación (B3 / #23 / HU-06).
 ///
 /// Coordina la lectura en tiempo real del acelerómetro, calcula la congruencia con
 /// la regla de negocio RN-11 y determina cuándo se habilita el botón disparador.
-class CamaraOrientacionViewModel extends ChangeNotifier {
+/// La zona válida sale de `anguloMin`/`anguloMax` del tipo, los mismos con los que valida el servidor.
+class CamaraOrientacionViewModel extends ChangeNotifier with NotificadorSeguro {
   CamaraOrientacionViewModel({
     required this.tipo,
     required this.inclinacionRepository,
     this.precisionGps,
+    this._sinSensor = false,
   }) {
-    _iniciarMonitoreo();
+    if (!_sinSensor) _iniciarMonitoreo();
   }
 
-  static const double sueloMinimo = 45.0;
-  static const double arribaMaximo = -20.0;
+  /// Si en este tiempo no llega ninguna lectura, el teléfono se trata como sin sensor (respaldo de B2).
+  static const esperaPrimeraLectura = Duration(milliseconds: 1500);
 
   final TipoIncidencia tipo;
   final InclinacionRepository inclinacionRepository;
   final double? precisionGps;
 
+  /// Ventana del promedio al disparar (RN-11).
+  static const _ventanaDisparo = Duration(milliseconds: 500);
+
   StreamSubscription<double>? _subscripcion;
+  Timer? _esperaSensor;
+  bool _sinSensor;
+
+  /// El teléfono no tiene acelerómetro o no respondió: cámara sin guía y disparador activo (B3e, RN-11).
+  bool get sinSensor => _sinSensor;
   double? _anguloActual;
+
+  /// Lecturas recientes con su hora, para promediar el último medio segundo.
+  final _lecturas = <(DateTime, double)>[];
   bool _capturando = false;
   String? _error;
 
@@ -34,50 +49,50 @@ class CamaraOrientacionViewModel extends ChangeNotifier {
   bool get capturando => _capturando;
   String? get error => _error;
 
+  /// Zona válida del tipo; `null` si el servidor no la mandó (entonces decide el servidor al enviar).
+  double? get _min => tipo.anguloMin;
+  double? get _max => tipo.anguloMax;
+
   /// Indica si la inclinación actual cumple la regla de negocio del tipo (RN-11).
   bool get enRango {
+    if (_sinSensor || tipo.orientacion == OrientacionFoto.sinRestriccion) return true;
     final angulo = _anguloActual;
-    switch (tipo.orientacion) {
-      case OrientacionFoto.suelo:
-        return angulo != null && angulo >= sueloMinimo;
-      case OrientacionFoto.arriba:
-        return angulo != null && angulo <= arribaMaximo;
-      case OrientacionFoto.sinRestriccion:
-        return true;
-    }
+    if (angulo == null) return false;
+    final (min, max) = (_min, _max);
+    if (min == null || max == null) return true;
+    return angulo >= min && angulo <= max;
   }
 
   /// Grados que faltan para entrar en la zona verde (0 si ya está en rango).
   int get gradosFaltantes {
     final angulo = _anguloActual;
-    if (angulo == null) return 0;
-    switch (tipo.orientacion) {
-      case OrientacionFoto.suelo:
-        return angulo < sueloMinimo ? (sueloMinimo - angulo).round() : 0;
-      case OrientacionFoto.arriba:
-        return angulo > arribaMaximo ? (angulo - arribaMaximo).round() : 0;
-      case OrientacionFoto.sinRestriccion:
-        return 0;
-    }
+    final (min, max) = (_min, _max);
+    if (angulo == null || min == null || max == null || enRango) return 0;
+    return angulo < min ? (min - angulo).round() : (angulo - max).round();
   }
 
   /// Título de estado para el panel inferior.
   String get estadoTexto {
+    if (_sinSensor) return 'Sin sensor de inclinación';
+    if (_anguloActual == null) return 'Esperando el sensor de inclinación';
     if (tipo.orientacion == OrientacionFoto.sinRestriccion) {
-      return '✓ Sensores listos';
+      return 'Sensores listos';
     }
     if (enRango) {
-      return '✓ Ángulo correcto';
+      return 'Ángulo correcto';
     }
     return switch (tipo.orientacion) {
       OrientacionFoto.suelo => 'Inclina hacia el suelo',
       OrientacionFoto.arriba => 'Inclina hacia arriba',
-      OrientacionFoto.sinRestriccion => '✓ Sensores listos',
+      OrientacionFoto.sinRestriccion => 'Sensores listos',
     };
   }
 
   /// Texto explicativo de la zona y los grados restantes (null si no se requiere).
   String? get textoAyuda {
+    if (_sinSensor) {
+      return 'Encuadra el problema como mejor se vea. La foto se envía sin validar el ángulo.';
+    }
     switch (tipo.orientacion) {
       case OrientacionFoto.sinRestriccion:
         return 'Este tipo no pide una orientación: encuadra el problema como mejor se vea. '
@@ -97,6 +112,7 @@ class CamaraOrientacionViewModel extends ChangeNotifier {
 
   /// Subtítulo para la píldora superior.
   String get subtituloOrientacion {
+    if (_sinSensor) return 'sin guía de inclinación';
     return switch (tipo.orientacion) {
       OrientacionFoto.suelo => 'apunta hacia el suelo',
       OrientacionFoto.arriba => 'apunta hacia arriba',
@@ -106,8 +122,12 @@ class CamaraOrientacionViewModel extends ChangeNotifier {
 
   /// Texto de ayuda en el pie de página bajo el disparador.
   String get textoPie {
+    if (_sinSensor) return 'Tu teléfono no tiene sensor de inclinación.';
+    if (_anguloActual == null) {
+      return 'El botón se activa cuando llegue la primera lectura del sensor.';
+    }
     if (!enRango) {
-      return 'Inclina el teléfono para continuar (en el prototipo, toca el botón para simularlo).';
+      return 'Inclina el teléfono hasta la zona verde para tomar la foto.';
     }
     if (tipo.orientacion == OrientacionFoto.arriba) {
       return 'Puedes tomarla de lejos: basta con apuntar hacia arriba.';
@@ -124,36 +144,60 @@ class CamaraOrientacionViewModel extends ChangeNotifier {
     return 'GPS listo';
   }
 
-  /// El disparador solo se activa dentro de la zona verde y si no se está capturando.
-  bool get disparadorActivo => enRango && !_capturando;
+  /// El disparador solo se activa con una lectura del sensor, dentro de la zona verde y si no se está capturando.
+  bool get disparadorActivo => (_sinSensor || _anguloActual != null) && enRango && !_capturando;
 
   void _iniciarMonitoreo() {
+    // Respaldo: el teléfono dice tener sensor pero no manda lecturas
+    _esperaSensor = Timer(esperaPrimeraLectura, () {
+      if (_anguloActual == null) _pasarASinSensor();
+    });
     try {
       _subscripcion = inclinacionRepository.observarInclinacion().listen(
         (angulo) {
           _anguloActual = angulo;
+          _guardarLectura(angulo);
           _error = null;
           notifyListeners();
         },
         onError: (Object err) {
-          _error = 'Error al leer la orientación del dispositivo: $err';
+          if (err is SensorNoDisponible) {
+            _pasarASinSensor();
+            return;
+          }
+          _error = 'No se pudo leer la inclinación del teléfono.';
           notifyListeners();
         },
       );
-    } catch (e) {
-      _error = 'Sensor de inclinación no disponible: $e';
-      notifyListeners();
+    } catch (_) {
+      _pasarASinSensor();
     }
   }
 
-  /// Permite a emuladores y pruebas simular el ángulo correcto con un toque.
-  void simularAnguloValido() {
-    _anguloActual = switch (tipo.orientacion) {
-      OrientacionFoto.suelo => 62.0,
-      OrientacionFoto.arriba => -35.0,
-      OrientacionFoto.sinRestriccion => 5.0,
-    };
+  void _pasarASinSensor() {
+    if (_sinSensor) return;
+    _sinSensor = true;
+    _esperaSensor?.cancel();
+    _subscripcion?.cancel();
+    _error = null;
     notifyListeners();
+  }
+
+  void _guardarLectura(double angulo) {
+    final ahora = DateTime.now();
+    _lecturas.add((ahora, angulo));
+    // Basta con conservar un poco más que la ventana del disparo
+    _lecturas.removeWhere((l) => ahora.difference(l.$1) > _ventanaDisparo * 2);
+  }
+
+  /// Inclinación que se guarda con la foto: el promedio de las lecturas del último medio segundo (RN-11).
+  /// `null` si no ha llegado ninguna lectura.
+  double? inclinacionDelDisparo() {
+    if (_sinSensor) return null;
+    final desde = DateTime.now().subtract(_ventanaDisparo);
+    final recientes = [for (final (hora, angulo) in _lecturas) if (!hora.isBefore(desde)) angulo];
+    if (recientes.isEmpty) return _anguloActual;
+    return recientes.reduce((a, b) => a + b) / recientes.length;
   }
 
   /// Permite fijar un ángulo exacto (para pruebas o control fino).
@@ -170,6 +214,7 @@ class CamaraOrientacionViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _esperaSensor?.cancel();
     _subscripcion?.cancel();
     super.dispose();
   }

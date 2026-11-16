@@ -39,6 +39,9 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   DateTime? _capturadaEn;
   Position? _posicion;
   double? _inclinacion;
+
+  /// El teléfono no tiene acelerómetro: se avisa y la foto va sin validar el ángulo (RN-11, B3e).
+  bool _sinSensor = false;
   bool _cargandoTipos = true;
   bool _cargandoUbicacion = true;
   String? _errorTipos;
@@ -49,7 +52,14 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     super.initState();
     _cargarTipos();
     _cargarUbicacion();
+    _revisarSensor();
     _recuperarFotoPerdida();
+  }
+
+  Future<void> _revisarSensor() async {
+    final disponible = await context.read<InclinacionRepository>().sensorDisponible();
+    if (!mounted || disponible) return;
+    setState(() => _sinSensor = true);
   }
 
   @override
@@ -117,6 +127,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
         builder: (_) => CamaraOrientacionScreen(
           tipo: tipo,
           precisionGps: _posicion?.accuracy,
+          sinSensor: _sinSensor,
         ),
       ),
     );
@@ -127,6 +138,8 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
       _foto = archivo;
       _inclinacion = resultado.inclinacion;
       _capturadaEn = resultado.capturadaEn;
+      // El respaldo de la cámara puede descubrir que el sensor no responde
+      _sinSensor = _sinSensor || resultado.sinSensor;
     });
     return archivo;
   }
@@ -183,8 +196,8 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
 
     final foto = _foto ?? await _capturarFoto();
     if (!mounted || foto == null) return;
-    // Inclinación capturada en el momento exacto del disparo (#23 / HU-06)
-    final inclinacion = _inclinacion ?? await inclinacionRepository.leerInclinacion();
+    // Inclinación del disparo (RN-11); sin acelerómetro no hay lectura
+    final inclinacion = _sinSensor ? null : _inclinacion ?? await inclinacionRepository.leerInclinacion();
     if (!mounted) return;
 
     final reporte = ReporteNuevo(
@@ -193,6 +206,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
       latitud: posicion.latitude,
       longitud: posicion.longitude,
       inclinacion: inclinacion,
+      sinSensor: _sinSensor,
       rutaFoto: foto.path,
       capturadaEn: _capturadaEn ?? DateTime.now(),
     );
@@ -262,7 +276,8 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
             else if (_errorTipos != null)
               _ErrorRow(mensaje: _errorTipos!, onRetry: _cargarTipos)
             else ...[
-              _TipoElegido(tipo: _tipo),
+              if (_sinSensor) ...[const _AvisoSinSensor(), const SizedBox(height: 12)],
+              _TipoElegido(tipo: _tipo, sinSensor: _sinSensor),
               const SizedBox(height: 12),
               _CuadriculaTipos(tipos: _tipos, elegido: _tipo, onElegir: (tipo) => setState(() => _tipo = tipo)),
               FormField<TipoIncidencia>(
@@ -303,7 +318,14 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
               children: [
                 const Icon(Icons.photo_camera_outlined, size: 20, color: AppColors.textSecondary),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Al continuar se abre la cámara con guía de inclinación y GPS.', style: meta)),
+                Expanded(
+                  child: Text(
+                    _sinSensor
+                        ? 'Al continuar se abre la cámara con GPS, sin guía de inclinación.'
+                        : 'Al continuar se abre la cámara con guía de inclinación y GPS.',
+                    style: meta,
+                  ),
+                ),
               ],
             ),
           ],
@@ -365,11 +387,42 @@ String _pistaOrientacion(OrientacionFoto orientacion) => switch (orientacion) {
   OrientacionFoto.sinRestriccion => 'Cualquier ángulo; la inclinación se guarda con la foto',
 };
 
+/// Aviso de B2 cuando el teléfono no tiene acelerómetro (design.md, B2 y B3e).
+class _AvisoSinSensor extends StatelessWidget {
+  const _AvisoSinSensor();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('aviso_sin_sensor'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.primaryContainer,
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Tu teléfono no puede medir la inclinación: puedes reportar cualquier tipo y la foto se envía sin validar el ángulo.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Tarjeta con el tipo elegido y cómo se tomará la foto.
 class _TipoElegido extends StatelessWidget {
-  const _TipoElegido({required this.tipo});
+  const _TipoElegido({required this.tipo, this.sinSensor = false});
 
   final TipoIncidencia? tipo;
+  final bool sinSensor;
 
   @override
   Widget build(BuildContext context) {
@@ -402,7 +455,11 @@ class _TipoElegido extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  tipo == null ? 'Elige una opción de la lista' : _pistaOrientacion(tipo.orientacion),
+                  tipo == null
+                      ? 'Elige una opción de la lista'
+                      : sinSensor
+                      ? 'Foto sin guía de inclinación'
+                      : _pistaOrientacion(tipo.orientacion),
                   style: texto.bodySmall?.copyWith(
                     fontSize: 13,
                     height: 18 / 13,

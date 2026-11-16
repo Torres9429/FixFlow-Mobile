@@ -16,6 +16,7 @@ abstract final class IncidenciaDetalleModel {
         ciudadano: _nombre(j['ciudadano']),
         operativoAsignado: _nombre(j['operativoAsignado']),
         operativoAsignadoId: _id(j['operativoAsignado']),
+        sinSensor: j['sinSensor'] as bool? ?? false,
       );
 
   static DateTime? _fecha(Object? v) =>

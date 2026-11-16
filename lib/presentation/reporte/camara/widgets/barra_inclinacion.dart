@@ -11,11 +11,17 @@ class BarraInclinacion extends StatelessWidget {
     required this.angulo,
     required this.orientacion,
     required this.enRango,
+    this.anguloMin,
+    this.anguloMax,
   });
 
   final double? angulo;
   final OrientacionFoto orientacion;
   final bool enRango;
+
+  /// Zona válida que manda el servidor para el tipo (RN-11). Sin ella se pinta toda la barra.
+  final double? anguloMin;
+  final double? anguloMax;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +35,8 @@ class BarraInclinacion extends StatelessWidget {
               angulo: angulo,
               orientacion: orientacion,
               enRango: enRango,
+              anguloMin: anguloMin,
+              anguloMax: anguloMax,
             ),
           ),
         ),
@@ -72,11 +80,17 @@ class _BarraInclinacionPainter extends CustomPainter {
     required this.angulo,
     required this.orientacion,
     required this.enRango,
+    this.anguloMin,
+    this.anguloMax,
   });
 
   final double? angulo;
   final OrientacionFoto orientacion;
   final bool enRango;
+
+  /// Zona válida que manda el servidor para el tipo (RN-11). Sin ella se pinta toda la barra.
+  final double? anguloMin;
+  final double? anguloMax;
 
   double _anguloAFaccion(double deg) {
     return ((deg.clamp(-90.0, 90.0) + 90.0) / 180.0).clamp(0.0, 1.0);
@@ -102,19 +116,13 @@ class _BarraInclinacionPainter extends CustomPainter {
       ..color = AppColors.guiaValida
       ..style = PaintingStyle.fill;
 
-    if (orientacion == OrientacionFoto.suelo) {
-      // Suelo: de 45° a 90° (75% a 100% de la pista)
-      final startX = size.width * _anguloAFaccion(45.0);
+    final (min, max) = (anguloMin, anguloMax);
+    if (orientacion != OrientacionFoto.sinRestriccion && min != null && max != null) {
+      // Zona del tipo con los ángulos del servidor (RN-11): la app no tiene los umbrales escritos
+      final startX = size.width * _anguloAFaccion(min);
+      final endX = size.width * _anguloAFaccion(max);
       final greenRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(startX, centerY - (trackHeight / 2), size.width - startX, trackHeight),
-        const Radius.circular(3),
-      );
-      canvas.drawRRect(greenRect, greenZonePaint);
-    } else if (orientacion == OrientacionFoto.arriba) {
-      // Arriba: de -90° a -20° (0% a ~38.9% de la pista)
-      final endX = size.width * _anguloAFaccion(-20.0);
-      final greenRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, centerY - (trackHeight / 2), endX, trackHeight),
+        Rect.fromLTWH(startX, centerY - (trackHeight / 2), endX - startX, trackHeight),
         const Radius.circular(3),
       );
       canvas.drawRRect(greenRect, greenZonePaint);
@@ -171,6 +179,8 @@ class _BarraInclinacionPainter extends CustomPainter {
   bool shouldRepaint(_BarraInclinacionPainter oldDelegate) {
     return oldDelegate.angulo != angulo ||
         oldDelegate.orientacion != orientacion ||
+        oldDelegate.anguloMin != anguloMin ||
+        oldDelegate.anguloMax != anguloMax ||
         oldDelegate.enRango != enRango;
   }
 }

@@ -5,7 +5,7 @@ import 'package:fix_flow/domain/entities/tipo_incidencia.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const bache = TipoIncidencia(id: '1', nombre: 'Bache', codigo: 'BACHE', orientacion: OrientacionFoto.suelo);
+  const bache = TipoIncidencia(id: '1', nombre: 'Bache', codigo: 'BACHE', orientacion: OrientacionFoto.suelo, anguloMin: 45, anguloMax: 90);
 
   ReporteNuevo reporte({double lat = 18.9220, double lng = -99.2340}) => ReporteNuevo(
         tipo: bache,

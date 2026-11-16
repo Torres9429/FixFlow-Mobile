@@ -25,7 +25,7 @@ void main() {
     id: '1',
     nombre: 'Bache',
     codigo: 'BACHE',
-    orientacion: OrientacionFoto.suelo,
+    orientacion: OrientacionFoto.suelo, anguloMin: 45, anguloMax: 90,
   );
 
   ReporteNuevo crearReporte({

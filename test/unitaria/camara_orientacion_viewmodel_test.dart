@@ -1,5 +1,7 @@
 import 'package:fix_flow/data/repositories/fakes/fake_inclinacion_repository.dart';
 import 'package:fix_flow/domain/entities/tipo_incidencia.dart';
+import 'package:fix_flow/domain/errors/sensor_no_disponible.dart';
+import 'package:fix_flow/domain/repositories/inclinacion_repository.dart';
 import 'package:fix_flow/presentation/reporte/camara/camara_orientacion_viewmodel.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -8,14 +10,14 @@ void main() {
     id: '1',
     nombre: 'Bache',
     codigo: 'BACHE',
-    orientacion: OrientacionFoto.suelo,
+    orientacion: OrientacionFoto.suelo, anguloMin: 45, anguloMax: 90,
   );
 
   const luminaria = TipoIncidencia(
     id: '2',
     nombre: 'Luminaria',
     codigo: 'LUMINARIA',
-    orientacion: OrientacionFoto.arriba,
+    orientacion: OrientacionFoto.arriba, anguloMin: -90, anguloMax: -20,
   );
 
   const fuga = TipoIncidencia(
@@ -50,7 +52,7 @@ void main() {
 
       expect(vm.enRango, isTrue);
       expect(vm.gradosFaltantes, 0);
-      expect(vm.estadoTexto, '✓ Ángulo correcto');
+      expect(vm.estadoTexto, 'Ángulo correcto');
       expect(vm.disparadorActivo, isTrue);
 
       vm.dispose();
@@ -64,7 +66,7 @@ void main() {
 
       expect(vm.enRango, isTrue);
       expect(vm.gradosFaltantes, 0);
-      expect(vm.estadoTexto, '✓ Ángulo correcto');
+      expect(vm.estadoTexto, 'Ángulo correcto');
       expect(vm.textoPie, contains('basta con apuntar hacia arriba'));
       expect(vm.disparadorActivo, isTrue);
 
@@ -93,7 +95,7 @@ void main() {
 
       expect(vm.enRango, isTrue);
       expect(vm.gradosFaltantes, 0);
-      expect(vm.estadoTexto, '✓ Sensores listos');
+      expect(vm.estadoTexto, 'Sensores listos');
       expect(vm.disparadorActivo, isTrue);
 
       vm.dispose();
@@ -133,5 +135,55 @@ void main() {
       vm.dispose();
     });
   });
+
+  group('HU-06: Teléfono sin acelerómetro (B3e, RN-11)', () {
+    test('Sin sensor desde B2: disparador activo con cualquier tipo y sin inclinación', () {
+      final repo = FakeInclinacionRepository(conSensor: false);
+      final vm = CamaraOrientacionViewModel(tipo: bache, inclinacionRepository: repo, sinSensor: true);
+
+      expect(vm.sinSensor, isTrue);
+      expect(vm.enRango, isTrue);
+      expect(vm.disparadorActivo, isTrue);
+      expect(vm.inclinacionDelDisparo(), isNull);
+      expect(vm.textoPie, 'Tu teléfono no tiene sensor de inclinación.');
+
+      vm.dispose();
+    });
+
+    test('Si el sensor manda «no disponible» en la cámara, pasa a sin sensor (respaldo)', () async {
+      final vm = CamaraOrientacionViewModel(tipo: bache, inclinacionRepository: _SensorQueFalla());
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(vm.sinSensor, isTrue);
+      expect(vm.disparadorActivo, isTrue);
+
+      vm.dispose();
+    });
+
+    test('Con sensor, Bache fuera de rango sigue bloqueado (no cambia nada)', () async {
+      final repo = FakeInclinacionRepository(inclinacionInicial: 10.0);
+      final vm = CamaraOrientacionViewModel(tipo: bache, inclinacionRepository: repo);
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(vm.sinSensor, isFalse);
+      expect(vm.disparadorActivo, isFalse);
+
+      vm.dispose();
+    });
+  });
+}
+
+/// El teléfono dice tener sensor, pero el stream responde que no está disponible.
+class _SensorQueFalla implements InclinacionRepository {
+  @override
+  Future<bool> sensorDisponible() async => true;
+
+  @override
+  Future<double?> leerInclinacion() async => null;
+
+  @override
+  Stream<double> observarInclinacion() => Stream<double>.error(const SensorNoDisponible());
 }
 

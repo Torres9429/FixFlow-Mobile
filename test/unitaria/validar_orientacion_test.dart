@@ -15,14 +15,14 @@ void main() {
     id: '1',
     nombre: 'Bache',
     codigo: 'BACHE',
-    orientacion: OrientacionFoto.suelo,
+    orientacion: OrientacionFoto.suelo, anguloMin: 45, anguloMax: 90,
   );
 
   const luminaria = TipoIncidencia(
     id: '2',
     nombre: 'Luminaria apagada o dañada',
     codigo: 'LUMINARIA',
-    orientacion: OrientacionFoto.arriba,
+    orientacion: OrientacionFoto.arriba, anguloMin: -90, anguloMax: -20,
   );
 
   ReporteNuevo reporte({

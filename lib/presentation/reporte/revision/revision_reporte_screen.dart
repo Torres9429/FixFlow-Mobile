@@ -80,7 +80,10 @@ class RevisionReporteScreen extends StatelessWidget {
                 child: Text(
                   [
                     'Capturada ${formatearFechaCorta(reporte.capturadaEn)}',
-                    if (inclinacion != null) 'Inclinación ${inclinacion.round()}°',
+                    if (reporte.sinSensor)
+                      'Sin sensor de inclinación'
+                    else if (inclinacion != null)
+                      'Inclinación ${inclinacion.round()}°',
                   ].join(' · '),
                   style: meta,
                 ),

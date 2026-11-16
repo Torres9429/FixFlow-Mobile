@@ -29,7 +29,7 @@ void main() {
         () {
       final ahora = DateTime.now();
       final reporte = ReporteNuevo(
-        tipo: const TipoIncidencia(id: '1', nombre: 'Bache', codigo: 'BACHE', orientacion: OrientacionFoto.suelo),
+        tipo: const TipoIncidencia(id: '1', nombre: 'Bache', codigo: 'BACHE', orientacion: OrientacionFoto.suelo, anguloMin: 45, anguloMax: 90),
         descripcion: 'Bache grande en el carril derecho',
         latitud: 18.92,
         longitud: -99.23,

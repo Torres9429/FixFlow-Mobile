@@ -1,8 +1,11 @@
 // Test tipo Integración: la app completa en el emulador, con los servicios simulados
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+// ignore: depend_on_referenced_packages
+import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:fix_flow/app.dart';
 import 'package:fix_flow/data/datasources/local/session_storage.dart';
 import 'package:fix_flow/data/datasources/remote/fake_auth_remote_datasource.dart';
@@ -10,6 +13,7 @@ import 'package:fix_flow/data/repositories/auth_repository_impl.dart';
 import 'package:fix_flow/data/repositories/fakes/fake_evidencia_repository.dart';
 import 'package:fix_flow/data/repositories/fakes/fake_inclinacion_repository.dart';
 import 'package:fix_flow/data/repositories/fakes/fake_reportes_ciudadano_repository.dart';
+import 'package:fix_flow/presentation/reporte/camara/camara_orientacion_screen.dart';
 import 'package:fix_flow/presentation/reporte/enviado/reporte_enviado_screen.dart';
 import 'package:fix_flow/presentation/reporte/nuevo_reporte_screen.dart';
 import 'package:fix_flow/presentation/reporte/revision/revision_reporte_screen.dart';
@@ -34,6 +38,46 @@ class MockImagePickerPlatform extends Mock
     implements ImagePickerPlatform {}
 
 class FakeImagePickerOptions extends Fake implements ImagePickerOptions {}
+
+/// Cámara trasera simulada: se inicializa al momento y el disparo devuelve [foto].
+/// Solo implementa lo que usan `CameraController.initialize()` y `takePicture()`.
+class FakeCameraPlatform extends Fake with MockPlatformInterfaceMixin implements CameraPlatform {
+  FakeCameraPlatform(this.foto);
+
+  final String foto;
+
+  @override
+  Future<List<CameraDescription>> availableCameras() async => const [
+    CameraDescription(name: '0', lensDirection: CameraLensDirection.back, sensorOrientation: 90),
+  ];
+
+  @override
+  Stream<DeviceOrientationChangedEvent> onDeviceOrientationChanged() => const Stream.empty();
+
+  @override
+  Future<int> createCameraWithSettings(CameraDescription cameraDescription, MediaSettings mediaSettings) async => 1;
+
+  @override
+  Stream<CameraInitializedEvent> onCameraInitialized(int cameraId) => Stream.value(
+    const CameraInitializedEvent(1, 640, 480, ExposureMode.auto, false, FocusMode.auto, false),
+  );
+
+  @override
+  // Nunca emite: el controller hace `.first` sobre este stream y uno vacío lanzaría «No element»
+  Stream<CameraErrorEvent> onCameraError(int cameraId) => Completer<CameraErrorEvent>().future.asStream();
+
+  @override
+  Future<void> initializeCamera(int cameraId, {ImageFormatGroup imageFormatGroup = ImageFormatGroup.unknown}) async {}
+
+  @override
+  Future<XFile> takePicture(int cameraId) async => XFile(foto);
+
+  @override
+  Widget buildPreview(int cameraId) => const ColoredBox(color: Colors.black);
+
+  @override
+  Future<void> dispose(int cameraId) async {}
+}
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -81,16 +125,11 @@ void main() {
     mockImagePicker = MockImagePickerPlatform();
     ImagePickerPlatform.instance = mockImagePicker;
     when(() => mockImagePicker.getLostData()).thenAnswer((_) async => LostDataResponse.empty());
-    when(() => mockImagePicker.getImageFromSource(
-          source: ImageSource.camera,
-          options: any(named: 'options'),
-        )).thenAnswer((_) async => XFile(archivoFotoTemp.path));
+
+    CameraPlatform.instance = FakeCameraPlatform(archivoFotoTemp.path);
   });
 
-  group('HU-03: Flujo completo: crear y enviar un reporte (CA-1 a CA-7)', () {
-    testWidgets(
-        'Seleccionar tipo → describir → capturar foto → obtener ubicación → revisar → confirmar → se genera un identificador y se muestra confirmación',
-        (tester) async {
+  Future<void> recorrerReporte(WidgetTester tester, {required bool conSensor}) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -103,7 +142,8 @@ void main() {
       final authRepo = AuthRepositoryImpl(remote: FakeAuthRemoteDataSource(), session: session);
       final reportesRepo = FakeReportesCiudadanoRepository();
       final evidenciaRepo = FakeEvidenciaRepository();
-      final inclinacionRepo = FakeInclinacionRepository(); // Devuelve 60° (suelo válido)
+      // Con sensor devuelve 60° (suelo válido); sin sensor, B2 avisa y la cámara abre en B3e
+      final inclinacionRepo = FakeInclinacionRepository(conSensor: conSensor);
 
       await tester.pumpWidget(
         FixFlowApp(
@@ -138,9 +178,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // PASO 5: Continuar a captura (obtiene GPS y abre cámara en vivo) (CA-3, CA-4)
+      if (!conSensor) expect(find.byKey(const Key('aviso_sin_sensor')), findsOneWidget);
+
+      // PASO 5: Continuar a captura: se abre la cámara en vivo de la app (CA-3, CA-4)
       await tester.ensureVisible(find.byKey(const Key('reporte_revisar_enviar')));
       await tester.tap(find.byKey(const Key('reporte_revisar_enviar')));
+      await tester.pumpAndSettle();
+      expect(find.byType(CamaraOrientacionScreen), findsOneWidget);
+
+      // Tomar la foto: con sensor, Bache a 60° está en la zona válida; sin sensor, el disparador siempre está activo
+      await tester.tap(find.byKey(const Key('disparador')));
       await tester.pumpAndSettle();
 
       // PASO 6: Pantalla de revisión previa al envío (CA-6)
@@ -148,6 +195,7 @@ void main() {
       expect(find.text('Bache'), findsOneWidget);
       expect(find.text('Bache grande en el carril derecho sobre Av. Morelos'), findsOneWidget);
       expect(find.text('Ubicación detectada'), findsOneWidget);
+      if (!conSensor) expect(find.textContaining('Sin sensor de inclinación'), findsOneWidget);
 
       // PASO 7: Confirmar envío (CA-7)
       await tester.ensureVisible(find.byKey(const Key('reporte_confirmar')));
@@ -164,7 +212,18 @@ void main() {
       // El folio generado contiene el formato esperado (FX-AAAA-NNNNNN)
       final textoFolio = tester.widget<Text>(find.byKey(const Key('reporte_folio'))).data;
       expect(textoFolio, matches(RegExp(r'^FX-\d{4}-\d{6}$')));
-    });
+  }
+
+  group('HU-03: Flujo completo: crear y enviar un reporte (CA-1 a CA-7)', () {
+    testWidgets(
+      'Seleccionar tipo → describir → capturar foto → obtener ubicación → revisar → confirmar → se genera un identificador y se muestra confirmación',
+      (tester) => recorrerReporte(tester, conSensor: true),
+    );
+
+    testWidgets(
+      'HU-06: teléfono sin acelerómetro → aviso en B2, cámara sin guía y el reporte se envía (CA-7, RN-11)',
+      (tester) => recorrerReporte(tester, conSensor: false),
+    );
   });
 }
 
