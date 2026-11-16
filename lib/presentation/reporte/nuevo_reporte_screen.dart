@@ -14,6 +14,8 @@ import '../../domain/repositories/reportes_ciudadano_repository.dart';
 import '../core/mensajes.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
+import 'camara/camara_orientacion_screen.dart';
+import 'camara/resultado_captura.dart';
 import 'revision/revision_reporte_screen.dart';
 import 'revision/revision_reporte_viewmodel.dart';
 
@@ -36,6 +38,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   XFile? _foto;
   DateTime? _capturadaEn;
   Position? _posicion;
+  double? _inclinacion;
   bool _cargandoTipos = true;
   bool _cargandoUbicacion = true;
   String? _errorTipos;
@@ -102,18 +105,30 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   }
 
   Future<XFile?> _capturarFoto() async {
-    try {
-      final foto = await _picker.pickImage(source: ImageSource.camera, imageQuality: 85);
-      if (!mounted || foto == null) return null;
-      setState(() {
-        _foto = foto;
-        _capturadaEn = DateTime.now();
-      });
-      return foto;
-    } catch (_) {
-      if (mounted) _mostrarAviso('No se pudo abrir la cámara. Verifica el permiso.');
+    final tipo = _tipo;
+    if (tipo == null) {
+      _mostrarAviso('Selecciona primero el tipo de incidencia.');
       return null;
     }
+
+    // Cámara en vivo con guía visual de orientación (RN-11 / HU-06 / #23)
+    final resultado = await Navigator.of(context).push<ResultadoCaptura>(
+      MaterialPageRoute(
+        builder: (_) => CamaraOrientacionScreen(
+          tipo: tipo,
+          precisionGps: _posicion?.accuracy,
+        ),
+      ),
+    );
+
+    if (!mounted || resultado == null) return null;
+    final archivo = XFile(resultado.rutaFoto);
+    setState(() {
+      _foto = archivo;
+      _inclinacion = resultado.inclinacion;
+      _capturadaEn = resultado.capturadaEn;
+    });
+    return archivo;
   }
 
   /// Si Android cerró la app mientras la cámara estaba abierta, recupera la foto tomada.
@@ -168,8 +183,8 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
 
     final foto = _foto ?? await _capturarFoto();
     if (!mounted || foto == null) return;
-    // PROVISIONAL: con la cámara en vivo (#20/#23) la inclinación será la del momento del disparo
-    final inclinacion = await inclinacionRepository.leerInclinacion();
+    // Inclinación capturada en el momento exacto del disparo (#23 / HU-06)
+    final inclinacion = _inclinacion ?? await inclinacionRepository.leerInclinacion();
     if (!mounted) return;
 
     final reporte = ReporteNuevo(
@@ -195,7 +210,10 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     );
     if (!mounted) return;
     // Al regresar de revisar, la siguiente vez se toma una foto nueva
-    setState(() => _foto = null);
+    setState(() {
+      _foto = null;
+      _inclinacion = null;
+    });
     // «Repetir foto» en B4: se vuelve a abrir la cámara con el mismo tipo y descripción
     if (repetirFoto == true) await _continuar();
   }

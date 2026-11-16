@@ -8,10 +8,20 @@ import '../../../domain/repositories/inclinacion_repository.dart';
 
 /// Lectura del acelerómetro promediada en 0.5 s, con la fórmula del spike (S2-04).
 ///
-/// PROVISIONAL: hoy se lee al volver de la cámara de `image_picker`. Cuando entre la cámara en vivo
-/// (#20) con su guía (#23), la lectura será la del momento del disparo y esta clase se usará desde ahí.
+/// Soporta lectura puntual para revisiones y stream continuo para la guía en vivo (#20 / #23).
 class InclinacionDataSource implements InclinacionRepository {
   static const _ventana = Duration(milliseconds: 500);
+
+  @override
+  Stream<double> observarInclinacion() {
+    try {
+      return accelerometerEventStream(samplingPeriod: SensorInterval.uiInterval)
+          .map((e) => math.atan2(e.z, math.sqrt(e.x * e.x + e.y * e.y)) * 180 / math.pi);
+    } catch (e) {
+      debugPrint('[FixFlow] Error al iniciar stream de acelerómetro: $e');
+      return const Stream.empty();
+    }
+  }
 
   @override
   Future<double?> leerInclinacion() async {
