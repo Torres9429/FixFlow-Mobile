@@ -7,7 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/campo_texto.dart';
 import '../nombre_rol.dart';
 import '../widgets/aviso_error.dart';
-import '../widgets/campo_bloqueado.dart';
+import '../../core/widgets/campo_bloqueado.dart';
 import 'editar_datos_viewmodel.dart';
 
 class EditarDatosScreen extends StatefulWidget {

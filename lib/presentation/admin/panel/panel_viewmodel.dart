@@ -7,6 +7,7 @@ import '../../../domain/entities/indicadores.dart';
 import '../../../domain/entities/prioridad.dart';
 import '../../../domain/repositories/admin_repository.dart';
 import '../../../domain/repositories/auth_repository.dart';
+import '../../../domain/repositories/incidence_type_repository.dart';
 import '../../core/estado_consulta.dart';
 import '../../core/mensajes.dart';
 import '../../core/notificador_seguro.dart';
@@ -16,19 +17,38 @@ typedef DatosPanel = ({Indicadores indicadores, List<IncidenciaResumen> priorita
 
 /// E1 Panel: indicadores (HU-19) y prioridad alta sin atender (HU-20).
 class PanelViewModel extends ChangeNotifier with NotificadorSeguro {
-  PanelViewModel({required this._adminRepository, required this._authRepository});
+  PanelViewModel({required this._adminRepository, required this._authRepository, this._tiposRepository});
 
   final AdminRepository _adminRepository;
   final AuthRepository _authRepository;
+
+  /// Solo para el subtítulo de la fila «Catálogo de tipos»; sin él, la fila muestra el texto fijo.
+  final IncidenceTypeRepository? _tiposRepository;
 
   static const maxPrioritarias = 5;
 
   String nombre = '';
   EstadoConsulta<DatosPanel> estado = const Cargando();
 
+  /// «9 activos / 1 inactivo», o `null` si no se pudo leer el catálogo.
+  String? resumenCatalogo;
+
   Future<void> iniciar() async {
     nombre = await _authRepository.nombreUsuario() ?? '';
-    await cargar();
+    await (cargar(), cargarCatalogo()).wait;
+  }
+
+  /// Si falla no afecta al panel: la fila se queda sin las cifras.
+  Future<void> cargarCatalogo() async {
+    final repo = _tiposRepository;
+    if (repo == null) return;
+    if (await repo.catalogo() case Ok(value: final tipos)) {
+      final activos = tipos.where((t) => t.activo).length;
+      final inactivos = tipos.length - activos;
+      resumenCatalogo =
+          '$activos ${activos == 1 ? 'activo' : 'activos'} / $inactivos ${inactivos == 1 ? 'inactivo' : 'inactivos'}';
+      notifyListeners();
+    }
   }
 
   /// Al recargar se deja el panel actual a la vista hasta que llegan las cifras nuevas.

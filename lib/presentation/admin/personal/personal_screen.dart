@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/barra_principal.dart';
 import '../../core/widgets/estado_vacio.dart';
+import '../../core/widgets/hoja_confirmacion.dart';
 import '../../routing/rutas.dart';
 import 'personal_viewmodel.dart';
 
@@ -98,68 +99,22 @@ class PersonalScreen extends StatelessWidget {
     Operativo operativo,
   ) async {
     final activar = !operativo.activo;
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(activar ? '¿Activar operativo?' : '¿Desactivar operativo?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              activar
-                  ? '${operativo.nombreCompleto} podrá iniciar sesión y recibir nuevas incidencias.'
-                  : '${operativo.nombreCompleto} no podrá recibir nuevas incidencias. Se conservará su historial y sus ${operativo.cargaActual} incidencias activas.',
-            ),
-            const SizedBox(height: 16),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(AppTheme.radius),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DatoOperativo(
-                      etiqueta: 'Operativo',
-                      valor: operativo.nombreCompleto,
-                    ),
-                    const SizedBox(height: 8),
-                    _DatoOperativo(
-                      etiqueta: 'Incidencias activas',
-                      valor: '${operativo.cargaActual}',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: activar ? null : AppColors.error,
-                ),
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(
-                  activar ? 'Activar operativo' : 'Desactivar operativo',
-                ),
-              ),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Cancelar'),
-              ),
-            ),
-          ],
-        ),
+    final confirmado = await confirmarAccion(
+      context,
+      titulo: activar ? '¿Activar operativo?' : '¿Desactivar operativo?',
+      mensaje: activar
+          ? '${operativo.nombreCompleto} podrá iniciar sesión y recibir nuevas incidencias.'
+          : '${operativo.nombreCompleto} no podrá recibir nuevas incidencias. Se conservará su historial y sus ${operativo.cargaActual} incidencias activas.',
+      accion: activar ? 'Activar operativo' : 'Desactivar operativo',
+      destructiva: !activar,
+      detalle: DatosHoja(
+        datos: [
+          ('Operativo', operativo.nombreCompleto),
+          ('Incidencias activas', '${operativo.cargaActual}'),
+        ],
       ),
     );
-    if (confirmado != true || !context.mounted) return;
+    if (!confirmado || !context.mounted) return;
 
     final actualizado = await vm.cambiarEstatus(operativo);
     if (!context.mounted) return;
@@ -389,24 +344,4 @@ class _TarjetaOperativo extends StatelessWidget {
       ),
     );
   }
-}
-
-class _DatoOperativo extends StatelessWidget {
-  const _DatoOperativo({required this.etiqueta, required this.valor});
-
-  final String etiqueta;
-  final String valor;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(
-        child: Text(
-          etiqueta,
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-      ),
-      Text(valor, style: const TextStyle(fontWeight: FontWeight.w600)),
-    ],
-  );
 }

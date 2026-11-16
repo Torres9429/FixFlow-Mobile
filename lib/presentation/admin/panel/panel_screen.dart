@@ -64,7 +64,6 @@ class PanelScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _TiempoYPrioridad(indicadores: indicadores),
             const SizedBox(height: 12),
-            // E10 llega con la tarjeta de HU-26
             const _FilaCatalogo(),
             const SizedBox(height: 32),
             Row(
@@ -255,26 +254,57 @@ class _TiempoYPrioridad extends StatelessWidget {
   }
 }
 
+/// Acceso a E10: título, «Gestionar catálogo de tipos, 9 activos / 1 inactivo» y chevron en un círculo.
 class _FilaCatalogo extends StatelessWidget {
   const _FilaCatalogo();
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppTheme.radius),
-      child: Ink(
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppTheme.radius), boxShadow: AppTheme.sombra),
-        child: ListTile(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radius)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(
-            'Catálogo de tipos',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w700),
+    final texto = Theme.of(context).textTheme;
+    final vm = context.watch<PanelViewModel>();
+    final radio = BorderRadius.circular(AppTheme.radius);
+    final subtitulo = vm.resumenCatalogo == null
+        ? 'Gestionar catálogo de tipos'
+        : 'Gestionar catálogo de tipos, ${vm.resumenCatalogo}';
+
+    // La sombra va por fuera del Material: dentro de él se recorta o tapa la tarjeta
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: radio, boxShadow: AppTheme.sombra),
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: radio,
+        child: InkWell(
+          key: const Key('abrir_catalogo'),
+          borderRadius: radio,
+          onTap: () async {
+            await context.push(Rutas.catalogoTipos);
+            // Al volver, las cifras pueden haber cambiado
+            await vm.cargarCatalogo();
+          },
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Catálogo de tipos', style: texto.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text(subtitulo, style: _estiloMeta(context)?.copyWith(fontSize: 14, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(color: AppColors.surfaceMuted, shape: BoxShape.circle),
+                  child: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
           ),
-          trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-          // Se conecta a E10 en la tarjeta de HU-26
-          onTap: null,
         ),
       ),
     );

@@ -21,6 +21,11 @@ abstract final class Rutas {
   static const perfilAdmin = '/admin/perfil'; // A3 como pestaña
   static const avisosAdmin = '/admin/avisos'; // E7
 
+  // Catálogo de tipos: se abre desde E1, encima de las pestañas
+  static const catalogoTipos = '/admin/tipos'; // E10
+  static const nuevoTipo = '$catalogoTipos/nuevo'; // E11
+  static const editarTipo = '$catalogoTipos/editar'; // E12, con el tipo en `extra`
+
   // Perfil del ciudadano y del operativo, desde el botón de la barra superior
   static const perfil = '/perfil'; // A3
   static const editarDatos = '/perfil/datos';

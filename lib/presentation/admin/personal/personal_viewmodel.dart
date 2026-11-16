@@ -10,7 +10,7 @@ import '../../core/notificador_seguro.dart';
 enum FiltroPersonal { todos, activos, inactivos }
 
 class PersonalViewModel extends ChangeNotifier with NotificadorSeguro {
-  PersonalViewModel(this._adminRepository);
+  PersonalViewModel({required this._adminRepository});
 
   final AdminRepository _adminRepository;
 

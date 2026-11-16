@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/result.dart';
 import '../../../domain/repositories/auth_repository.dart';
+import '../../../domain/validators/campos_validators.dart';
 import '../../core/mensajes.dart';
 import '../../core/notificador_seguro.dart';
 
@@ -15,6 +16,22 @@ class CambiarPasswordViewModel extends ChangeNotifier with NotificadorSeguro {
   bool guardando = false;
   String? error;
   String? exito;
+
+  /// Lo que se lleva escrito, para marcar los requisitos mientras se escribe.
+  String actual = '';
+  String nueva = '';
+
+  RequisitosPassword get requisitos => requisitosPassword(nueva, actual);
+
+  void cambiarActual(String valor) {
+    actual = valor;
+    notifyListeners();
+  }
+
+  void cambiarNueva(String valor) {
+    nueva = valor;
+    notifyListeners();
+  }
 
   Future<void> cambiar({required String actual, required String nueva}) async {
     guardando = true;
