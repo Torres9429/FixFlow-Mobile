@@ -13,13 +13,21 @@ class AuthRemoteDataSource {
 
   final Dio _dio;
 
-  Future<Result<LoginResponseModel>> login(String correo, String password) async {
+  Future<Result<LoginResponseModel>> login(
+    String correo,
+    String password,
+  ) async {
     try {
-      final res = await _dio.post<Map<String, dynamic>>('/auth/login', data: {'correo': correo, 'password': password});
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/auth/login',
+        data: {'correo': correo, 'password': password},
+      );
       return Result.ok(LoginResponseModel.fromJson(res.data!));
     } catch (e) {
       // En el login, un 401 son credenciales malas o cuenta inactiva (contrato-api, A1)
-      if (e is DioException && e.response?.statusCode == 401) return const Result.error(CredencialesInvalidas());
+      if (e is DioException && e.response?.statusCode == 401) {
+        return const Result.error(CredencialesInvalidas());
+      }
       return Result.error(traducirError(e));
     }
   }
@@ -33,12 +41,19 @@ class AuthRemoteDataSource {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
         '/usuarios/registro',
-        data: {'nombre': nombre, 'apellidos': apellidos, 'correo': correo, 'password': password},
+        data: {
+          'nombre': nombre,
+          'apellidos': apellidos,
+          'correo': correo,
+          'password': password,
+        },
       );
       return Result.ok(RegistroResponseModel.fromJson(res.data!));
     } catch (e) {
       // En el registro, el único conflicto posible es el correo repetido (contrato-api, A2)
-      if (e is DioException && e.response?.statusCode == 409) return const Result.error(CorreoDuplicado());
+      if (e is DioException && e.response?.statusCode == 409) {
+        return const Result.error(CorreoDuplicado());
+      }
       return Result.error(traducirError(e));
     }
   }
@@ -46,7 +61,10 @@ class AuthRemoteDataSource {
   /// Revoca el refresh token en el back. Si falla no importa: la sesión local se borra igual.
   Future<void> logout(String refreshToken) async {
     try {
-      await _dio.post<void>('/auth/logout', data: {'refreshToken': refreshToken});
+      await _dio.post<void>(
+        '/auth/logout',
+        data: {'refreshToken': refreshToken},
+      );
     } catch (e) {
       debugPrint('[FixFlow] No se pudo cerrar sesión en el servidor: $e');
     }
@@ -61,7 +79,10 @@ class AuthRemoteDataSource {
     }
   }
 
-  Future<Result<PerfilModel>> actualizarPerfil({required String nombre, required String apellidos}) async {
+  Future<Result<PerfilModel>> actualizarPerfil({
+    required String nombre,
+    required String apellidos,
+  }) async {
     try {
       final res = await _dio.put<Map<String, dynamic>>(
         '/usuarios/me',
@@ -73,7 +94,10 @@ class AuthRemoteDataSource {
     }
   }
 
-  Future<Result<String?>> cambiarPassword({required String actual, required String nueva}) async {
+  Future<Result<String?>> cambiarPassword({
+    required String actual,
+    required String nueva,
+  }) async {
     try {
       final res = await _dio.patch<Map<String, dynamic>>(
         '/usuarios/me/password',

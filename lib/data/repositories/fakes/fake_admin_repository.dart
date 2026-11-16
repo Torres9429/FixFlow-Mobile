@@ -1,4 +1,5 @@
 import '../../../core/result.dart';
+import '../../../domain/errors/falla_red.dart';
 import '../../../domain/entities/estado_incidencia.dart';
 import '../../../domain/entities/incidencia_resumen.dart';
 import '../../../domain/entities/indicadores.dart';
@@ -15,6 +16,7 @@ class FakeAdminRepository implements AdminRepository {
       id: 1,
       nombre: 'Roberto',
       apellidos: 'Mendoza',
+      correo: 'roberto.mendoza@municipio.gob.mx',
       activo: true,
       cargaActual: 2,
     ),
@@ -22,6 +24,7 @@ class FakeAdminRepository implements AdminRepository {
       id: 2,
       nombre: 'Jaime',
       apellidos: 'Torres',
+      correo: 'jaime.torres@municipio.gob.mx',
       activo: true,
       cargaActual: 1,
     ),
@@ -29,8 +32,17 @@ class FakeAdminRepository implements AdminRepository {
       id: 3,
       nombre: 'Sara',
       apellidos: 'Valenzuela',
+      correo: 'sara.valenzuela@municipio.gob.mx',
       activo: true,
       cargaActual: 3,
+    ),
+    const Operativo(
+      id: 4,
+      nombre: 'Miguel Ángel',
+      apellidos: 'Solís',
+      correo: 'miguel.solis@municipio.gob.mx',
+      activo: false,
+      cargaActual: 0,
     ),
   ];
 
@@ -76,7 +88,67 @@ class FakeAdminRepository implements AdminRepository {
   @override
   Future<Result<List<Operativo>>> operativosDisponibles() async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
+    return Result.ok(
+      List.unmodifiable(_operativos.where((operativo) => operativo.activo)),
+    );
+  }
+
+  @override
+  Future<Result<List<Operativo>>> listarOperativos() async {
+    await Future<void>.delayed(const Duration(milliseconds: 400));
     return Result.ok(List.unmodifiable(_operativos));
+  }
+
+  @override
+  Future<Result<void>> crearOperativo({
+    required String nombre,
+    required String apellidos,
+    required String correo,
+    required String passwordTemporal,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    if (_operativos.any(
+      (operativo) =>
+          operativo.correo.toLowerCase() == correo.trim().toLowerCase(),
+    )) {
+      return const Result.error(Conflicto('El correo ya está registrado'));
+    }
+    _operativos.add(
+      Operativo(
+        id:
+            _operativos.fold(
+              0,
+              (maxId, operativo) => operativo.id > maxId ? operativo.id : maxId,
+            ) +
+            1,
+        nombre: nombre.trim(),
+        apellidos: apellidos.trim(),
+        correo: correo.trim().toLowerCase(),
+        activo: true,
+        cargaActual: 0,
+      ),
+    );
+    return const Result.ok(null);
+  }
+
+  @override
+  Future<Result<void>> cambiarEstatusOperativo(
+    int id, {
+    required bool activo,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    final index = _operativos.indexWhere((operativo) => operativo.id == id);
+    if (index == -1) return const Result.error(NoEncontrado());
+    final operativo = _operativos[index];
+    _operativos[index] = Operativo(
+      id: operativo.id,
+      nombre: operativo.nombre,
+      apellidos: operativo.apellidos,
+      correo: operativo.correo,
+      activo: activo,
+      cargaActual: operativo.cargaActual,
+    );
+    return const Result.ok(null);
   }
 
   @override

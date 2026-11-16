@@ -16,6 +16,7 @@ abstract final class Rutas {
   // Admin: pestañas Inicio · Personal · Incidencias · Perfil, y la campana
   static const homeAdmin = '/admin/inicio'; // E1
   static const personal = '/admin/personal'; // E8
+  static const nuevoOperativo = '/admin/personal/nuevo';
   static const incidenciasAdmin = '/admin/incidencias'; // E2
   static const perfilAdmin = '/admin/perfil'; // A3 como pestaña
   static const avisosAdmin = '/admin/avisos'; // E7
@@ -29,5 +30,6 @@ abstract final class Rutas {
   static String detalleCiudadano(int id) => '$homeCiudadano/$id'; // C2
   static String detalleOperativo(int id) => '$homeOperativo/$id'; // D2
   static String detalleAdmin(int id) => '$homeAdmin/$id'; // E4
-  static String asignarAdmin(int id) => '${detalleAdmin(id)}/asignar'; // E5, desde el detalle
+  static String asignarAdmin(int id) =>
+      '${detalleAdmin(id)}/asignar'; // E5, desde el detalle
 }

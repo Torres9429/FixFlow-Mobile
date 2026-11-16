@@ -22,7 +22,10 @@ class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   String? _correoActual;
 
   @override
-  Future<Result<LoginResponseModel>> login(String correo, String password) async {
+  Future<Result<LoginResponseModel>> login(
+    String correo,
+    String password,
+  ) async {
     // Simula la latencia de la red para ver el estado de carga
     await Future<void>.delayed(const Duration(milliseconds: 800));
 
@@ -62,12 +65,8 @@ class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
       apellidos: apellidos,
       password: password,
     );
-
-    return Result.ok(RegistroResponseModel(
-      rol: 'CIUDADANO',
-      nombre: nombre,
-    ));
-  }
+  return Result.ok(RegistroResponseModel(rol: 'CIUDADANO', nombre: nombre));
+}
 
   @override
   Future<void> logout(String refreshToken) async {

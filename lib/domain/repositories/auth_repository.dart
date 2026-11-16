@@ -22,7 +22,14 @@ abstract interface class AuthRepository {
 
   Future<Result<Perfil>> miPerfil();
 
-  Future<Result<Perfil>> actualizarPerfil({required String nombre, required String apellidos});
+  Future<Result<Perfil>> actualizarPerfil({
+    required String nombre,
+    required String apellidos,
+  });
 
-  Future<Result<String?>> cambiarPassword({required String actual, required String nueva});
+  /// Cambia la contraseña de la sesión actual y devuelve un mensaje opcional de éxito.
+  Future<Result<String?>> cambiarPassword({
+    required String actual,
+    required String nueva,
+  });
 }

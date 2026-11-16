@@ -67,21 +67,77 @@ class AdminRepositoryImpl implements AdminRepository {
         '/operativos',
         queryParameters: {'activos': true},
       );
-      final result = res.data!['result'] as List<dynamic>;
       return Result.ok(
-        result
-            .map((json) {
-              final item = json as Map<String, dynamic>;
-              return Operativo(
-                id: (item['id'] as num).toInt(),
-                nombre: item['nombre'] as String,
-                apellidos: item['apellidos'] as String,
-                activo: item['activo'] as bool,
-                cargaActual: (item['cargaActual'] as num).toInt(),
-              );
-            })
-            .toList(growable: false),
+        _operativosFromJson(res.data!['result'] as List<dynamic>),
       );
+    } catch (e) {
+      return Result.error(traducirError(e));
+    }
+  }
+
+  @override
+  Future<Result<List<Operativo>>> listarOperativos() async {
+    try {
+      final res = await _dio.get<Map<String, dynamic>>(
+        '/operativos',
+        queryParameters: {'activos': false},
+      );
+      return Result.ok(
+        _operativosFromJson(res.data!['result'] as List<dynamic>),
+      );
+    } catch (e) {
+      return Result.error(traducirError(e));
+    }
+  }
+
+  List<Operativo> _operativosFromJson(List<dynamic> result) => result
+      .map((json) {
+        final item = json as Map<String, dynamic>;
+        return Operativo(
+          id: (item['id'] as num).toInt(),
+          nombre: item['nombre'] as String,
+          apellidos: item['apellidos'] as String,
+          correo: item['correo'] as String,
+          activo: item['activo'] as bool,
+          cargaActual: (item['cargaActual'] as num).toInt(),
+        );
+      })
+      .toList(growable: false);
+
+  @override
+  Future<Result<void>> crearOperativo({
+    required String nombre,
+    required String apellidos,
+    required String correo,
+    required String passwordTemporal,
+  }) async {
+    try {
+      await _dio.post<void>(
+        '/admin/operativos',
+        data: {
+          'nombre': nombre,
+          'apellidos': apellidos,
+          'correo': correo,
+          'passwordTemporal': passwordTemporal,
+        },
+      );
+      return const Result.ok(null);
+    } catch (e) {
+      return Result.error(traducirError(e));
+    }
+  }
+
+  @override
+  Future<Result<void>> cambiarEstatusOperativo(
+    int id, {
+    required bool activo,
+  }) async {
+    try {
+      await _dio.patch<void>(
+        '/admin/operativos/$id/estatus',
+        data: {'activo': activo},
+      );
+      return const Result.ok(null);
     } catch (e) {
       return Result.error(traducirError(e));
     }
