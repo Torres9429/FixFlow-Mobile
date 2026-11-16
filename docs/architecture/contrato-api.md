@@ -46,9 +46,9 @@ Se corrigen al integrar cada pantalla con el back:
 | A3 Perfil · A3a Editar datos · A3b Contraseña (HU-25) | `PUT /usuarios/me` · `PATCH /usuarios/me/password` | `{nombre, apellidos}` · `{actual, nueva}` | Usuario · mensaje |
 | E10 Catálogo · E11 Nuevo tipo · E12 Editar tipo (HU-26) | `GET /admin/tipos-incidencia` · `POST /admin/tipos-incidencia` · `PUT /admin/tipos-incidencia/{id}` · `PATCH /admin/tipos-incidencia/{id}/estatus` | `{codigo?, nombre, orientacion, prioridadBase}` (`codigo` opcional al crear, se genera del nombre; se ignora en el PUT) · `{activo}` | Tipo, con `incidencias`: cuántas lo usan (E10) |
 | B2 Nuevo reporte / B3 Cámara | `GET /tipos-incidencia` | — | `[{id, codigo, nombre, orientacion, prioridadBase, anguloMin, anguloMax}]`. La cámara pinta la zona verde y activa el botón cuando la inclinación queda entre `anguloMin` y `anguloMax` (RN-11); son los mismos valores con los que el servidor valida |
-| B3/B4 Enviar | `POST /evidencias/firma` → Cloudinary → `POST /incidencias` | `{tipoId, descripcion, latitud, longitud, inclinacion, fotoUrl}` | Detalle con `folio` (B5) · 422 → repetir captura (B3b, B7) |
+| B3/B4 Enviar | `POST /evidencias/firma` → Cloudinary → `POST /incidencias` | `{tipoId, descripcion, latitud, longitud, inclinacion?, sinSensor?, fotoUrl}`. Sin acelerómetro se manda `sinSensor: true` y no se manda `inclinacion`: el servidor no valida la orientación (RN-11) | Detalle con `folio` (B5) · 422 → repetir captura (B3b, B7) |
 | B1 Mis reportes | `GET /incidencias/mias?estado` (`estado` pendiente en el back) | — | Página de resúmenes `{id, folio, tipo, tipoCodigo, estado, prioridad, motivoPrioridad, latitud, longitud, operativo, fechaCreacion, ultimaActualizacion, fotoUrl}`; `fotoUrl` es la miniatura de la foto del reporte |
-| C2 / D2 / E4 Detalle | `GET /incidencias/{id}` | — | Detalle (el operativo recibe `ciudadano: null`) |
+| C2 / D2 / E4 Detalle | `GET /incidencias/{id}` | — | Detalle (el operativo recibe `ciudadano: null`); `sinSensor: true` si la foto del reporte se tomó sin acelerómetro |
 | Historial | `GET /incidencias/{id}/historial` | — | Lista cronológica |
 | C2 Confirmar | `POST /incidencias/{id}/confirmacion` | — | Detalle en `CERRADA` |
 | C3 Reabrir | `POST /incidencias/{id}/reapertura` | `{justificacion}` (10–500) | Detalle en `REABIERTA` · 409 si ya van 2 |

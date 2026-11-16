@@ -28,7 +28,7 @@ Catálogo de capacidades que el sistema debe ofrecer, con trazabilidad a la HU q
 | --- | --- | --- | --- |
 | RF-05 | Captura de fotografía en vivo con la cámara del dispositivo. | HU-04 | RN-09 |
 | RF-06 | Obtención automática de la ubicación GPS durante la captura. | HU-05 | RN-10, RN-12 |
-| RF-07 | Lectura del acelerómetro durante la captura y validación de la orientación según el tipo de incidencia. | HU-06 | RN-07, RN-11 |
+| RF-07 | Detección del acelerómetro y, si existe, lectura durante la captura y validación de la orientación según el tipo de incidencia; sin acelerómetro, captura sin validación marcada como sin sensor. | HU-06 | RN-07, RN-11 |
 | RF-08 | Vinculación de la evidencia con las coordenadas obtenidas en la captura. | HU-07 | RN-10 |
 | RF-09 | Validación de la evidencia completa antes de permitir el envío. | HU-08 | RN-09, RN-10, RN-11, RN-12 |
 

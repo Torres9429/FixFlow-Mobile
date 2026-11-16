@@ -24,6 +24,7 @@ Términos del dominio tal como se usan en las HUs. Si un término cambia de sign
 | **Prioridad** | Nivel de atención de una incidencia, asignado automáticamente según reglas predefinidas (RN-13). No confundir con la prioridad de tablero de GitHub Projects. |
 | **Reapertura** | Acción por la que el ciudadano indica que una incidencia no fue solucionada, con justificación, para que vuelva a atenderse (RN-17). |
 | **Reporte** | Registro que el ciudadano envía para dar de alta una incidencia. En las HUs, *reporte* e *incidencia* se usan con frecuencia como sinónimos. |
+| **Reporte sin sensor** | Reporte enviado desde un teléfono sin acelerómetro: se puede elegir cualquier tipo y su foto no se valida por inclinación (RN-11). |
 | **Tipo de incidencia** | Categoría de la incidencia (por ejemplo, bache o luminaria) seleccionada por el ciudadano. Tiene un código fijo y un nombre visible (RN-07). |
 | **Usuario autorizado** | Usuario con permiso para consultar una incidencia y su historial (HU-22): el ciudadano que la reportó, el operativo asignado y cualquier administrador municipal (RNF-04). |
 | **Validación de resolución** | Revisión por parte del ciudadano de la evidencia de solución para confirmar que la incidencia fue atendida (HU-13). |

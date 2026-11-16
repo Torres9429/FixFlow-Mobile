@@ -20,7 +20,7 @@ No se utiliza el micrófono ni ninguna funcionalidad de voz (reconocimiento, dic
 
 **Tipo:** Compatibilidad · **Relacionado con:** HU-04, HU-05, HU-06
 
-Para registrar reportes, el dispositivo del ciudadano debe contar con cámara, GPS y acelerómetro.
+Para registrar reportes, el dispositivo del ciudadano debe contar con cámara y GPS. El acelerómetro es recomendado: sin él se puede reportar, pero la foto no se valida por inclinación (RN-11).
 
 ### RNF-03 — Gestión de permisos del sistema operativo
 

@@ -31,5 +31,6 @@ actor: Administrador municipal
 
 - El **código** es la clave fija y legible del tipo (por ejemplo `BACHE`): mayúsculas, números y guion bajo, de 2 a 30 caracteres. Si no se indica, se genera del nombre sin acentos (`Fuga de agua` → `FUGA_DE_AGUA`). El **nombre** es el texto que ve el usuario y sí puede cambiar (RN-07).
 - Por ahora no tiene pantalla en el lienzo; el catálogo inicial se carga desde el servidor.
+- La orientación del tipo solo se exige en teléfonos con acelerómetro; en los que no lo tienen, cualquier tipo se reporta sin validar la inclinación (RN-11).
 - Reglas de negocio: RN-05, RN-07, RN-11, RN-13.
 - Requisitos funcionales: RF-28.

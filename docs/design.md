@@ -349,7 +349,7 @@ De arriba hacia abajo, con 24 entre secciones y 20 de margen lateral. **Cada sec
    - Debajo, un minimapa de 160 de alto con el punto de la captura.
 3. **Fotos de evidencia** (a la derecha, «1 foto» o «2 fotos»):
    - Dos columnas en proporción 4:3 con radio 14, «Reporte» y «Solución», con la etiqueta en una píldora blanca sobre la esquina superior izquierda. Van sobre el fondo, sin bloque gris.
-   - Debajo de cada una, solo la fecha.
+   - Debajo de cada una, solo la fecha. Si la foto del reporte se tomó sin acelerómetro, debajo de su fecha va «Foto sin validación de inclinación» en meta.
    - Si todavía no hay solución, la foto del reporte va a todo el ancho.
 4. **Solución** (solo si ya se registró): la descripción en cuerpo y la meta «Luis Ramírez · hoy, 10:45».
 5. **Motivo de la reapertura** (solo si se reabrió; a la derecha, «1 reapertura» o «2 reaperturas»): el motivo que escribió el ciudadano, en cuerpo.
@@ -407,7 +407,7 @@ Los botones no llevan iconos ni flechas junto al texto.
 - Al final, «Prioridad alta sin atender»: hasta 5 tarjetas, sin botón (cada una abre E4, donde se asigna), y «Ver todas».
 - Acceso «Catálogo de tipos» como fila con chevron.
 
-### Cámara (B3, B3b, B3c, B3d, D3a)
+### Cámara (B3, B3b, B3c, B3d, B3e, D3a)
 
 - Es la única pantalla oscura, con texto blanco. La imagen de la cámara cubre toda la pantalla, todo el alto y todo el ancho, sin un alto fijo, marcos, bordes redondeados, padding ni barras blancas. Los controles van encima de la imagen.
 - **No lleva:** galería, miniatura de la última foto, voltear cámara, flash, zoom, modos, marcas de agua ni datos técnicos (coordenadas, precisión, azimut).
@@ -417,6 +417,7 @@ Los botones no llevan iconos ni flechas junto al texto.
   - La zona se pinta de `#7ED69A` cuando la inclinación está en rango.
 - **Disparador:** blanco de 72. Fuera de rango, desactivado al 40 % de opacidad.
 - **Bajo el disparador:** una línea de texto blanco con la instrucción. Además, «GPS listo» como texto, sin icono.
+- **Sin acelerómetro (B3e):** no hay barra de inclinación. La píldora dice «Bache · sin guía de inclinación», el disparador siempre está activo y bajo él va «Tu teléfono no tiene sensor de inclinación».
 
 ### Diálogos de confirmación (A3c, E8a, E12a, iniciar atención)
 
@@ -508,11 +509,13 @@ Cada pantalla es un tablero de 390 × 844 con su código y nombre en el título,
   - Acciones: tarjeta → C2; Reportar → B2; Avisos → C1; perfil → A3.
 - **B2 Nuevo reporte:**
   - Muestra: «Paso 1 de 2», tipo de incidencia (abre una hoja inferior con los 9 tipos), foto con «Tomar foto» o, ya tomada, con «Volver a capturar» y la fecha, y descripción con contador 0/500. Debajo de la foto, una sola línea gris: «La cámara te guiará para inclinar el teléfono». Sin tarjetas de ayuda sobre la captura ni listas de sensores.
-  - Acciones: Tomar foto → B3, B3c o B3d según el tipo; Revisar y enviar → B4.
+  - Sin acelerómetro: arriba de los tipos, una tarjeta informativa (fondo `#E1ECF4`, icono info) con «Tu teléfono no puede medir la inclinación: puedes reportar cualquier tipo y la foto se envía sin validar el ángulo». La línea gris de la foto no se muestra.
+  - Acciones: Tomar foto → B3, B3c o B3d según el tipo (B3e sin acelerómetro); Revisar y enviar → B4.
 - **B3 Cámara: ángulo correcto:** Bache, apunta hacia el suelo, 62° en zona válida, disparador activo. Tomar foto → B2 con la foto.
 - **B3b Cámara: ajustar el ángulo:** la misma cámara con 18° y «Faltan 27°. Inclina el teléfono hacia el suelo». Disparador desactivado.
 - **B3c Cámara: hacia arriba:** Luminaria apagada o dañada, −35° en zona válida, «Puedes tomarla de lejos: basta con apuntar hacia arriba».
 - **B3d Cámara: sin restricción:** Fuga de agua, cualquier ángulo (5°), «Encuadra el problema como mejor se vea. La inclinación se guarda con la foto».
+- **B3e Cámara: sin sensor de inclinación:** Bache en un teléfono sin acelerómetro. Sin barra de inclinación, disparador activo y «Tu teléfono no tiene sensor de inclinación». Tomar foto → B2 con la foto; en B4 se ve «Sin sensor de inclinación» en lugar de los grados.
 - **B4 Revisar y enviar:**
   - Muestra: «Paso 2 de 2», foto, tipo, descripción, «Fecha y hora: se asignan al enviar», dirección con minimapa y la nota «La ubicación se toma del GPS y no se puede editar».
   - Acciones: Enviar reporte → B5; Editar (botón de texto) → B2.
@@ -613,7 +616,7 @@ Cada pantalla es un tablero de 390 × 844 con su código y nombre en el título,
 ## 11. Recorridos completos
 
 - **Acceso:** A1 → B1, D1 o E1 según el rol. A1 → A2 → A1. Perfil (A3) → A3a, A3b o A3c → A3 o A1.
-- **Reporte:** B1 → B2 → B3 (B3b si el ángulo no es válido; B3c o B3d según el tipo) → B2 → B4 → B5 → C2. Sin permiso de cámara → B6. Sin GPS → B7.
+- **Reporte:** B1 → B2 → B3 (B3b si el ángulo no es válido; B3c o B3d según el tipo; B3e si el teléfono no tiene acelerómetro) → B2 → B4 → B5 → C2. Sin permiso de cámara → B6. Sin GPS → B7.
 - **Asignación:** E1 o E2 → E4 → Asignar → E5 → E4. El operativo recibe «Nueva incidencia asignada» en D6.
 - **Atención:** D1 → D2 → Iniciar atención → Registrar solución → D3 → D3a → D3 → D1. El ciudadano recibe «Tu reporte fue resuelto» en C1.
 - **Cierre:** C1 o B1 → C2 → Confirmar resolución → Cerrada. O bien: El problema sigue → C3 → Reabierta. El operativo y el admin reciben «Incidencia reabierta» (D6 → D4, E7 → E4).

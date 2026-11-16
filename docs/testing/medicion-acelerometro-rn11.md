@@ -3,6 +3,9 @@
 Esta medición debe hacerse en cada teléfono físico del equipo. No se deben
 reutilizar los valores de otro modelo ni sustituirlos por valores del emulador.
 
+Aplica a los teléfonos con acelerómetro. Si un teléfono no lo tiene, se anota
+como «sin sensor»: la app reporta sin validar la inclinación (RN-11).
+
 ## Procedimiento
 
 1. Abrir la app instalada en el teléfono y colocar la cámara trasera en la

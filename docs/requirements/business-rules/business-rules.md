@@ -117,9 +117,11 @@ Cada tipo de incidencia define la orientación del dispositivo durante la captur
 | --- | --- |
 | Hacia el suelo | Inclinación **≥ +45°** |
 | Hacia arriba | Inclinación **≤ −20°** |
-| Sin restricción | Cualquier valor, pero la lectura del acelerómetro debe existir (HU-08) |
+| Sin restricción | Cualquier valor; con acelerómetro, la lectura debe existir (HU-08) |
 
 Los umbrales son ajustables: viven en la configuración del servidor (`fixflow.orientacion.*`) y se cambian sin tocar código. La app no los tiene escritos: los recibe en cada tipo de incidencia (`anguloMin`, `anguloMax`) para guiar la cámara en vivo, así la guía y la validación del servidor siempre coinciden. Si la prueba en los teléfonos del equipo (signo del eje Z) muestra otros valores, se actualizan aquí y en el servidor.
+
+**Dispositivos sin acelerómetro.** Antes de capturar, la app revisa si el teléfono tiene acelerómetro. Si no lo tiene, avisa al ciudadano, permite reportar cualquier tipo sin guía de inclinación y envía el reporte con `sinSensor: true` y sin inclinación. El servidor no valida la orientación de ese reporte y lo deja registrado en la evidencia, para que el detalle muestre que la foto no se validó.
 
 ### RN-12 — Condiciones para enviar un reporte
 
@@ -129,7 +131,7 @@ Un reporte solo puede enviarse si cumple todas las condiciones:
 
 1. Tiene evidencia fotográfica capturada en vivo (RN-09).
 2. Tiene ubicación GPS asociada (RN-10).
-3. Se obtuvieron los datos requeridos del acelerómetro y la orientación es válida para su tipo (RN-11).
+3. Si el dispositivo cuenta con acelerómetro, se obtuvieron sus datos y la orientación es válida para su tipo (RN-11). Si no cuenta con él, el reporte se envía marcado como sin sensor.
 
 Si alguna condición no se cumple, se solicita al ciudadano repetir la captura y el reporte no se envía.
 

@@ -30,6 +30,7 @@ actor: Ciudadano
 
 ## Notas funcionales
 
+- La inclinación del teléfono se incluye solo si el dispositivo tiene acelerómetro (RN-11).
 - Reglas de negocio: RN-07, RN-08, RN-12.
 - Requisitos funcionales: RF-04.
 - Requisitos no funcionales: RNF-05, RNF-08.

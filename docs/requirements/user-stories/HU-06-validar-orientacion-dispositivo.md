@@ -15,11 +15,13 @@ actor: Sistema
 
 ## Criterios de aceptación
 
-- [ ] El sistema debe obtener los datos del acelerómetro durante la captura.
-- [ ] La aplicación debe comparar la orientación registrada con las condiciones establecidas para el tipo de incidencia.
+- [ ] Antes de capturar, la aplicación debe detectar si el dispositivo cuenta con acelerómetro.
+- [ ] Si el dispositivo cuenta con acelerómetro, el sistema debe obtener sus datos durante la captura.
+- [ ] Si el dispositivo cuenta con acelerómetro, la aplicación debe comparar la orientación registrada con las condiciones establecidas para el tipo de incidencia.
 - [ ] Para incidencias que requieren una captura hacia el suelo, como un bache, la aplicación debe verificar la orientación correspondiente.
 - [ ] Para incidencias que requieren una captura hacia arriba, como una luminaria, debe verificarse la orientación correspondiente.
 - [ ] Si la orientación no cumple con las condiciones establecidas, el sistema debe solicitar al ciudadano realizar nuevamente la captura.
+- [ ] Si el dispositivo no cuenta con acelerómetro, la aplicación debe avisar al ciudadano y permitir la captura de cualquier tipo de incidencia sin validar la orientación; el reporte se envía marcado como sin sensor.
 
 ## Dependencias
 
@@ -28,7 +30,7 @@ actor: Sistema
 
 ## Notas funcionales
 
-- Sensor utilizado: acelerómetro (RNF-01).
+- Sensor utilizado: acelerómetro (RNF-01). Sin acelerómetro: aviso en B2 y cámara sin guía (B3e); la foto no se valida por inclinación (RN-11).
 - Reglas de negocio: RN-07, RN-11.
 - Requisitos funcionales: RF-07.
 - Requisitos no funcionales: RNF-01, RNF-02.

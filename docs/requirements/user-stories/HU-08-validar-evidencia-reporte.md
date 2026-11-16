@@ -18,7 +18,7 @@ actor: Sistema
 - [ ] El sistema debe verificar que el reporte cuente con evidencia fotográfica.
 - [ ] La evidencia debe haber sido capturada mediante la cámara de la aplicación.
 - [ ] El sistema debe verificar que exista información de ubicación asociada.
-- [ ] El sistema debe verificar que se hayan obtenido los datos requeridos del acelerómetro.
+- [ ] Si el dispositivo cuenta con acelerómetro, el sistema debe verificar que se hayan obtenido sus datos; si no cuenta con él, el reporte se envía marcado como sin sensor.
 - [ ] Si la evidencia no cumple las condiciones establecidas, el sistema debe solicitar al ciudadano realizar nuevamente la captura.
 - [ ] El reporte no debe enviarse hasta cumplir con los requisitos establecidos.
 

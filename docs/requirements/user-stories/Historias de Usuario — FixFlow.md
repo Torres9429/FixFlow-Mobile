@@ -99,11 +99,13 @@
 
 **Criterios de aceptación:**
 
-* El sistema debe obtener los datos del acelerómetro durante la captura.
-* La aplicación debe comparar la orientación registrada con las condiciones establecidas para el tipo de incidencia.
+* Antes de capturar, la aplicación debe detectar si el dispositivo cuenta con acelerómetro.
+* Si el dispositivo cuenta con acelerómetro, el sistema debe obtener sus datos durante la captura.
+* Si el dispositivo cuenta con acelerómetro, la aplicación debe comparar la orientación registrada con las condiciones establecidas para el tipo de incidencia.
 * Para incidencias que requieren una captura hacia el suelo, como un bache, la aplicación debe verificar la orientación correspondiente.
 * Para incidencias que requieren una captura hacia arriba, como una luminaria, debe verificarse la orientación correspondiente.
 * Si la orientación no cumple con las condiciones establecidas, el sistema debe solicitar al ciudadano realizar nuevamente la captura.
+* Si el dispositivo no cuenta con acelerómetro, la aplicación debe avisar al ciudadano y permitir la captura de cualquier tipo de incidencia sin validar la orientación; el reporte se envía marcado como sin sensor.
 
 ---
 
@@ -133,7 +135,7 @@
 * El sistema debe verificar que el reporte cuente con evidencia fotográfica.
 * La evidencia debe haber sido capturada mediante la cámara de la aplicación.
 * El sistema debe verificar que exista información de ubicación asociada.
-* El sistema debe verificar que se hayan obtenido los datos requeridos del acelerómetro.
+* Si el dispositivo cuenta con acelerómetro, el sistema debe verificar que se hayan obtenido sus datos; si no cuenta con él, el reporte se envía marcado como sin sensor.
 * Si la evidencia no cumple las condiciones establecidas, el sistema debe solicitar al ciudadano realizar nuevamente la captura.
 * El reporte no debe enviarse hasta cumplir con los requisitos establecidos.
 
