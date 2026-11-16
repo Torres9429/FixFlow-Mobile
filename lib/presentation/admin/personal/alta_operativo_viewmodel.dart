@@ -6,7 +6,7 @@ import '../../core/mensajes.dart';
 import '../../core/notificador_seguro.dart';
 
 class AltaOperativoViewModel extends ChangeNotifier with NotificadorSeguro {
-  AltaOperativoViewModel(this._adminRepository);
+  AltaOperativoViewModel({required this._adminRepository});
 
   final AdminRepository _adminRepository;
 

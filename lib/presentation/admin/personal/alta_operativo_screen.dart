@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../domain/validators/campos_validators.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/campo_texto.dart';
+import '../../core/widgets/hoja_confirmacion.dart';
 import 'alta_operativo_viewmodel.dart';
 
 class AltaOperativoScreen extends StatefulWidget {
@@ -58,37 +59,33 @@ class _AltaOperativoScreenState extends State<AltaOperativoScreen> {
       passwordTemporal: _password.text,
     );
     if (!mounted || !creado) return;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Operativo registrado'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Comparte estas credenciales con ${_nombre.text.trim()}.'),
-            const SizedBox(height: 16),
-            SelectableText('Correo: ${_correo.text.trim()}'),
-            const SizedBox(height: 8),
-            SelectableText('Contraseña temporal: ${_password.text}'),
-            const SizedBox(height: 12),
-            const Text(
-              'Podrá cambiarla desde su perfil después de iniciar sesión.',
-            ),
-          ],
+    final correo = _correo.text.trim();
+    final password = _password.text;
+    // Hoja inferior como el resto de los diálogos; no se cierra al tocar fuera para no perder las credenciales
+    await mostrarHoja<void>(
+      context,
+      descartable: false,
+      builder: (hojaContext) => ContenidoHoja(
+        titulo: 'Operativo registrado',
+        mensaje:
+            'Comparte estas credenciales con ${_nombre.text.trim()}. Podrá cambiar la contraseña desde su perfil después de iniciar sesión.',
+        detalle: DatosHoja(
+          datos: [('Correo', correo), ('Contraseña temporal', password)],
         ),
-        actions: [
+        acciones: [
+          FilledButton(
+            key: const Key('alta_listo'),
+            onPressed: () => Navigator.pop(hojaContext),
+            child: const Text('Listo'),
+          ),
+          const SizedBox(height: 8),
           TextButton(
+            key: const Key('alta_copiar_password'),
             onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: _password.text));
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
+              await Clipboard.setData(ClipboardData(text: password));
+              if (hojaContext.mounted) Navigator.pop(hojaContext);
             },
             child: const Text('Copiar contraseña'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Listo'),
           ),
         ],
       ),

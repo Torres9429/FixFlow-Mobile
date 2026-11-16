@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../domain/repositories/admin_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/tipo_incidencia.dart';
 import '../../domain/repositories/direccion_repository.dart';
+import '../../domain/repositories/incidence_type_repository.dart';
 import '../../domain/repositories/incidencias_repository.dart';
 import '../core/widgets/pestana_pendiente.dart';
 import '../incidencia/ruta_detalle.dart';
@@ -12,6 +14,10 @@ import '../perfil/perfil_screen.dart';
 import '../perfil/perfil_viewmodel.dart';
 import '../routing/rutas.dart';
 import 'admin_shell.dart';
+import 'catalogo/catalogo_tipos_screen.dart';
+import 'catalogo/catalogo_tipos_viewmodel.dart';
+import 'catalogo/tipo_form_screen.dart';
+import 'catalogo/tipo_form_viewmodel.dart';
 import 'panel/panel_screen.dart';
 import 'panel/panel_viewmodel.dart';
 import 'asignacion/asignacion_screen.dart';
@@ -34,6 +40,7 @@ List<RouteBase> rutasAdmin() => [
               create: (context) => PanelViewModel(
                 adminRepository: context.read<AdminRepository>(),
                 authRepository: context.read<AuthRepository>(),
+                tiposRepository: context.read<IncidenceTypeRepository>(),
               )..iniciar(),
               child: const PanelScreen(),
             ),
@@ -68,7 +75,7 @@ List<RouteBase> rutasAdmin() => [
             path: Rutas.personal,
             builder: (context, state) => ChangeNotifierProvider(
               create: (context) =>
-                  PersonalViewModel(context.read<AdminRepository>())..iniciar(),
+                  PersonalViewModel(adminRepository: context.read<AdminRepository>())..iniciar(),
               child: const PersonalScreen(),
             ),
             routes: [
@@ -76,7 +83,7 @@ List<RouteBase> rutasAdmin() => [
                 path: 'nuevo',
                 builder: (context, state) => ChangeNotifierProvider(
                   create: (context) =>
-                      AltaOperativoViewModel(context.read<AdminRepository>()),
+                      AltaOperativoViewModel(adminRepository: context.read<AdminRepository>()),
                   child: const AltaOperativoScreen(),
                 ),
               ),
@@ -111,5 +118,35 @@ List<RouteBase> rutasAdmin() => [
     path: Rutas.avisosAdmin,
     builder: (context, state) =>
         const PestanaPendiente(titulo: 'Avisos', codigo: 'E7'),
+  ),
+  // E10 → E11 o E12, sin barra inferior (design.md)
+  GoRoute(
+    path: Rutas.catalogoTipos,
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (context) =>
+          CatalogoTiposViewModel(tiposRepository: context.read<IncidenceTypeRepository>())..cargar(),
+      child: const CatalogoTiposScreen(),
+    ),
+    routes: [
+      GoRoute(
+        path: 'nuevo',
+        builder: (context, state) => ChangeNotifierProvider(
+          create: (context) => TipoFormViewModel(tiposRepository: context.read<IncidenceTypeRepository>()),
+          child: const TipoFormScreen(),
+        ),
+      ),
+      GoRoute(
+        path: 'editar',
+        // Sin el tipo (por ejemplo, tras reiniciar la app) se regresa al catálogo
+        redirect: (context, state) => state.extra is TipoIncidencia ? null : Rutas.catalogoTipos,
+        builder: (context, state) => ChangeNotifierProvider(
+          create: (context) => TipoFormViewModel(
+            tiposRepository: context.read<IncidenceTypeRepository>(),
+            tipo: state.extra! as TipoIncidencia,
+          ),
+          child: const TipoFormScreen(),
+        ),
+      ),
+    ],
   ),
 ];
