@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/result.dart';
 import '../../../domain/errors/auth_failure.dart';
 import '../../models/login_response_model.dart';
+import '../../models/perfil_model.dart';
 import '../../models/registro_response_model.dart';
 import 'traducir_error.dart';
 
@@ -57,21 +58,6 @@ class AuthRemoteDataSource {
     }
   }
 
-  Future<Result<void>> cambiarPassword({
-    required String actual,
-    required String nueva,
-  }) async {
-    try {
-      await _dio.patch<void>(
-        '/usuarios/me/password',
-        data: {'actual': actual, 'nueva': nueva},
-      );
-      return const Result.ok(null);
-    } catch (e) {
-      return Result.error(traducirError(e));
-    }
-  }
-
   /// Revoca el refresh token en el back. Si falla no importa: la sesión local se borra igual.
   Future<void> logout(String refreshToken) async {
     try {
@@ -81,6 +67,45 @@ class AuthRemoteDataSource {
       );
     } catch (e) {
       debugPrint('[FixFlow] No se pudo cerrar sesión en el servidor: $e');
+    }
+  }
+
+  Future<Result<PerfilModel>> miPerfil() async {
+    try {
+      final res = await _dio.get<Map<String, dynamic>>('/usuarios/me');
+      return Result.ok(PerfilModel.fromJson(res.data!));
+    } catch (e) {
+      return Result.error(traducirError(e));
+    }
+  }
+
+  Future<Result<PerfilModel>> actualizarPerfil({
+    required String nombre,
+    required String apellidos,
+  }) async {
+    try {
+      final res = await _dio.put<Map<String, dynamic>>(
+        '/usuarios/me',
+        data: {'nombre': nombre, 'apellidos': apellidos},
+      );
+      return Result.ok(PerfilModel.fromJson(res.data!));
+    } catch (e) {
+      return Result.error(traducirError(e));
+    }
+  }
+
+  Future<Result<String?>> cambiarPassword({
+    required String actual,
+    required String nueva,
+  }) async {
+    try {
+      final res = await _dio.patch<Map<String, dynamic>>(
+        '/usuarios/me/password',
+        data: {'actual': actual, 'nueva': nueva},
+      );
+      return Result.ok(res.data?['text'] as String?);
+    } catch (e) {
+      return Result.error(traducirError(e));
     }
   }
 }

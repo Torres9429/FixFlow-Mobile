@@ -16,6 +16,7 @@ abstract final class AppColors {
   static const background = Color(0xFFFFFFFF); // fondo de las pantallas
   static const surface = Color(0xFFFFFFFF); // tarjetas y formularios
   static const surfaceMuted = Color(0xFFF2F4F7); // esqueletos, miniatura sin foto, minimapa cargando
+  static const campoBloqueado = Color(0xFFEEF1F4);
 
   // Texto
   static const textPrimary = Color(0xFF1B1F24);

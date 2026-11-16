@@ -26,3 +26,20 @@ String? Function(String?) validarConfirmarPassword(String Function() obtenerPass
   };
 }
 
+
+String? Function(String?) validarPasswordNueva(String Function() obtenerActual) {
+  return (String? valor) {
+    final error = validarPassword(valor);
+    if (error != null) return error;
+    if (valor == obtenerActual()) return 'Debe ser distinta de la actual';
+    return null;
+  };
+}
+
+typedef RequisitosPassword = ({bool largo, bool letrasYNumeros, bool distinta});
+
+RequisitosPassword requisitosPassword(String nueva, String actual) => (
+  largo: nueva.length >= 8,
+  letrasYNumeros: RegExp(r'[a-zA-Z]').hasMatch(nueva) && RegExp(r'[0-9]').hasMatch(nueva),
+  distinta: nueva.isNotEmpty && nueva != actual,
+);

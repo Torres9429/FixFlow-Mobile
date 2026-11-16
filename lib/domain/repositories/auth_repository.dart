@@ -1,4 +1,5 @@
 import '../../core/result.dart';
+import '../entities/perfil.dart';
 import '../entities/usuario.dart';
 
 abstract interface class AuthRepository {
@@ -14,14 +15,21 @@ abstract interface class AuthRepository {
     required String password,
   });
 
-  /// Cambia la contraseña de la sesión actual (HU-25; útil para reemplazar la temporal de HU-24).
-  Future<Result<void>> cambiarPassword({
-    required String actual,
-    required String nueva,
-  });
-
   Future<void> cerrarSesion();
 
   /// Nombre del usuario con sesión, o `null` si no se guardó.
   Future<String?> nombreUsuario();
+
+  Future<Result<Perfil>> miPerfil();
+
+  Future<Result<Perfil>> actualizarPerfil({
+    required String nombre,
+    required String apellidos,
+  });
+
+  /// Cambia la contraseña de la sesión actual y devuelve un mensaje opcional de éxito.
+  Future<Result<String?>> cambiarPassword({
+    required String actual,
+    required String nueva,
+  });
 }
