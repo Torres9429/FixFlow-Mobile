@@ -28,6 +28,7 @@ class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
   EstadoIncidencia? filtro;
   EstadoConsulta<List<IncidenciaResumen>> estado = const Cargando();
   bool cargandoMas = false;
+  int? iniciandoId;
   Coordenada? _posicion;
   int _pagina = 0;
   bool _esUltima = true;
@@ -92,6 +93,20 @@ class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
     filtro = nuevo;
     estado = const Cargando();
     await cargar();
+  }
+
+  Future<Result<void>> iniciarAtencion(int incidenciaId) async {
+    if (iniciandoId != null) return const Result.ok(null);
+    iniciandoId = incidenciaId;
+    notifyListeners();
+    final res = await _operativoRepository.iniciarAtencion(incidenciaId);
+    iniciandoId = null;
+    if (res is Ok) {
+      await cargar();
+    } else {
+      notifyListeners();
+    }
+    return res;
   }
 
   Future<void> cargarMas() async {

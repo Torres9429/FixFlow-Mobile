@@ -13,6 +13,7 @@ import '../../core/widgets/incidencia_card.dart';
 import '../../core/widgets/lista_incidencias.dart';
 import '../../core/widgets/saludo.dart';
 import '../../routing/rutas.dart';
+import '../confirmar_inicio_atencion.dart';
 import 'asignadas_viewmodel.dart';
 
 /// D1 Mis asignadas.
@@ -80,9 +81,32 @@ class AsignadasScreen extends StatelessWidget {
       ...conSeparacion(
         vm.asignadas.map((i) {
           final distancia = vm.distancia(i);
+          final puedeIniciar = i.estado == EstadoIncidencia.asignada || i.estado == EstadoIncidencia.reabierta;
+          final iniciando = vm.iniciandoId == i.id;
           return IncidenciaCard(
             incidencia: i,
             meta: [i.folio, formatearFechaCorta(i.ultimaActualizacion), ?distancia].join(' · '),
+            accion: puedeIniciar
+                ? SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: FilledButton(
+                      key: Key('iniciar_atencion_${i.id}'),
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: iniciando
+                          ? null
+                          : () => confirmarInicioAtencion(context, () => vm.iniciarAtencion(i.id)),
+                      child: iniciando
+                          ? const SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Iniciar atención'),
+                    ),
+                  )
+                : null,
             onTap: () => context.push(Rutas.detalleOperativo(i.id)),
           );
         }),

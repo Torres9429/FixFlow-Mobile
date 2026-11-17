@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../domain/repositories/direccion_repository.dart';
 import '../../domain/repositories/incidencias_repository.dart';
+import '../../domain/repositories/operativo_repository.dart';
 import 'detalle_incidencia_screen.dart';
 import 'detalle_incidencia_viewmodel.dart';
 import 'vista_detalle.dart';
@@ -20,6 +21,7 @@ GoRoute rutaDetalle(VistaDetalle vista, {List<RouteBase> acciones = const []}) =
       vista: vista,
       incidenciasRepository: context.read<IncidenciasRepository>(),
       direccionRepository: context.read<DireccionRepository>(),
+      operativoRepository: context.read<OperativoRepository>(),
     )..iniciar(),
     child: const DetalleIncidenciaScreen(),
   ),

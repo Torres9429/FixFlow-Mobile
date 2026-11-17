@@ -6,6 +6,7 @@ import '../../domain/entities/evento_historial.dart';
 import '../../domain/entities/incidencia_detalle.dart';
 import '../../domain/repositories/direccion_repository.dart';
 import '../../domain/repositories/incidencias_repository.dart';
+import '../../domain/repositories/operativo_repository.dart';
 import '../core/estado_consulta.dart';
 import '../core/mensajes.dart';
 import '../core/notificador_seguro.dart';
@@ -17,13 +18,14 @@ typedef DetalleConHistorial = ({
   List<EventoHistorial> historial,
 });
 
-/// C2, D2 y E4: detalle de la incidencia (HU-11) con su historial (HU-22). Sin acciones en este sprint.
+/// C2, D2 y E4: detalle de la incidencia (HU-11) con su historial (HU-22).
 class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   DetalleIncidenciaViewModel({
     required this.id,
     required this.vista,
     required this._incidenciasRepository,
     required this._direccionRepository,
+    required this._operativoRepository,
   });
 
   /// Con más eventos que estos se muestran los 3 más recientes y «Ver todo» (design.md §7).
@@ -34,12 +36,14 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   final VistaDetalle vista;
   final IncidenciasRepository _incidenciasRepository;
   final DireccionRepository _direccionRepository;
+  final OperativoRepository _operativoRepository;
 
   EstadoConsulta<DetalleConHistorial> estado = const Cargando();
 
   /// Dirección escrita; llega después del detalle y mientras tanto se muestran las coordenadas.
   String? direccion;
   bool verTodo = false;
+  bool iniciando = false;
 
   /// Solo el admin ve quién reportó (RNF-04). Al ciudadano no le sirve ver su propio nombre.
   bool get mostrarCiudadano => vista == VistaDetalle.admin;
@@ -56,6 +60,30 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
           }.contains(datos.detalle.resumen.estado),
     _ => false,
   };
+
+  /// El operativo puede iniciar atención si la tiene asignada o fue reabierta (HU-15 / RN-14 / #46).
+  bool get puedeIniciarAtencion => switch (estado) {
+    Listo(:final datos) =>
+      vista == VistaDetalle.operativo &&
+          (datos.detalle.resumen.estado == EstadoIncidencia.asignada ||
+           datos.detalle.resumen.estado == EstadoIncidencia.reabierta),
+    _ => false,
+  };
+
+  /// Inicia la atención de la incidencia pasando a `EN_PROCESO` y recarga la ficha.
+  Future<Result<void>> iniciarAtencion() async {
+    if (iniciando) return const Result.ok(null);
+    iniciando = true;
+    notifyListeners();
+    final res = await _operativoRepository.iniciarAtencion(id);
+    iniciando = false;
+    if (res is Ok) {
+      await iniciar();
+    } else {
+      notifyListeners();
+    }
+    return res;
+  }
 
   bool get tieneResponsable => switch (estado) {
     Listo(:final datos) => datos.detalle.tieneResponsable,
