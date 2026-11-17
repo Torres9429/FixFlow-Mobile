@@ -15,31 +15,10 @@ class FakeIncidenciasRepository implements IncidenciasRepository {
   static const _fotoSolucion = 'https://res.cloudinary.com/demo/image/upload/samples/landscapes/nature-mountains.jpg';
   static const _solucion = 'Se cambió el tramo de tubería dañado y se selló la toma.';
   static const _motivoReapertura = 'Sigue saliendo agua junto a la banqueta.';
-  static final Map<int, EstadoIncidencia> estadosSobrescritos = {};
 
   IncidenciaResumen? _buscar(int id) {
     for (final i in [...DatosDemo.reportesAna, ...DatosDemo.municipio]) {
-      if (i.id == id) {
-        final sob = estadosSobrescritos[id];
-        if (sob != null) {
-          return IncidenciaResumen(
-            id: i.id,
-            folio: i.folio,
-            tipo: i.tipo,
-            tipoCodigo: i.tipoCodigo,
-            estado: sob,
-            prioridad: i.prioridad,
-            motivoPrioridad: i.motivoPrioridad,
-            latitud: i.latitud,
-            longitud: i.longitud,
-            fechaCreacion: i.fechaCreacion,
-            ultimaActualizacion: DateTime.now(),
-            operativo: i.operativo,
-            fotoUrl: i.fotoUrl,
-          );
-        }
-        return i;
-      }
+      if (i.id == id) return i;
     }
     return null;
   }

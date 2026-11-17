@@ -252,6 +252,7 @@ void main() {
       final res = await vm.iniciarAtencion(131);
 
       expect(res, isA<Ok<void>>());
+      expect(vm.iniciandoId, isNull);
       verify(() => mockOperativoRepo.iniciarAtencion(131)).called(1);
       expect(vm.asignadas.first.estado, EstadoIncidencia.enProceso);
     });

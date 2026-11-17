@@ -15,19 +15,20 @@ import '../../core/notificador_seguro.dart';
 /// D1 Mis asignadas (HU-14): prioridad alta primero y distancia desde el teléfono.
 class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
   AsignadasViewModel({
-    required this.operativoRepository,
-    required this.ubicacionRepository,
-    required this.authRepository,
+    required this._operativoRepository,
+    required this._ubicacionRepository,
+    required this._authRepository,
   });
 
-  final OperativoRepository operativoRepository;
-  final UbicacionRepository ubicacionRepository;
-  final AuthRepository authRepository;
+  final OperativoRepository _operativoRepository;
+  final UbicacionRepository _ubicacionRepository;
+  final AuthRepository _authRepository;
 
   String nombre = '';
   EstadoIncidencia? filtro;
   EstadoConsulta<List<IncidenciaResumen>> estado = const Cargando();
   bool cargandoMas = false;
+  int? iniciandoId;
   Coordenada? _posicion;
   int _pagina = 0;
   bool _esUltima = true;
@@ -59,9 +60,9 @@ class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
   }
 
   Future<void> iniciar() async {
-    nombre = await authRepository.nombreUsuario() ?? '';
+    nombre = await _authRepository.nombreUsuario() ?? '';
     // El GPS no frena la lista: la distancia aparece cuando llega
-    ubicacionRepository.posicionActual().then((p) {
+    _ubicacionRepository.posicionActual().then((p) {
       _posicion = p;
       notifyListeners();
     });
@@ -75,7 +76,7 @@ class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
       notifyListeners();
     }
 
-    final res = await operativoRepository.asignadas(estado: filtro);
+    final res = await _operativoRepository.asignadas(estado: filtro);
     switch (res) {
       case Ok(:final value):
         estado = Listo(value.contenido);
@@ -95,9 +96,15 @@ class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
   }
 
   Future<Result<void>> iniciarAtencion(int incidenciaId) async {
-    final res = await operativoRepository.iniciarAtencion(incidenciaId);
+    if (iniciandoId != null) return const Result.ok(null);
+    iniciandoId = incidenciaId;
+    notifyListeners();
+    final res = await _operativoRepository.iniciarAtencion(incidenciaId);
+    iniciandoId = null;
     if (res is Ok) {
       await cargar();
+    } else {
+      notifyListeners();
     }
     return res;
   }
@@ -107,7 +114,7 @@ class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
     cargandoMas = true;
     notifyListeners();
 
-    final res = await operativoRepository.asignadas(estado: filtro, pagina: _pagina + 1);
+    final res = await _operativoRepository.asignadas(estado: filtro, pagina: _pagina + 1);
     if (res case Ok(:final value)) {
       estado = Listo([...asignadas, ...value.contenido]);
       _pagina = value.numero;

@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/result.dart';
 import '../core/estado_consulta.dart';
-import '../core/mensajes.dart';
 import '../core/widgets/esqueleto_tarjetas.dart';
 import '../core/widgets/estado_vacio.dart';
-import '../core/widgets/hoja_confirmacion.dart';
+import '../operativo/confirmar_inicio_atencion.dart';
 import '../routing/rutas.dart';
 import 'detalle_incidencia_viewmodel.dart';
 import 'secciones/barra_acciones.dart';
@@ -50,29 +48,15 @@ class DetalleIncidenciaScreen extends StatelessWidget {
             return BarraAcciones(
               primario: FilledButton(
                 key: const Key('detalle_iniciar_atencion'),
-                onPressed: () async {
-                  final confirmado = await HojaConfirmacion.mostrar(
-                    context: context,
-                    titulo: '¿Iniciar atención?',
-                    mensaje: 'La incidencia pasará a En proceso y el ciudadano podrá ver que ya la estás atendiendo.',
-                    accionTexto: 'Iniciar atención',
-                  );
-                  if (confirmado && context.mounted) {
-                    final res = await vm.iniciarAtencion();
-                    if (context.mounted) {
-                      if (res is Ok) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Atención iniciada')),
-                        );
-                      } else if (res is Error) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(mensajePara(res.error))),
-                        );
-                      }
-                    }
-                  }
-                },
-                child: const Text('Iniciar atención'),
+                onPressed: vm.iniciando
+                    ? null
+                    : () => confirmarInicioAtencion(context, vm.iniciarAtencion),
+                child: vm.iniciando
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Iniciar atención'),
               ),
             );
           }

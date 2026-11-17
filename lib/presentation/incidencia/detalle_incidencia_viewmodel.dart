@@ -4,7 +4,6 @@ import '../../core/result.dart';
 import '../../domain/entities/estado_incidencia.dart';
 import '../../domain/entities/evento_historial.dart';
 import '../../domain/entities/incidencia_detalle.dart';
-import '../../domain/errors/falla_red.dart';
 import '../../domain/repositories/direccion_repository.dart';
 import '../../domain/repositories/incidencias_repository.dart';
 import '../../domain/repositories/operativo_repository.dart';
@@ -24,9 +23,9 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   DetalleIncidenciaViewModel({
     required this.id,
     required this.vista,
-    required this.incidenciasRepository,
-    required this.direccionRepository,
-    this.operativoRepository,
+    required this._incidenciasRepository,
+    required this._direccionRepository,
+    required this._operativoRepository,
   });
 
   /// Con más eventos que estos se muestran los 3 más recientes y «Ver todo» (design.md §7).
@@ -35,15 +34,16 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
 
   final int id;
   final VistaDetalle vista;
-  final IncidenciasRepository incidenciasRepository;
-  final DireccionRepository direccionRepository;
-  final OperativoRepository? operativoRepository;
+  final IncidenciasRepository _incidenciasRepository;
+  final DireccionRepository _direccionRepository;
+  final OperativoRepository _operativoRepository;
 
   EstadoConsulta<DetalleConHistorial> estado = const Cargando();
 
   /// Dirección escrita; llega después del detalle y mientras tanto se muestran las coordenadas.
   String? direccion;
   bool verTodo = false;
+  bool iniciando = false;
 
   /// Solo el admin ve quién reportó (RNF-04). Al ciudadano no le sirve ver su propio nombre.
   bool get mostrarCiudadano => vista == VistaDetalle.admin;
@@ -72,13 +72,15 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
 
   /// Inicia la atención de la incidencia pasando a `EN_PROCESO` y recarga la ficha.
   Future<Result<void>> iniciarAtencion() async {
-    final repo = operativoRepository;
-    if (repo == null) {
-      return const Result.error(PeticionRechazada(400, 'Repositorio operativo no configurado'));
-    }
-    final res = await repo.iniciarAtencion(id);
+    if (iniciando) return const Result.ok(null);
+    iniciando = true;
+    notifyListeners();
+    final res = await _operativoRepository.iniciarAtencion(id);
+    iniciando = false;
     if (res is Ok) {
       await iniciar();
+    } else {
+      notifyListeners();
     }
     return res;
   }
@@ -107,8 +109,8 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
     }
 
     final (detalle, historial) = await (
-      incidenciasRepository.detalle(id),
-      incidenciasRepository.historial(id),
+      _incidenciasRepository.detalle(id),
+      _incidenciasRepository.historial(id),
     ).wait;
 
     switch ((detalle, historial)) {
@@ -131,7 +133,7 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   }
 
   Future<void> _cargarDireccion(IncidenciaDetalle d) async {
-    direccion = await direccionRepository.direccion(
+    direccion = await _direccionRepository.direccion(
       d.resumen.latitud,
       d.resumen.longitud,
     );

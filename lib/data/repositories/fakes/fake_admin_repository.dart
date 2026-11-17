@@ -8,8 +8,6 @@ import '../../../domain/entities/pagina.dart';
 import '../../../domain/entities/prioridad.dart';
 import '../../../domain/repositories/admin_repository.dart';
 import 'datos_demo.dart';
-import 'fake_incidencias_repository.dart';
-import 'fake_operativo_repository.dart';
 
 /// Panel del admin en el modo mock, con las cifras de design.md §9.
 class FakeAdminRepository implements AdminRepository {
@@ -159,27 +157,6 @@ class FakeAdminRepository implements AdminRepository {
     int operativoId,
   ) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
-    FakeIncidenciasRepository.estadosSobrescritos[incidenciaId] = EstadoIncidencia.asignada;
-    final incidencia = DatosDemo.municipio.firstWhere(
-      (i) => i.id == incidenciaId,
-      orElse: () => DatosDemo.bache142,
-    );
-    final asignada = IncidenciaResumen(
-      id: incidencia.id,
-      folio: incidencia.folio,
-      tipo: incidencia.tipo,
-      tipoCodigo: incidencia.tipoCodigo,
-      estado: EstadoIncidencia.asignada,
-      prioridad: incidencia.prioridad,
-      motivoPrioridad: incidencia.motivoPrioridad,
-      latitud: incidencia.latitud,
-      longitud: incidencia.longitud,
-      fechaCreacion: incidencia.fechaCreacion,
-      ultimaActualizacion: DateTime.now(),
-      operativo: 'Luis Ramírez',
-      fotoUrl: incidencia.fotoUrl,
-    );
-    FakeOperativoRepository.registrarAsignacion(asignada);
     return const Result.ok(null);
   }
 }
