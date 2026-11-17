@@ -15,14 +15,14 @@ import '../../core/notificador_seguro.dart';
 /// D1 Mis asignadas (HU-14): prioridad alta primero y distancia desde el teléfono.
 class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
   AsignadasViewModel({
-    required this._operativoRepository,
-    required this._ubicacionRepository,
-    required this._authRepository,
+    required this.operativoRepository,
+    required this.ubicacionRepository,
+    required this.authRepository,
   });
 
-  final OperativoRepository _operativoRepository;
-  final UbicacionRepository _ubicacionRepository;
-  final AuthRepository _authRepository;
+  final OperativoRepository operativoRepository;
+  final UbicacionRepository ubicacionRepository;
+  final AuthRepository authRepository;
 
   String nombre = '';
   EstadoIncidencia? filtro;
@@ -59,9 +59,9 @@ class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
   }
 
   Future<void> iniciar() async {
-    nombre = await _authRepository.nombreUsuario() ?? '';
+    nombre = await authRepository.nombreUsuario() ?? '';
     // El GPS no frena la lista: la distancia aparece cuando llega
-    _ubicacionRepository.posicionActual().then((p) {
+    ubicacionRepository.posicionActual().then((p) {
       _posicion = p;
       notifyListeners();
     });
@@ -75,7 +75,7 @@ class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
       notifyListeners();
     }
 
-    final res = await _operativoRepository.asignadas(estado: filtro);
+    final res = await operativoRepository.asignadas(estado: filtro);
     switch (res) {
       case Ok(:final value):
         estado = Listo(value.contenido);
@@ -94,12 +94,20 @@ class AsignadasViewModel extends ChangeNotifier with NotificadorSeguro {
     await cargar();
   }
 
+  Future<Result<void>> iniciarAtencion(int incidenciaId) async {
+    final res = await operativoRepository.iniciarAtencion(incidenciaId);
+    if (res is Ok) {
+      await cargar();
+    }
+    return res;
+  }
+
   Future<void> cargarMas() async {
     if (_esUltima || estado is! Listo || cargandoMas) return;
     cargandoMas = true;
     notifyListeners();
 
-    final res = await _operativoRepository.asignadas(estado: filtro, pagina: _pagina + 1);
+    final res = await operativoRepository.asignadas(estado: filtro, pagina: _pagina + 1);
     if (res case Ok(:final value)) {
       estado = Listo([...asignadas, ...value.contenido]);
       _pagina = value.numero;

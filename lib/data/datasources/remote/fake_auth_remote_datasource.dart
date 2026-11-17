@@ -17,6 +17,12 @@ class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
     'ciudadano@fixflow.mx': (id: 1, rol: 'CIUDADANO', nombre: 'Ana', apellidos: 'López Ruiz', password: passwordDemo),
     'operativo@fixflow.mx': (id: 2, rol: 'OPERATIVO', nombre: 'Luis', apellidos: 'Ramírez', password: passwordDemo),
     'admin@fixflow.mx': (id: 3, rol: 'ADMIN', nombre: 'Marta', apellidos: 'Sánchez', password: passwordDemo),
+    '20233tn105@utez.edu.mx': (id: 1, rol: 'CIUDADANO', nombre: 'Xio', apellidos: 'Ciudadano', password: passwordDemo),
+    '20233tn077@utez.edu.mx': (id: 2, rol: 'OPERATIVO', nombre: 'Amador', apellidos: 'Operativo', password: passwordDemo),
+    '20233tn083@utez.edu.mx': (id: 3, rol: 'ADMIN', nombre: 'Alexa', apellidos: 'Admin', password: passwordDemo),
+    'ciudadano@fixflow.com': (id: 1, rol: 'CIUDADANO', nombre: 'Ana', apellidos: 'López Ruiz', password: passwordDemo),
+    'operativo@fixflow.com': (id: 2, rol: 'OPERATIVO', nombre: 'Luis', apellidos: 'Ramírez', password: passwordDemo),
+    'admin@fixflow.com': (id: 3, rol: 'ADMIN', nombre: 'Marta', apellidos: 'Sánchez', password: passwordDemo),
   };
 
   String? _correoActual;
@@ -27,13 +33,29 @@ class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
     String password,
   ) async {
     // Simula la latencia de la red para ver el estado de carga
-    await Future<void>.delayed(const Duration(milliseconds: 800));
+    await Future<void>.delayed(const Duration(milliseconds: 300));
 
-    final usuario = _usuarios[correo.toLowerCase()];
-    if (usuario == null || password != usuario.password) {
+    final c = correo.trim().toLowerCase();
+    final p = password.trim();
+
+    _UsuarioDemo? usuario = _usuarios[c];
+
+    // Detección inteligente para modo mock
+    if (usuario == null) {
+      if (c.contains('operativo') || c.contains('amador') || c.contains('077')) {
+        usuario = (id: 2, rol: 'OPERATIVO', nombre: 'Luis', apellidos: 'Ramírez', password: p);
+      } else if (c.contains('admin') || c.contains('alexa') || c.contains('083')) {
+        usuario = (id: 3, rol: 'ADMIN', nombre: 'Marta', apellidos: 'Sánchez', password: p);
+      } else if (c.contains('ciudadano') || c.contains('ana') || c.contains('xio') || c.contains('105')) {
+        usuario = (id: 1, rol: 'CIUDADANO', nombre: 'Ana', apellidos: 'López Ruiz', password: p);
+      }
+    }
+
+    if (usuario == null) {
       return const Result.error(CredencialesInvalidas());
     }
-    _correoActual = correo.toLowerCase();
+
+    _correoActual = c;
     return Result.ok(LoginResponseModel(
       token: 'token-falso-${usuario.rol.toLowerCase()}',
       refreshToken: 'refresh-falso',

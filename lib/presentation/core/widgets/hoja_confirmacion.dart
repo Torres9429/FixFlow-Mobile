@@ -14,7 +14,7 @@ Future<T?> mostrarHoja<T>(BuildContext context, {required WidgetBuilder builder,
       builder: builder,
     );
 
-/// Confirmación (A3c, E8a, E12a…): título, una línea de explicación, un [detalle] opcional,
+/// Confirmación (A3c, E8a, E12a, iniciar atención…): título, una línea de explicación, un [detalle] opcional,
 /// la acción (en rojo si es [destructiva]) y «Cancelar» como texto. Devuelve `true` si se confirma.
 Future<bool> confirmarAccion(
   BuildContext context, {
@@ -49,6 +49,27 @@ Future<bool> confirmarAccion(
     ),
   );
   return confirmado ?? false;
+}
+
+/// Adaptador de conveniencia con interfaz de clase para diálogos de confirmación.
+abstract final class HojaConfirmacion {
+  static Future<bool> mostrar({
+    required BuildContext context,
+    required String titulo,
+    required String mensaje,
+    required String accionTexto,
+    bool destructivo = false,
+    Key? claveConfirmar,
+    Key? claveCancelar,
+  }) => confirmarAccion(
+    context,
+    titulo: titulo,
+    mensaje: mensaje,
+    accion: accionTexto,
+    destructiva: destructivo,
+    claveConfirmar: claveConfirmar,
+    claveCancelar: claveCancelar,
+  );
 }
 
 /// Cuerpo común de las hojas: título en 17/700, texto secundario, detalle opcional y los botones.

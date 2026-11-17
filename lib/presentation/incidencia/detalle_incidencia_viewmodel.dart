@@ -4,8 +4,10 @@ import '../../core/result.dart';
 import '../../domain/entities/estado_incidencia.dart';
 import '../../domain/entities/evento_historial.dart';
 import '../../domain/entities/incidencia_detalle.dart';
+import '../../domain/errors/falla_red.dart';
 import '../../domain/repositories/direccion_repository.dart';
 import '../../domain/repositories/incidencias_repository.dart';
+import '../../domain/repositories/operativo_repository.dart';
 import '../core/estado_consulta.dart';
 import '../core/mensajes.dart';
 import '../core/notificador_seguro.dart';
@@ -17,13 +19,14 @@ typedef DetalleConHistorial = ({
   List<EventoHistorial> historial,
 });
 
-/// C2, D2 y E4: detalle de la incidencia (HU-11) con su historial (HU-22). Sin acciones en este sprint.
+/// C2, D2 y E4: detalle de la incidencia (HU-11) con su historial (HU-22).
 class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   DetalleIncidenciaViewModel({
     required this.id,
     required this.vista,
-    required this._incidenciasRepository,
-    required this._direccionRepository,
+    required this.incidenciasRepository,
+    required this.direccionRepository,
+    this.operativoRepository,
   });
 
   /// Con más eventos que estos se muestran los 3 más recientes y «Ver todo» (design.md §7).
@@ -32,8 +35,9 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
 
   final int id;
   final VistaDetalle vista;
-  final IncidenciasRepository _incidenciasRepository;
-  final DireccionRepository _direccionRepository;
+  final IncidenciasRepository incidenciasRepository;
+  final DireccionRepository direccionRepository;
+  final OperativoRepository? operativoRepository;
 
   EstadoConsulta<DetalleConHistorial> estado = const Cargando();
 
@@ -56,6 +60,28 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
           }.contains(datos.detalle.resumen.estado),
     _ => false,
   };
+
+  /// El operativo puede iniciar atención si la tiene asignada o fue reabierta (HU-15 / RN-14 / #46).
+  bool get puedeIniciarAtencion => switch (estado) {
+    Listo(:final datos) =>
+      vista == VistaDetalle.operativo &&
+          (datos.detalle.resumen.estado == EstadoIncidencia.asignada ||
+           datos.detalle.resumen.estado == EstadoIncidencia.reabierta),
+    _ => false,
+  };
+
+  /// Inicia la atención de la incidencia pasando a `EN_PROCESO` y recarga la ficha.
+  Future<Result<void>> iniciarAtencion() async {
+    final repo = operativoRepository;
+    if (repo == null) {
+      return const Result.error(PeticionRechazada(400, 'Repositorio operativo no configurado'));
+    }
+    final res = await repo.iniciarAtencion(id);
+    if (res is Ok) {
+      await iniciar();
+    }
+    return res;
+  }
 
   bool get tieneResponsable => switch (estado) {
     Listo(:final datos) => datos.detalle.tieneResponsable,
@@ -81,8 +107,8 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
     }
 
     final (detalle, historial) = await (
-      _incidenciasRepository.detalle(id),
-      _incidenciasRepository.historial(id),
+      incidenciasRepository.detalle(id),
+      incidenciasRepository.historial(id),
     ).wait;
 
     switch ((detalle, historial)) {
@@ -105,7 +131,7 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   }
 
   Future<void> _cargarDireccion(IncidenciaDetalle d) async {
-    direccion = await _direccionRepository.direccion(
+    direccion = await direccionRepository.direccion(
       d.resumen.latitud,
       d.resumen.longitud,
     );

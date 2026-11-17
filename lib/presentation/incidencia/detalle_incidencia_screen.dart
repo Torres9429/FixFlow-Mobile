@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/result.dart';
 import '../core/estado_consulta.dart';
+import '../core/mensajes.dart';
 import '../core/widgets/esqueleto_tarjetas.dart';
 import '../core/widgets/estado_vacio.dart';
+import '../core/widgets/hoja_confirmacion.dart';
 import '../routing/rutas.dart';
 import 'detalle_incidencia_viewmodel.dart';
 import 'secciones/barra_acciones.dart';
@@ -29,19 +32,52 @@ class DetalleIncidenciaScreen extends StatelessWidget {
       appBar: AppBar(title: Text(vm.vista.titulo)),
       // Sin acción válida no hay barra (design.md §7)
       bottomNavigationBar: Consumer<DetalleIncidenciaViewModel>(
-        builder: (context, vm, _) => vm.puedeAsignar
-            ? BarraAcciones(
-                primario: FilledButton(
-                  key: const Key('detalle_asignar'),
-                  onPressed: () async {
-                    await context.push(Rutas.asignarAdmin(vm.id));
-                    // Al volver de E5 la incidencia ya puede estar Asignada
-                    await vm.iniciar();
-                  },
-                  child: Text(vm.tieneResponsable ? 'Reasignar' : 'Asignar'),
-                ),
-              )
-            : const SizedBox.shrink(),
+        builder: (context, vm, _) {
+          if (vm.puedeAsignar) {
+            return BarraAcciones(
+              primario: FilledButton(
+                key: const Key('detalle_asignar'),
+                onPressed: () async {
+                  await context.push(Rutas.asignarAdmin(vm.id));
+                  // Al volver de E5 la incidencia ya puede estar Asignada
+                  await vm.iniciar();
+                },
+                child: Text(vm.tieneResponsable ? 'Reasignar' : 'Asignar'),
+              ),
+            );
+          }
+          if (vm.puedeIniciarAtencion) {
+            return BarraAcciones(
+              primario: FilledButton(
+                key: const Key('detalle_iniciar_atencion'),
+                onPressed: () async {
+                  final confirmado = await HojaConfirmacion.mostrar(
+                    context: context,
+                    titulo: '¿Iniciar atención?',
+                    mensaje: 'La incidencia pasará a En proceso y el ciudadano podrá ver que ya la estás atendiendo.',
+                    accionTexto: 'Iniciar atención',
+                  );
+                  if (confirmado && context.mounted) {
+                    final res = await vm.iniciarAtencion();
+                    if (context.mounted) {
+                      if (res is Ok) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Atención iniciada')),
+                        );
+                      } else if (res is Error) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(mensajePara(res.error))),
+                        );
+                      }
+                    }
+                  }
+                },
+                child: const Text('Iniciar atención'),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
       ),
       body: Consumer<DetalleIncidenciaViewModel>(
         builder: (context, vm, _) => switch (vm.estado) {

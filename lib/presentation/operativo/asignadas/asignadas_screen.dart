@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/result.dart';
 import '../../../domain/entities/estado_incidencia.dart';
 import '../../core/estado_consulta.dart';
 import '../../core/formato_fecha.dart';
+import '../../core/mensajes.dart';
 import '../../core/widgets/barra_principal.dart';
 import '../../core/widgets/chips_filtro.dart';
 import '../../core/widgets/esqueleto_tarjetas.dart';
 import '../../core/widgets/estado_vacio.dart';
+import '../../core/widgets/hoja_confirmacion.dart';
 import '../../core/widgets/incidencia_card.dart';
 import '../../core/widgets/lista_incidencias.dart';
 import '../../core/widgets/saludo.dart';
@@ -80,9 +83,46 @@ class AsignadasScreen extends StatelessWidget {
       ...conSeparacion(
         vm.asignadas.map((i) {
           final distancia = vm.distancia(i);
+          final puedeIniciar = i.estado == EstadoIncidencia.asignada || i.estado == EstadoIncidencia.reabierta;
           return IncidenciaCard(
             incidencia: i,
             meta: [i.folio, formatearFechaCorta(i.ultimaActualizacion), ?distancia].join(' · '),
+            accion: puedeIniciar
+                ? SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: FilledButton(
+                      key: Key('iniciar_atencion_${i.id}'),
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () async {
+                        final confirmado = await HojaConfirmacion.mostrar(
+                          context: context,
+                          titulo: '¿Iniciar atención?',
+                          mensaje:
+                              'La incidencia pasará a En proceso y el ciudadano podrá ver que ya la estás atendiendo.',
+                          accionTexto: 'Iniciar atención',
+                        );
+                        if (confirmado && context.mounted) {
+                          final res = await vm.iniciarAtencion(i.id);
+                          if (context.mounted) {
+                            if (res is Ok) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Atención iniciada')),
+                              );
+                            } else if (res is Error) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(mensajePara(res.error))),
+                              );
+                            }
+                          }
+                        }
+                      },
+                      child: const Text('Iniciar atención'),
+                    ),
+                  )
+                : null,
             onTap: () => context.push(Rutas.detalleOperativo(i.id)),
           );
         }),

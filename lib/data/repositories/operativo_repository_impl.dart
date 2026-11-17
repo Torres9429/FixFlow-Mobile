@@ -29,4 +29,17 @@ class OperativoRepositoryImpl implements OperativoRepository {
       return Result.error(traducirError(e));
     }
   }
+
+  @override
+  Future<Result<void>> iniciarAtencion(int incidenciaId) async {
+    try {
+      await _dio.patch<Map<String, dynamic>>(
+        '/incidencias/$incidenciaId/estado',
+        data: {'estado': 'EN_PROCESO'},
+      );
+      return const Result.ok(null);
+    } catch (e) {
+      return Result.error(traducirError(e));
+    }
+  }
 }
