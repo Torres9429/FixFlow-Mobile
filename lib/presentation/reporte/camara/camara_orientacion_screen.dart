@@ -190,24 +190,33 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
                             tooltip: 'Cerrar',
                             onPressed: () => Navigator.of(context).pop(),
                           ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xB31F2937),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white24, width: 0.8),
-                            ),
-                            child: Text(
-                              '${vm.tipo.nombre} • ${vm.subtituloOrientacion}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                          // La píldora toma el espacio libre; con nombres largos usa dos líneas
+                          Expanded(
+                            // heightFactor: 1 → alto de la píldora; sin él el encabezado ocupa toda la pantalla
+                            child: Center(
+                              heightFactor: 1,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xB31F2937),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.white24, width: 0.8),
+                                ),
+                                child: Text(
+                                  '${vm.tipo.nombre} • ${vm.subtituloOrientacion}',
+                                  // En pantallas angostas baja a una segunda línea para que la instrucción se lea completa
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                          const Spacer(),
                           const SizedBox(width: 48), // Equilibrar el botón cerrar
                         ],
                       ),
