@@ -45,6 +45,8 @@ class FakeIncidenciasRepository implements IncidenciasRepository {
         // En una reabierta la solución anterior se conserva, pero ya no cuenta como resuelta
         fechaResolucion: _conSolucion(r.estado) && !reabierta ? r.ultimaActualizacion : null,
         fotoReporteUrl: _fotoReporte,
+        // Una de demo tomada desde un teléfono sin acelerómetro (B3e)
+        sinSensor: r.tipoCodigo == 'LUMINARIA',
         fotoSolucionUrl: _conSolucion(r.estado) ? _fotoSolucion : null,
         descripcionSolucion: _conSolucion(r.estado) ? _solucion : null,
         motivoReapertura: reabierta ? _motivoReapertura : null,

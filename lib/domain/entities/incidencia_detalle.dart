@@ -14,6 +14,7 @@ class IncidenciaDetalle {
     this.ciudadano,
     this.operativoAsignado,
     this.operativoAsignadoId,
+    this.sinSensor = false,
   });
 
   /// Folio, tipo, estado, prioridad, ubicación y fechas: lo mismo que la tarjeta.
@@ -35,6 +36,9 @@ class IncidenciaDetalle {
 
   /// ID del usuario responsable, para identificarlo en la lista de operativos.
   final int? operativoAsignadoId;
+
+  /// La foto del reporte se tomó sin acelerómetro: no se validó su inclinación (RN-11).
+  final bool sinSensor;
 
   /// Nombre del responsable en el detalle o, como respaldo, en el resumen.
   String? get responsableActual {

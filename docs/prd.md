@@ -13,7 +13,7 @@ Guía interna del equipo para construir la primera versión. Resume **qué** se 
 
 Hoy un bache, una luminaria apagada o una fuga se reportan sin evidencia confiable y sin ubicación exacta. Además, el ciudadano no sabe qué pasó con su reporte. Por su parte, el municipio no tiene cómo priorizar ni repartir el trabajo.
 
-FixFlow es una app Android con la que el ciudadano reporta el problema con foto en vivo, GPS e inclinación. El municipio lo asigna, lo atiende y lo cierra, y cada paso queda en el historial.
+FixFlow es una app Android con la que el ciudadano reporta el problema con foto en vivo, GPS e inclinación (si el teléfono tiene acelerómetro). El municipio lo asigna, lo atiende y lo cierra, y cada paso queda en el historial.
 
 | Usuario | Necesita | FixFlow le da |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ Los tres roles usan la misma app (RNF-07). La v1 se valida **solo con el equipo*
 | Módulo | Qué hace | HU |
 | --- | --- | --- |
 | Acceso | Registro de ciudadano, login por rol, sesión que se renueva sola (RNF-09), perfil y cambio de contraseña | 01, 02, 25 |
-| Reporte | Tipo del catálogo, descripción, foto en vivo, GPS e inclinación válida según el tipo; folio `FX-AAAA-NNNNNN` (RN-08, RN-12) | 03–08 |
+| Reporte | Tipo del catálogo, descripción, foto en vivo, GPS e inclinación válida según el tipo (si el teléfono tiene acelerómetro; si no, se envía marcado como sin sensor); folio `FX-AAAA-NNNNNN` (RN-08, RN-12) | 03–08 |
 | Prioridad | Automática por tipo, escalamiento cada 7 días, Alta al reabrir; siempre con motivo (RN-13) | 09, 20 |
 | Atención | Asignar y reasignar con la carga visible; el operativo inicia y registra la solución con foto | 14, 15, 16, 21 |
 | Seguimiento | Mis reportes, estado, historial, bandeja de avisos, confirmar, reabrir (máx. 2) y cierre automático a 7 días | 10–13, 22, 23 |
@@ -76,6 +76,7 @@ Códigos del lienzo de diseño. Los endpoints de cada pantalla están en [contra
 | B3b | Cámara: guía para ajustar el ángulo (fuera de rango) | 06, 08 |
 | B3c | Cámara: tipo que apunta hacia arriba (luminaria) | 06 |
 | B3d | Cámara: tipo sin restricción | 06, 08 |
+| B3e | Cámara: teléfono sin sensor de inclinación (sin guía, disparador activo) | 06, 08 |
 | B4 | Revisar y enviar, con minimapa | 03, 05, 07, 08 |
 | B5 | Reporte enviado, con folio | 03 |
 | B6 | Sin permiso de cámara | 04 |
@@ -147,7 +148,7 @@ El modelo vive en el back (MySQL). La app no guarda nada en el teléfono salvo l
 | Usuario | nombre, apellidos, correo (único), password (BCrypt), rol, estatus (activo) | Roles: `CIUDADANO`, `OPERATIVO`, `ADMIN` (RN-05) |
 | TipoIncidencia | codigo (fijo), nombre, orientacion, prioridadBase, estatus | Catálogo editable (RN-07). `anguloMin` y `anguloMax` los calcula el server (RN-11) |
 | Incidencia | folio, ciudadano, tipo, operativo, descripcion (≤ 500), latitud, longitud, estado, prioridad, motivoPrioridad, numReaperturas, fechaCreacion, fechaResolucion | Estados y transiciones en RN-14 |
-| Evidencia | incidencia, subidaPor, tipo (`REPORTE` o `SOLUCION`), url de Cloudinary, latitud, longitud, inclinacion, fechaCaptura | Una por reporte y una por cada solución (RNF-05) |
+| Evidencia | incidencia, subidaPor, tipo (`REPORTE` o `SOLUCION`), url de Cloudinary, latitud, longitud, inclinacion, sinSensor, fechaCaptura | Una por reporte y una por cada solución (RNF-05) |
 | HistorialIncidencia | incidencia, usuario (o sistema), accion, estado anterior y nuevo, prioridad anterior y nueva, operativo, evidencia, comentario, fecha | Acciones: creada, asignación, reasignación, cambio de estado, solución, reapertura, cambio de prioridad (RN-15) |
 | Notificacion | usuario, historial, titulo, mensaje, leida, fecha | Bandeja interna, sin duplicados (RN-18) |
 | RefreshToken | token, usuario, expiracion, revocado | 7 días; se revoca al cerrar sesión o desactivar la cuenta |
@@ -179,7 +180,8 @@ Cada flujo se acepta probándolo en teléfonos reales contra el back. Además, c
 ### F2 — Reportar con evidencia válida · HU-03 a 09
 
 - [ ] En B2 solo aparecen los tipos activos. La descripción es obligatoria (máximo 500 caracteres).
-- [ ] B3 no ofrece la galería. El botón de captura solo se activa con la inclinación dentro del rango del tipo.
+- [ ] B3 no ofrece la galería. El botón de captura solo se activa con la inclinación dentro del rango del tipo; sin acelerómetro siempre está activo (B3e).
+- [ ] Sin acelerómetro, B2 muestra el aviso, se puede elegir cualquier tipo y el reporte se envía con `sinSensor: true`; el detalle indica que la foto no se validó.
 - [ ] Sin permiso de cámara se muestra B6. Sin GPS se muestra B7. En ninguno de los dos casos se puede enviar el reporte (RNF-03).
 - [ ] B4 muestra la foto, el minimapa con las coordenadas de la captura y los datos, todo antes de enviar.
 - [ ] Al enviar, B5 muestra el folio. El back guarda la prioridad base con su motivo y la primera entrada del historial.

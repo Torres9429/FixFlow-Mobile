@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../domain/entities/tipo_incidencia.dart';
 import '../../../../domain/repositories/inclinacion_repository.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/estado_vacio.dart';
 import 'camara_orientacion_viewmodel.dart';
 import 'resultado_captura.dart';
 import 'widgets/barra_inclinacion.dart';
@@ -25,10 +24,14 @@ class CamaraOrientacionScreen extends StatefulWidget {
     super.key,
     required this.tipo,
     this.precisionGps,
+    this.sinSensor = false,
   });
 
   final TipoIncidencia tipo;
   final double? precisionGps;
+
+  /// B2 ya sabe que el teléfono no tiene acelerómetro: se abre directo en B3e.
+  final bool sinSensor;
 
   @override
   State<CamaraOrientacionScreen> createState() => _CamaraOrientacionScreenState();
@@ -37,7 +40,8 @@ class CamaraOrientacionScreen extends StatefulWidget {
 class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with WidgetsBindingObserver {
   CameraController? _cameraController;
   bool _inicializandoCamara = true;
-  bool _modoSimulacion = false;
+  /// No hay cámara o no hay permiso: se muestra B6 en lugar del visor (RN-09, RNF-03).
+  bool _sinCamara = false;
 
   @override
   void initState() {
@@ -49,6 +53,7 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
   Future<void> _iniciarCamara() async {
     setState(() {
       _inicializandoCamara = true;
+      _sinCamara = false;
     });
 
     try {
@@ -56,7 +61,7 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
       if (camaras.isEmpty) {
         setState(() {
           _inicializandoCamara = false;
-          _modoSimulacion = true;
+          _sinCamara = true;
         });
         return;
       }
@@ -87,7 +92,7 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
       if (!mounted) return;
       setState(() {
         _inicializandoCamara = false;
-        _modoSimulacion = true;
+        _sinCamara = true;
       });
     }
   }
@@ -112,49 +117,23 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
   }
 
   Future<void> _disparar(CamaraOrientacionViewModel vm) async {
-    if (!vm.disparadorActivo) return;
+    final controller = _cameraController;
+    if (!vm.disparadorActivo || controller == null || !controller.value.isInitialized) return;
 
     vm.setCapturando(true);
     try {
-      final double inclinacionCapturada = vm.anguloActual ?? 0.0;
-      final DateTime ahora = DateTime.now();
-      String rutaFoto;
-
-      final controller = _cameraController;
-      if (controller != null && controller.value.isInitialized && !_modoSimulacion) {
-        final XFile archivo = await controller.takePicture();
-        rutaFoto = archivo.path;
-      } else {
-        // En emuladores o cuando no hay cámara física, generamos un archivo simulado válido
-        final dir = Directory.systemTemp;
-        final archivoTemp = File('${dir.path}/captura_fixflow_${ahora.millisecondsSinceEpoch}.jpg');
-        if (!archivoTemp.existsSync()) {
-          // 1x1 pixel JPEG básico o placeholder
-          await archivoTemp.writeAsBytes(const [
-            0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
-            0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43,
-            0x00, 0x08, 0x06, 0x06, 0x07, 0x06, 0x05, 0x08, 0x07, 0x07, 0x07, 0x09,
-            0x09, 0x08, 0x0A, 0x0C, 0x14, 0x0D, 0x0C, 0x0B, 0x0B, 0x0C, 0x19, 0x12,
-            0x13, 0x0F, 0x14, 0x1D, 0x1A, 0x1F, 0x1E, 0x1D, 0x1A, 0x1C, 0x1C, 0x20,
-            0x24, 0x2E, 0x27, 0x20, 0x22, 0x2C, 0x23, 0x1C, 0x1C, 0x28, 0x37, 0x29,
-            0x2C, 0x30, 0x31, 0x34, 0x34, 0x34, 0x1F, 0x27, 0x39, 0x3D, 0x38, 0x32,
-            0x3C, 0x2E, 0x33, 0x34, 0x32, 0xFF, 0xC0, 0x00, 0x0B, 0x08, 0x00, 0x01,
-            0x00, 0x01, 0x01, 0x01, 0x11, 0x00, 0xFF, 0xC4, 0x00, 0x1F, 0x00, 0x00,
-            0x01, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-            0x09, 0x0A, 0x0B, 0xFF, 0xDA, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3F,
-            0x00, 0xBF, 0x00, 0xFF, 0xD9,
-          ]);
-        }
-        rutaFoto = archivoTemp.path;
-      }
+      // Promedio de ~0.5 s antes de disparar (RN-11); nunca un valor inventado
+      final inclinacion = vm.inclinacionDelDisparo();
+      final ahora = DateTime.now();
+      final XFile archivo = await controller.takePicture();
 
       if (!mounted) return;
       Navigator.of(context).pop(
         ResultadoCaptura(
-          rutaFoto: rutaFoto,
-          inclinacion: inclinacionCapturada,
+          rutaFoto: archivo.path,
+          inclinacion: inclinacion,
           capturadaEn: ahora,
+          sinSensor: vm.sinSensor,
         ),
       );
     } catch (e) {
@@ -177,9 +156,11 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
         tipo: widget.tipo,
         inclinacionRepository: ctx.read<InclinacionRepository>(),
         precisionGps: widget.precisionGps,
+        sinSensor: widget.sinSensor,
       ),
       child: Consumer<CamaraOrientacionViewModel>(
         builder: (context, vm, _) {
+          if (_sinCamara) return _SinCamara(onReintentar: _iniciarCamara);
           return Scaffold(
             backgroundColor: Colors.black,
             body: Stack(
@@ -209,24 +190,33 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
                             tooltip: 'Cerrar',
                             onPressed: () => Navigator.of(context).pop(),
                           ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xB31F2937),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white24, width: 0.8),
-                            ),
-                            child: Text(
-                              '${vm.tipo.nombre} • ${vm.subtituloOrientacion}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                          // La píldora toma el espacio libre; con nombres largos usa dos líneas
+                          Expanded(
+                            // heightFactor: 1 → alto de la píldora; sin él el encabezado ocupa toda la pantalla
+                            child: Center(
+                              heightFactor: 1,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xB31F2937),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.white24, width: 0.8),
+                                ),
+                                child: Text(
+                                  '${vm.tipo.nombre} • ${vm.subtituloOrientacion}',
+                                  // En pantallas angostas baja a una segunda línea para que la instrucción se lea completa
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                          const Spacer(),
                           const SizedBox(width: 48), // Equilibrar el botón cerrar
                         ],
                       ),
@@ -255,7 +245,7 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
     }
 
     final controller = _cameraController;
-    if (controller != null && controller.value.isInitialized && !_modoSimulacion) {
+    if (controller != null && controller.value.isInitialized) {
       return FittedBox(
         fit: BoxFit.cover,
         child: SizedBox(
@@ -266,34 +256,12 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
       );
     }
 
-    // Fondo simulado para emulador / pruebas sin sensor de cámara
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF263238), Color(0xFF1E262B), Color(0xFF11171A)],
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.camera_alt_outlined, color: Color(0x26FFFFFF), size: 80),
-            const SizedBox(height: 12),
-            Text(
-              _modoSimulacion ? 'Visor de cámara activo (Modo simulación)' : 'Cámara activa',
-              style: const TextStyle(color: Color(0x59FFFFFF), fontSize: 13),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const ColoredBox(color: Colors.black);
   }
 
   Widget _buildBottomControls(CamaraOrientacionViewModel vm) {
     final angulo = vm.anguloActual;
-    final textoAngulo = angulo == null ? '--' : '${angulo.round()}°';
+    final textoAngulo = vm.sinSensor ? '' : (angulo == null ? '--' : '${angulo.round()}°');
     final estadoColor = vm.enRango ? AppColors.guiaValida : AppColors.guiaInvalida;
 
     return Container(
@@ -344,11 +312,13 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
                 const SizedBox(height: 12),
 
                 // Fila 2: Barra de inclinación (Cielo - Horizonte - Suelo)
-                if (vm.tipo.orientacion != OrientacionFoto.sinRestriccion) ...[
+                if (!vm.sinSensor && vm.tipo.orientacion != OrientacionFoto.sinRestriccion) ...[
                   BarraInclinacion(
                     angulo: vm.anguloActual,
                     orientacion: vm.tipo.orientacion,
                     enRango: vm.enRango,
+                    anguloMin: vm.tipo.anguloMin,
+                    anguloMax: vm.tipo.anguloMax,
                   ),
                   const SizedBox(height: 10),
                 ],
@@ -388,14 +358,8 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
 
           // Botón Disparador
           GestureDetector(
-            onTap: () {
-              if (vm.disparadorActivo) {
-                _disparar(vm);
-              } else {
-                // Toque en el botón simula entrar a la zona verde (apoyo prototipo/emulador)
-                vm.simularAnguloValido();
-              }
-            },
+            key: const Key('disparador'),
+            onTap: vm.disparadorActivo ? () => _disparar(vm) : null,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 76,
@@ -448,3 +412,29 @@ class _CamaraOrientacionScreenState extends State<CamaraOrientacionScreen> with 
   }
 }
 
+/// B6: la cámara no se pudo abrir (sin permiso o sin cámara). La foto debe ser en vivo, sin galería (RN-09).
+class _SinCamara extends StatelessWidget {
+  const _SinCamara({required this.onReintentar});
+
+  final VoidCallback onReintentar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: EstadoVacio(
+        icono: Icons.no_photography_outlined,
+        titulo: 'No podemos usar la cámara',
+        mensaje: 'La foto debe tomarse en este momento; no se puede elegir de la galería.',
+        accion: 'Dar permiso',
+        onAccion: onReintentar,
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+          child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+        ),
+      ),
+    );
+  }
+}

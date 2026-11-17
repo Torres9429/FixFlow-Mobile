@@ -69,7 +69,7 @@ void main() {
     test('Tras capturar, la entidad del reporte contiene la ruta de la imagen', () {
       const rutaFotoCapturada = '/tmp/foto_capturada.jpg';
       final reporte = ReporteNuevo(
-        tipo: const TipoIncidencia(id: '1', nombre: 'Bache', codigo: 'BACHE', orientacion: OrientacionFoto.suelo),
+        tipo: const TipoIncidencia(id: '1', nombre: 'Bache', codigo: 'BACHE', orientacion: OrientacionFoto.suelo, anguloMin: 45, anguloMax: 90),
         descripcion: 'Bache profundo',
         latitud: 18.92,
         longitud: -99.23,

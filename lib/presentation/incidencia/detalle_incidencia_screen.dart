@@ -69,6 +69,7 @@ class DetalleIncidenciaScreen extends StatelessWidget {
                   fechaReporte: datos.detalle.resumen.fechaCreacion,
                   fotoSolucion: datos.detalle.fotoSolucionUrl,
                   fechaSolucion: datos.detalle.fechaResolucion,
+                  sinSensor: datos.detalle.sinSensor,
                 ),
                 if (datos.detalle.descripcionSolucion case final solucion?) ...[
                   _separacion,

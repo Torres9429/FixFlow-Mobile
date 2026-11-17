@@ -52,7 +52,7 @@ void main() {
       // Si no hay coordenadas GPS válidas (por ejemplo, valor centinela fuera de rango),
       // validarEvidencia rechaza el reporte impidiendo el envío (RN-12)
       final reporteSinUbicacion = ReporteNuevo(
-        tipo: const TipoIncidencia(id: '1', nombre: 'Bache', codigo: 'BACHE', orientacion: OrientacionFoto.suelo),
+        tipo: const TipoIncidencia(id: '1', nombre: 'Bache', codigo: 'BACHE', orientacion: OrientacionFoto.suelo, anguloMin: 45, anguloMax: 90),
         descripcion: 'Bache sin coordenadas',
         latitud: 999.0, // Coordenada fuera de rango por falla de GPS
         longitud: 999.0,

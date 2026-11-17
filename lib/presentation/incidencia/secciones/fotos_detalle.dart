@@ -14,16 +14,25 @@ class FotosDetalle extends StatelessWidget {
     required this.fechaReporte,
     this.fotoSolucion,
     this.fechaSolucion,
+    this.sinSensor = false,
   });
 
   final String? fotoReporte;
+
+  /// La foto del reporte se tomó sin acelerómetro (RN-11).
+  final bool sinSensor;
   final DateTime fechaReporte;
   final String? fotoSolucion;
   final DateTime? fechaSolucion;
 
   @override
   Widget build(BuildContext context) {
-    final reporte = _Foto(etiqueta: 'Reporte', url: fotoReporte, fecha: fechaReporte);
+    final reporte = _Foto(
+      etiqueta: 'Reporte',
+      url: fotoReporte,
+      fecha: fechaReporte,
+      nota: sinSensor ? 'Foto sin validación de inclinación' : null,
+    );
     final conSolucion = fotoSolucion != null;
 
     return Column(
@@ -49,11 +58,14 @@ class FotosDetalle extends StatelessWidget {
 }
 
 class _Foto extends StatelessWidget {
-  const _Foto({required this.etiqueta, required this.url, required this.fecha});
+  const _Foto({required this.etiqueta, required this.url, required this.fecha, this.nota});
 
   final String etiqueta;
   final String? url;
   final DateTime? fecha;
+
+  /// Línea extra debajo de la fecha, en meta.
+  final String? nota;
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +105,10 @@ class _Foto extends StatelessWidget {
         if (fecha != null) ...[
           const SizedBox(height: 6),
           Text(formatearFechaCorta(fecha!), style: estiloMeta(context)),
+        ],
+        if (nota case final texto?) ...[
+          const SizedBox(height: 2),
+          Text(texto, key: const Key('foto_sin_sensor'), style: estiloMeta(context)),
         ],
       ],
     );

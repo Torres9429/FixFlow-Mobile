@@ -50,7 +50,8 @@ Como sistema quiero obtener información del acelerómetro durante la captura de
 | HU-06 | El validador de orientación para "luminaria" (CA-4, RN-11) | Unitaria | Acelerómetro apuntando arriba → orientación válida; apuntando al suelo → orientación inválida | 2 |
 | HU-06 | Se obtienen datos del acelerómetro durante la captura (CA-1) | Unitaria | El servicio del acelerómetro devuelve valores x, y, z no nulos al capturar | 1 |
 | HU-06 | Orientación incorrecta → se solicita recaptura (CA-5) | Interfaz | Si la orientación no coincide con el tipo, se muestra un mensaje pidiendo volver a capturar | 1 |
-| | | | **Total HU-06** | **6** |
+| HU-06 | Sin acelerómetro → aviso y captura sin restricción (CA-1, CA-7, RN-11) | Unitaria | Con el sensor no disponible, el disparador queda activo con cualquier tipo y el reporte lleva `sinSensor` | 1 |
+| | | | **Total HU-06** | **7** |
 
 ## HU-07 — ASOCIAR COORDENADAS A LA EVIDENCIA
 
@@ -72,10 +73,10 @@ Como sistema quiero verificar que la evidencia requerida haya sido obtenida corr
 | HU-08 | Reporte completo pasa la validación (CA-1, CA-2, CA-3, CA-4, RN-12) | Unitaria | Con foto, ubicación y acelerómetro válidos → la validación retorna éxito | 1 |
 | HU-08 | Reporte sin foto falla la validación (CA-1, RN-09) | Unitaria | Sin evidencia fotográfica → error indicando que falta la foto | 1 |
 | HU-08 | Reporte sin ubicación falla la validación (CA-3, RN-10) | Unitaria | Sin coordenadas GPS → error indicando que falta la ubicación | 1 |
-| HU-08 | Reporte sin datos del acelerómetro falla la validación (CA-4, RN-11) | Unitaria | Sin datos del acelerómetro → error indicando que falta la orientación | 1 |
+| HU-08 | Datos del acelerómetro según el sensor (CA-4, RN-11) | Unitaria | Con sensor y sin lectura → error indicando que falta la orientación; sin sensor → la validación pasa y el reporte va marcado `sinSensor` | 2 |
 | HU-08 | Evidencia que no cumple condiciones → se solicita recaptura (CA-5) | Interfaz | El botón de enviar queda deshabilitado y se muestra un mensaje de evidencia incompleta | 1 |
 | HU-08 | El reporte no se envía hasta cumplir todos los requisitos (CA-6, RN-12) | Interfaz | Sin evidencia completa, al intentar enviar aparece una alerta y no se llama al servicio de envío | 1 |
-| | | | **Total HU-08** | **6** |
+| | | | **Total HU-08** | **7** |
 
 ## Resumen del Sprint 2
 
@@ -84,10 +85,10 @@ Como sistema quiero verificar que la evidencia requerida haya sido obtenida corr
 | HU-03 — Crear reporte de incidencia | 7 |
 | HU-04 — Capturar evidencia fotográfica en vivo | 5 |
 | HU-05 — Registrar ubicación automáticamente | 6 |
-| HU-06 — Validar orientación del dispositivo | 6 |
+| HU-06 — Validar orientación del dispositivo | 7 |
 | HU-07 — Asociar coordenadas a la evidencia | 3 |
-| HU-08 — Validar evidencia del reporte | 6 |
-| **Total Sprint 2** | **33** |
+| HU-08 — Validar evidencia del reporte | 7 |
+| **Total Sprint 2** | **35** |
 
 ## Correspondencia con tarjetas del tablero
 

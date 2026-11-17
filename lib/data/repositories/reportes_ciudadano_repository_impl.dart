@@ -45,7 +45,8 @@ class ReportesCiudadanoRepositoryImpl implements ReportesCiudadanoRepository {
           'descripcion': reporte.descripcion,
           'latitud': reporte.latitud,
           'longitud': reporte.longitud,
-          'inclinacion': reporte.inclinacion,
+          // Sin acelerómetro se avisa con sinSensor y no se manda inclinación (RN-11)
+          if (reporte.sinSensor) 'sinSensor': true else 'inclinacion': reporte.inclinacion,
           'fotoUrl': fotoUrl,
         },
       );
