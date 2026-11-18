@@ -33,6 +33,8 @@ class AdminRepositoryImpl implements AdminRepository {
   Future<Result<Pagina<IncidenciaResumen>>> incidencias({
     EstadoIncidencia? estado,
     Prioridad? prioridad,
+    String? tipoId,
+    String? q,
     int pagina = 0,
     int tamano = 20,
   }) async {
@@ -46,6 +48,8 @@ class AdminRepositoryImpl implements AdminRepository {
           'prioridad': ?(prioridad == null
               ? null
               : IncidenciaResumenModel.codigoPrioridad(prioridad)),
+          'tipoId': ?(tipoId == null || tipoId.isEmpty ? null : tipoId),
+          'q': ?(q == null || q.trim().isEmpty ? null : q.trim()),
           'page': pagina,
           'size': tamano,
         },

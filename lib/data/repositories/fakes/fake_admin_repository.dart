@@ -70,20 +70,43 @@ class FakeAdminRepository implements AdminRepository {
   Future<Result<Pagina<IncidenciaResumen>>> incidencias({
     EstadoIncidencia? estado,
     Prioridad? prioridad,
+    String? tipoId,
+    String? q,
     int pagina = 0,
     int tamano = 20,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
+    final consulta = q?.trim().toLowerCase() ?? '';
+    final porTipo = tipoId != null && tipoId.isNotEmpty;
+    // Misma correspondencia id → código que FakeIncidenceTypeRepository (modo mock).
+    final codigo = _codigoPorId[tipoId];
     final filtradas = DatosDemo.municipio
         .where(
           (i) =>
               (estado == null || i.estado == estado) &&
-              (prioridad == null || i.prioridad == prioridad),
+              (prioridad == null || i.prioridad == prioridad) &&
+              (!porTipo || (codigo != null && i.tipoCodigo == codigo)) &&
+              (consulta.isEmpty ||
+                  i.folio.toLowerCase().contains(consulta) ||
+                  i.tipo.toLowerCase().contains(consulta)),
         )
         .take(tamano)
         .toList();
     return Result.ok(Pagina(contenido: filtradas, numero: 0, totalPaginas: 1));
   }
+
+  static const _codigoPorId = <String, String>{
+    '1': 'BACHE',
+    '2': 'LUMINARIA',
+    '3': 'FUGA_AGUA',
+    '4': 'COLADERA',
+    '5': 'ARBOL_CAIDO',
+    '6': 'SENALAMIENTO',
+    '7': 'BANQUETA',
+    '8': 'BASURA',
+    '9': 'OTRO',
+    '10': 'GRAFITI',
+  };
 
   @override
   Future<Result<List<Operativo>>> operativosDisponibles() async {

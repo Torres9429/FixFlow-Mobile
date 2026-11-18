@@ -11,10 +11,13 @@ abstract interface class AdminRepository {
   /// `GET /admin/indicadores` (HU-19).
   Future<Result<Indicadores>> indicadores();
 
-  /// `GET /admin/incidencias` con filtros (HU-17, HU-20).
+  /// `GET /admin/incidencias` con filtros combinables (HU-17, HU-20).
+  /// `q` busca por folio o nombre de tipo; `tipoId` es el id del catálogo.
   Future<Result<Pagina<IncidenciaResumen>>> incidencias({
     EstadoIncidencia? estado,
     Prioridad? prioridad,
+    String? tipoId,
+    String? q,
     int pagina = 0,
     int tamano = 20,
   });

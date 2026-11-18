@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../core/result.dart';
@@ -13,24 +15,22 @@ import '../../core/notificador_seguro.dart';
 
 /// E2 Incidencias del municipio (HU-17): lista, búsqueda y filtros de estado, tipo y prioridad.
 ///
-/// Solo la prioridad viaja al back (es el único filtro que el contrato ya expone hoy).
-/// La búsqueda y el tipo se aplican sobre lo cargado para no tocar `AdminRepository`,
-/// que es compartido con las demás HUs de administración.
+/// Todos los filtros viajan al back (`estado`, `tipoId`, `prioridad`, `q`): cada cambio
+/// vuelve a pedir la página 0 y el scroll infinito sigue pidiendo con los mismos filtros.
 class IncidenciasAdminViewModel extends ChangeNotifier with NotificadorSeguro {
-  IncidenciasAdminViewModel({required this.adminRepository, required this.tiposRepository});
+  IncidenciasAdminViewModel({required this._adminRepository, required this._tiposRepository});
 
-  final AdminRepository adminRepository;
-  final IncidenceTypeRepository tiposRepository;
+  final AdminRepository _adminRepository;
+  final IncidenceTypeRepository _tiposRepository;
 
   EstadoConsulta<List<IncidenciaResumen>> estado = const Cargando();
 
-  /// Texto del buscador: folio o tipo.
+  /// Texto del buscador: viaja como `q` (el back busca por folio o tipo).
   String busqueda = '';
 
   /// Chip de estado.
   EstadoIncidencia? filtro;
 
-  /// Prioridad: el único filtro que se pide al back.
   Prioridad? prioridad;
 
   /// Id del tipo elegido en el desplegable; vacío = Todos.
@@ -47,48 +47,19 @@ class IncidenciasAdminViewModel extends ChangeNotifier with NotificadorSeguro {
   /// Cada recarga deja atrás a la anterior: si llega tarde, se descarta.
   int _generacion = 0;
 
+  /// Espera a que el usuario deje de escribir antes de pedir la búsqueda al back.
+  Timer? _busquedaTimer;
+
   List<IncidenciaResumen> get _cargados => switch (estado) {
     Listo(:final datos) => datos,
     _ => const [],
   };
 
-  /// Todo lo que se cargó (todas las páginas), sin aplicar los filtros de la pantalla.
+  /// Lo que devolvió el back, ya filtrado en el servidor.
   List<IncidenciaResumen> get incidencias => _cargados;
 
-  /// Código del tipo elegido («BACHE»), para comparar con `IncidenciaResumen.tipoCodigo`.
-  String get _codigoTipo {
-    if (tipoId.isEmpty) return '';
-    for (final tipo in tipos) {
-      if (tipo.id == tipoId) return tipo.codigo.toUpperCase();
-    }
-    return tipoId.toUpperCase();
-  }
-
-  /// Conjunto cargado con texto y tipo aplicados, pero sin el chip de estado.
-  List<IncidenciaResumen> get _sinChip {
-    final consulta = busqueda.trim().toLowerCase();
-    final codigo = _codigoTipo;
-    return _cargados.where((i) {
-      if (codigo.isNotEmpty && i.tipoCodigo.toUpperCase() != codigo) return false;
-      if (consulta.isNotEmpty &&
-          !i.folio.toLowerCase().contains(consulta) &&
-          !i.tipo.toLowerCase().contains(consulta)) {
-        return false;
-      }
-      return true;
-    }).toList(growable: false);
-  }
-
-  /// Lo que se pinta: estado, texto y tipo aplicados sobre el conjunto cargado.
-  List<IncidenciaResumen> get visibles => filtro == null
-      ? _sinChip
-      : _sinChip.where((i) => i.estado == filtro).toList(growable: false);
-
-  /// Conteo de un chip, sobre lo cargado y respetando texto y tipo.
-  int contar(EstadoIncidencia? e) {
-    final base = _sinChip;
-    return e == null ? base.length : base.where((i) => i.estado == e).length;
-  }
+  /// Cierto cuando llegó la última página: el total y el pie solo se muestran entonces.
+  bool get esUltima => _esUltima;
 
   Future<void> iniciar() async {
     await (cargar(), cargarTipos()).wait;
@@ -96,7 +67,7 @@ class IncidenciasAdminViewModel extends ChangeNotifier with NotificadorSeguro {
 
   /// Si el catálogo no llega, el desplegable se queda solo con «Todos».
   Future<void> cargarTipos() async {
-    if (await tiposRepository.obtenerTipos() case Ok(value: final lista)) {
+    if (await _tiposRepository.obtenerTipos() case Ok(value: final lista)) {
       tipos = lista;
       notifyListeners();
     }
@@ -105,18 +76,21 @@ class IncidenciasAdminViewModel extends ChangeNotifier with NotificadorSeguro {
   /// Al recargar se deja la lista actual a la vista hasta que llega la nueva.
   Future<void> cargar() => _cargar(conEsqueleto: false);
 
-  /// La búsqueda solo estrecha lo ya cargado; no vuelve a pedir nada al back.
+  /// La búsqueda espera 400 ms a que el usuario deje de escribir y pide la página 0 al back.
   void buscar(String valor) {
     if (valor == busqueda) return;
     busqueda = valor;
-    notifyListeners();
+    _busquedaTimer?.cancel();
+    _busquedaTimer = Timer(const Duration(milliseconds: 400), () {
+      _cargar(conEsqueleto: false);
+    });
   }
 
-  /// El tipo solo estrecha lo ya cargado.
-  void cambiarTipo(String id) {
+  /// Otro tipo son otros datos: se muestra el esqueleto.
+  Future<void> cambiarTipo(String id) async {
     if (id == tipoId) return;
     tipoId = id;
-    notifyListeners();
+    await _cargar(conEsqueleto: true);
   }
 
   /// Otra prioridad son otros datos: se muestra el esqueleto.
@@ -126,21 +100,28 @@ class IncidenciasAdminViewModel extends ChangeNotifier with NotificadorSeguro {
     await _cargar(conEsqueleto: true);
   }
 
-  /// El chip solo estrecha lo ya cargado; no vuelve a pedir nada al back.
-  void cambiarFiltro(EstadoIncidencia? nuevo) {
+  /// Otro chip son otros datos: se muestra el esqueleto.
+  Future<void> cambiarFiltro(EstadoIncidencia? nuevo) async {
     if (nuevo == filtro) return;
     filtro = nuevo;
-    notifyListeners();
+    await _cargar(conEsqueleto: true);
   }
 
   Future<void> _cargar({required bool conEsqueleto}) async {
+    // La petición que va a salir ya lleva el texto actual: sobra una búsqueda pendiente.
+    _busquedaTimer?.cancel();
     final generacion = ++_generacion;
     if (conEsqueleto || estado is! Listo) {
       estado = const Cargando();
       notifyListeners();
     }
 
-    final res = await adminRepository.incidencias(prioridad: prioridad);
+    final res = await _adminRepository.incidencias(
+      estado: filtro,
+      prioridad: prioridad,
+      tipoId: tipoId.isEmpty ? null : tipoId,
+      q: busqueda.trim().isEmpty ? null : busqueda.trim(),
+    );
     if (generacion != _generacion) return;
 
     switch (res) {
@@ -154,15 +135,18 @@ class IncidenciasAdminViewModel extends ChangeNotifier with NotificadorSeguro {
     notifyListeners();
   }
 
-  /// Siguiente página al llegar al final de la lista.
+  /// Siguiente página al llegar al final de la lista, con los mismos filtros.
   Future<void> cargarMas() async {
     if (_esUltima || estado is! Listo || cargandoMas) return;
     cargandoMas = true;
     notifyListeners();
     final generacion = _generacion;
 
-    final res = await adminRepository.incidencias(
+    final res = await _adminRepository.incidencias(
+      estado: filtro,
       prioridad: prioridad,
+      tipoId: tipoId.isEmpty ? null : tipoId,
+      q: busqueda.trim().isEmpty ? null : busqueda.trim(),
       pagina: _pagina + 1,
     );
     if (generacion != _generacion) {
@@ -177,5 +161,11 @@ class IncidenciasAdminViewModel extends ChangeNotifier with NotificadorSeguro {
     }
     cargandoMas = false;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _busquedaTimer?.cancel();
+    super.dispose();
   }
 }

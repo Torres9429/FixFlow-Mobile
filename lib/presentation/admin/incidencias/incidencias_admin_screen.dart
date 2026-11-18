@@ -22,10 +22,15 @@ import 'incidencias_admin_viewmodel.dart';
 class IncidenciasAdminScreen extends StatelessWidget {
   const IncidenciasAdminScreen({super.key});
 
+  /// RN-14: todos los estados menos Rechazada (fuera de alcance). Cada chip se pide al back.
   static const _filtros = <(EstadoIncidencia?, String)>[
     (null, 'Todas'),
     (EstadoIncidencia.pendiente, 'Pendientes'),
     (EstadoIncidencia.asignada, 'Asignadas'),
+    (EstadoIncidencia.enProceso, 'En proceso'),
+    (EstadoIncidencia.resuelta, 'Resueltas'),
+    (EstadoIncidencia.reabierta, 'Reabiertas'),
+    (EstadoIncidencia.cerrada, 'Cerradas'),
   ];
 
   @override
@@ -53,7 +58,7 @@ class IncidenciasAdminScreen extends StatelessWidget {
   List<Widget> _contenido(BuildContext context, IncidenciasAdminViewModel vm) => switch (vm.estado) {
     Cargando() => const [Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: EsqueletoTarjetas())],
     ConError(:final mensaje) => [EstadoVacio.error(mensaje: mensaje, onReintentar: vm.cargar)],
-    Listo() when vm.visibles.isEmpty => const [
+    Listo() when vm.incidencias.isEmpty => const [
       EstadoVacio(
         icono: Icons.inbox_outlined,
         titulo: 'Sin incidencias',
@@ -65,7 +70,7 @@ class IncidenciasAdminScreen extends StatelessWidget {
 
   List<Widget> _lista(BuildContext context, IncidenciasAdminViewModel vm) => [
     ...conSeparacion(
-      vm.visibles.map(
+      vm.incidencias.map(
         (i) => IncidenciaCard(
           incidencia: i,
           meta: '${i.folio} · ${formatearFechaCorta(i.ultimaActualizacion)}',
@@ -78,11 +83,11 @@ class IncidenciasAdminScreen extends StatelessWidget {
         padding: EdgeInsets.all(16),
         child: Center(child: CircularProgressIndicator()),
       ),
-    const _Pie(),
+    if (vm.esUltima) const _Pie(),
   ];
 
   /// Pendiente → directo a asignar (E5); el resto → ficha (E4).
-  /// Al volver se recarga: la incidencia pudo cambiar de estado.
+  /// Al volver se recarga solo la lista: el catálogo de tipos no cambia al asignar.
   Future<void> _abrir(BuildContext context, IncidenciasAdminViewModel vm, IncidenciaResumen i) async {
     if (i.estado == EstadoIncidencia.pendiente) {
       await context.push(Rutas.asignarAdmin(i.id));
@@ -90,7 +95,7 @@ class IncidenciasAdminScreen extends StatelessWidget {
       await context.push(Rutas.detalleAdmin(i.id));
     }
     if (!context.mounted) return;
-    await vm.iniciar();
+    await vm.cargar();
   }
 }
 
@@ -119,8 +124,11 @@ class _Encabezado extends StatelessWidget {
               ),
               if (conDatos) ...[
                 const SizedBox(height: 4),
+                // El total solo se sabe con la última página cargada; antes se muestra sin número.
                 Text(
-                  '${vm.incidencias.length} incidencias registradas en la demarcación',
+                  vm.esUltima
+                      ? '${vm.incidencias.length} incidencias registradas en la demarcación'
+                      : 'Incidencias registradas en la demarcación',
                   style: texto.bodyMedium?.copyWith(color: AppColors.textSecondary),
                 ),
               ],
@@ -130,34 +138,18 @@ class _Encabezado extends StatelessWidget {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  key: const Key('incidencias_busqueda'),
-                  onChanged: vm.buscar,
-                  decoration: const InputDecoration(
-                    hintText: 'Buscar por folio (FX-...), calle o tipo',
-                    prefixIcon: Icon(Icons.search),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Solo abre la vista de los filtros de abajo (HU-18 hará la zona)
-              BotonCircular(
-                key: const Key('incidencias_filtros'),
-                icono: Icons.tune,
-                etiqueta: 'Filtros',
-                onPressed: () {},
-              ),
-            ],
+          child: TextField(
+            key: const Key('incidencias_busqueda'),
+            onChanged: vm.buscar,
+            decoration: const InputDecoration(
+              hintText: 'Buscar por folio o tipo',
+              prefixIcon: Icon(Icons.search),
+            ),
           ),
         ),
         const SizedBox(height: 16),
         ChipsFiltro<EstadoIncidencia?>(
-          opciones: [
-            for (final (valor, etiqueta) in filtros) (valor, '$etiqueta (${vm.contar(valor)})'),
-          ],
+          opciones: filtros,
           seleccionada: vm.filtro,
           onSeleccionar: vm.cambiarFiltro,
         ),
@@ -166,20 +158,20 @@ class _Encabezado extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              _Desplegable(
+              _Desplegable<Prioridad?>(
                 id: 'prioridad',
                 etiqueta: 'Prioridad',
-                valor: _clavePrioridad(vm.prioridad),
+                valor: vm.prioridad,
                 opciones: const [
-                  ('', 'Todas'),
-                  ('alta', 'Alta'),
-                  ('media', 'Media'),
-                  ('baja', 'Baja'),
+                  (null, 'Todas'),
+                  (Prioridad.alta, 'Alta'),
+                  (Prioridad.media, 'Media'),
+                  (Prioridad.baja, 'Baja'),
                 ],
-                onCambio: (clave) => vm.cambiarPrioridad(_prioridadDe(clave)),
+                onCambio: vm.cambiarPrioridad,
               ),
               const SizedBox(width: 8),
-              _Desplegable(
+              _Desplegable<String>(
                 id: 'tipo',
                 etiqueta: 'Tipo',
                 valor: vm.tipoId,
@@ -191,7 +183,7 @@ class _Encabezado extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               // La zona llega en HU-18: por ahora se ve pero no se puede elegir
-              const _Desplegable(
+              const _Desplegable<String>(
                 id: 'zona',
                 etiqueta: 'Zona',
                 valor: '5 km',
@@ -209,21 +201,7 @@ class _Encabezado extends StatelessWidget {
 
 void _ignorar(String _) {}
 
-String _clavePrioridad(Prioridad? p) => switch (p) {
-  null => '',
-  Prioridad.alta => 'alta',
-  Prioridad.media => 'media',
-  Prioridad.baja => 'baja',
-};
-
-Prioridad? _prioridadDe(String clave) => switch (clave) {
-  'alta' => Prioridad.alta,
-  'media' => Prioridad.media,
-  'baja' => Prioridad.baja,
-  _ => null,
-};
-
-class _Desplegable extends StatelessWidget {
+class _Desplegable<T> extends StatelessWidget {
   const _Desplegable({
     required this.id,
     required this.etiqueta,
@@ -235,9 +213,9 @@ class _Desplegable extends StatelessWidget {
 
   final String id;
   final String etiqueta;
-  final String valor;
-  final List<(String, String)> opciones;
-  final ValueChanged<String> onCambio;
+  final T valor;
+  final List<(T, String)> opciones;
+  final ValueChanged<T> onCambio;
   final bool habilitado;
 
   @override
@@ -259,7 +237,7 @@ class _Desplegable extends StatelessWidget {
           border: Border.all(color: habilitado ? AppColors.border : AppColors.borderSubtle, width: 1.5),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: DropdownButton<String>(
+        child: DropdownButton<T>(
           value: valor,
           isExpanded: true,
           isDense: true,
@@ -281,18 +259,15 @@ class _Desplegable extends StatelessWidget {
                 style: estilo,
               ),
           ],
-          onChanged: habilitado
-              ? (v) {
-                  if (v != null) onCambio(v);
-                }
-              : null,
+          // El menú solo devuelve null al elegir la opción con valor null («Todas»).
+          onChanged: habilitado ? (v) => onCambio(v as T) : null,
         ),
       ),
     );
   }
 }
 
-/// «Todas las incidencias del cuadrante sincronizadas», al final de la lista (design.md, E2).
+/// «Todas las incidencias del cuadrante sincronizadas», al final de la última página.
 class _Pie extends StatelessWidget {
   const _Pie();
 
