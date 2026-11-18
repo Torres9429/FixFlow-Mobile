@@ -22,6 +22,8 @@ import 'panel/panel_screen.dart';
 import 'panel/panel_viewmodel.dart';
 import 'asignacion/asignacion_screen.dart';
 import 'asignacion/asignacion_viewmodel.dart';
+import 'incidencias/incidencias_admin_screen.dart';
+import 'incidencias/incidencias_admin_viewmodel.dart';
 import 'personal/alta_operativo_screen.dart';
 import 'personal/alta_operativo_viewmodel.dart';
 import 'personal/personal_screen.dart';
@@ -95,8 +97,13 @@ List<RouteBase> rutasAdmin() => [
         routes: [
           GoRoute(
             path: Rutas.incidenciasAdmin,
-            builder: (context, state) =>
-                const PestanaPendiente(titulo: 'Incidencias', codigo: 'E2'),
+            builder: (context, state) => ChangeNotifierProvider(
+              create: (context) => IncidenciasAdminViewModel(
+                adminRepository: context.read<AdminRepository>(),
+                tiposRepository: context.read<IncidenceTypeRepository>(),
+              )..iniciar(),
+              child: const IncidenciasAdminScreen(),
+            ),
           ),
         ],
       ),
