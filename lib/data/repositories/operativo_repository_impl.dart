@@ -42,4 +42,28 @@ class OperativoRepositoryImpl implements OperativoRepository {
       return Result.error(traducirError(e));
     }
   }
+
+  @override
+  Future<Result<void>> registrarSolucion({
+    required int incidenciaId,
+    required String descripcion,
+    required String fotoUrl,
+    double? latitud,
+    double? longitud,
+  }) async {
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/incidencias/$incidenciaId/solucion',
+        data: {
+          'descripcion': descripcion,
+          'fotoUrl': fotoUrl,
+          'latitud': ?latitud,
+          'longitud': ?longitud,
+        },
+      );
+      return const Result.ok(null);
+    } catch (e) {
+      return Result.error(traducirError(e));
+    }
+  }
 }

@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/evidencia_repository.dart';
 import '../../domain/repositories/operativo_repository.dart';
 import '../../domain/repositories/ubicacion_repository.dart';
 import '../core/widgets/pestana_pendiente.dart';
@@ -11,6 +12,8 @@ import '../routing/rutas.dart';
 import 'asignadas/asignadas_screen.dart';
 import 'asignadas/asignadas_viewmodel.dart';
 import 'operativo_shell.dart';
+import 'solucion/solucion_screen.dart';
+import 'solucion/solucion_viewmodel.dart';
 
 /// Rutas del operativo. Solo quien trabaja este rol toca este archivo.
 List<RouteBase> rutasOperativo() => [
@@ -29,7 +32,26 @@ List<RouteBase> rutasOperativo() => [
               )..iniciar(),
               child: const AsignadasScreen(),
             ),
-            routes: [rutaDetalle(VistaDetalle.operativo)],
+            routes: [
+              rutaDetalle(
+                VistaDetalle.operativo,
+                acciones: [
+                  GoRoute(
+                    path: 'solucion',
+                    builder: (context, state) => ChangeNotifierProvider(
+                      create: (context) => SolucionViewModel(
+                        id: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
+                        operativoRepository: context.read<OperativoRepository>(),
+                        evidenciaRepository: context.read<EvidenciaRepository>(),
+                        ubicacionRepository: context.read<UbicacionRepository>(),
+                        authRepository: context.read<AuthRepository>(),
+                      )..iniciar(),
+                      child: const SolucionScreen(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
