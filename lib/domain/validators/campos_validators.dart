@@ -59,3 +59,10 @@ String? validarCodigoTipo(String? valor) {
   }
   return null;
 }
+
+/// Descripción de la solución: obligatoria y hasta 500 caracteres (HU-16 / RF-18).
+String? validarDescripcionSolucion(String? valor) {
+  if (valor == null || valor.trim().isEmpty) return 'Campo obligatorio';
+  if (valor.trim().length > 500) return 'Máximo 500 caracteres';
+  return null;
+}

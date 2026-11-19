@@ -107,7 +107,10 @@ class AsignadasScreen extends StatelessWidget {
                     ),
                   )
                 : null,
-            onTap: () => context.push(Rutas.detalleOperativo(i.id)),
+            onTap: () async {
+              await context.push(Rutas.detalleOperativo(i.id));
+              if (context.mounted) await vm.cargar();
+            },
           );
         }),
       ),

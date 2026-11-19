@@ -70,6 +70,14 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
     _ => false,
   };
 
+  /// El operativo registra la solución cuando la incidencia está En proceso (HU-16 / RN-14 / #70).
+  bool get puedeRegistrarSolucion => switch (estado) {
+    Listo(:final datos) =>
+      vista == VistaDetalle.operativo &&
+          datos.detalle.resumen.estado == EstadoIncidencia.enProceso,
+    _ => false,
+  };
+
   /// Inicia la atención de la incidencia pasando a `EN_PROCESO` y recarga la ficha.
   Future<Result<void>> iniciarAtencion() async {
     if (iniciando) return const Result.ok(null);

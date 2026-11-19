@@ -10,4 +10,13 @@ abstract interface class OperativoRepository {
 
   /// Transita una incidencia asignada o reabierta a `EN_PROCESO` (HU-15 / RN-14 / #46).
   Future<Result<void>> iniciarAtencion(int incidenciaId);
+
+  /// Registra la solución y transita la incidencia de `EN_PROCESO` a `RESUELTA` (HU-16 / RF-18 / #70).
+  Future<Result<void>> registrarSolucion({
+    required int incidenciaId,
+    required String descripcion,
+    required String fotoUrl,
+    double? latitud,
+    double? longitud,
+  });
 }

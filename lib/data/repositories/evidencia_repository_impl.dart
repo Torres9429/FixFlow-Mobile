@@ -16,10 +16,17 @@ class EvidenciaRepositoryImpl implements EvidenciaRepository {
   final Dio _cloudinary;
 
   @override
-  Future<Result<String>> subirFoto(String rutaFoto) async {
+  Future<Result<String>> subirFoto(
+    String rutaFoto, {
+    TipoEvidencia tipo = TipoEvidencia.reporte,
+  }) async {
     try {
+      final codigoTipo = switch (tipo) {
+        TipoEvidencia.reporte => 'REPORTE',
+        TipoEvidencia.solucion => 'SOLUCION',
+      };
       // 1. Firma del back (503 si Cloudinary no está configurado)
-      final res = await _api.post<Map<String, dynamic>>('/evidencias/firma', data: {'tipo': 'REPORTE'});
+      final res = await _api.post<Map<String, dynamic>>('/evidencias/firma', data: {'tipo': codigoTipo});
       final firma = res.data!['result'] as Map<String, dynamic>;
 
       // 2. JPEG de 1600 px como máximo y calidad 80 (RNF-05)

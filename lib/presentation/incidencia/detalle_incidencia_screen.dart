@@ -60,6 +60,27 @@ class DetalleIncidenciaScreen extends StatelessWidget {
               ),
             );
           }
+          if (vm.puedeRegistrarSolucion) {
+            return BarraAcciones(
+              primario: FilledButton(
+                key: const Key('detalle_registrar_solucion'),
+                onPressed: () async {
+                  final resuelta = await context.push<bool>(Rutas.solucionOperativo(vm.id));
+                  if (!context.mounted) return;
+                  if (resuelta == true) {
+                    if (context.canPop()) {
+                      context.pop(true);
+                    } else {
+                      context.go(Rutas.homeOperativo);
+                    }
+                    return;
+                  }
+                  await vm.iniciar();
+                },
+                child: const Text('Registrar solución'),
+              ),
+            );
+          }
           return const SizedBox.shrink();
         },
       ),
