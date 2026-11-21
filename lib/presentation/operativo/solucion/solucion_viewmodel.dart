@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../core/result.dart';
+import '../../../domain/entities/coordenada.dart';
 import '../../../domain/errors/falla_red.dart';
 import '../../../domain/repositories/auth_repository.dart';
 import '../../../domain/repositories/evidencia_repository.dart';
@@ -43,6 +44,9 @@ class SolucionViewModel extends ChangeNotifier with NotificadorSeguro {
   /// URL ya subida en Cloudinary: si falla el registro posterior, el reintento no vuelve a subir (RNF-08).
   String? _fotoUrl;
 
+  /// GPS del momento de la foto: se pide al capturar, no al enviar, para que sea el lugar del trabajo.
+  Future<Coordenada?>? _posicion;
+
   bool get enviando => paso != PasoEnvioSolucion.listo;
 
   Future<void> iniciar() async {
@@ -57,6 +61,7 @@ class SolucionViewModel extends ChangeNotifier with NotificadorSeguro {
     rutaFoto = ruta;
     this.capturadaEn = capturadaEn ?? DateTime.now();
     _fotoUrl = null;
+    _posicion = _ubicacionRepository.posicionActual();
     errorFoto = null;
     errorGeneral = null;
     notifyListeners();
@@ -100,7 +105,8 @@ class SolucionViewModel extends ChangeNotifier with NotificadorSeguro {
     paso = PasoEnvioSolucion.enviando;
     notifyListeners();
 
-    final posicion = await _ubicacionRepository.posicionActual();
+    // Normalmente ya llegó mientras el operativo escribía la descripción
+    final posicion = await (_posicion ?? _ubicacionRepository.posicionActual());
     final res = await _operativoRepository.registrarSolucion(
       incidenciaId: id,
       descripcion: descripcion.trim(),

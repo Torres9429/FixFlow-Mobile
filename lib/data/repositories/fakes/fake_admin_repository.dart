@@ -78,8 +78,8 @@ class FakeAdminRepository implements AdminRepository {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     final consulta = q?.trim().toLowerCase() ?? '';
     final porTipo = tipoId != null && tipoId.isNotEmpty;
-    // Misma correspondencia id → código que FakeIncidenceTypeRepository (modo mock).
-    final codigo = _codigoPorId[tipoId];
+    // El código del tipo sale de la misma lista que usa el catálogo del modo mock
+    final codigo = DatosDemo.tipos.where((t) => t.id == tipoId).firstOrNull?.codigo;
     final filtradas = DatosDemo.municipio
         .where(
           (i) =>
@@ -94,19 +94,6 @@ class FakeAdminRepository implements AdminRepository {
         .toList();
     return Result.ok(Pagina(contenido: filtradas, numero: 0, totalPaginas: 1));
   }
-
-  static const _codigoPorId = <String, String>{
-    '1': 'BACHE',
-    '2': 'LUMINARIA',
-    '3': 'FUGA_AGUA',
-    '4': 'COLADERA',
-    '5': 'ARBOL_CAIDO',
-    '6': 'SENALAMIENTO',
-    '7': 'BANQUETA',
-    '8': 'BASURA',
-    '9': 'OTRO',
-    '10': 'GRAFITI',
-  };
 
   @override
   Future<Result<List<Operativo>>> operativosDisponibles() async {

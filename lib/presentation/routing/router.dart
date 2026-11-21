@@ -5,6 +5,9 @@ import '../../core/sesion/sesion_expirada.dart';
 import '../../domain/entities/perfil.dart';
 import '../../domain/entities/reporte_creado.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/incidence_type_repository.dart';
+import '../../domain/repositories/inclinacion_repository.dart';
+import '../../domain/repositories/ubicacion_repository.dart';
 import '../admin/rutas_admin.dart';
 import '../auth/login/login_screen.dart';
 import '../auth/login/login_viewmodel.dart';
@@ -20,6 +23,7 @@ import '../perfil/perfil_screen.dart';
 import '../perfil/perfil_viewmodel.dart';
 import '../reporte/enviado/reporte_enviado_screen.dart';
 import '../reporte/nuevo_reporte_screen.dart';
+import '../reporte/nuevo_reporte_viewmodel.dart';
 import 'rutas.dart';
 
 /// [sesionExpirada] es el estado de la sesión: cuando cambia, el router vuelve a evaluar [GoRouter.redirect]
@@ -54,7 +58,17 @@ GoRouter crearRouter({SesionExpirada? sesionExpirada}) => GoRouter(
     ...rutasOperativo(),
     ...rutasAdmin(),
     // Pantallas que se abren encima de las pestañas
-    GoRoute(path: Rutas.nuevoReporte, builder: (context, state) => const NuevoReporteScreen()),
+    GoRoute(
+      path: Rutas.nuevoReporte,
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (context) => NuevoReporteViewModel(
+          tiposRepository: context.read<IncidenceTypeRepository>(),
+          ubicacionRepository: context.read<UbicacionRepository>(),
+          inclinacionRepository: context.read<InclinacionRepository>(),
+        )..iniciar(),
+        child: const NuevoReporteScreen(),
+      ),
+    ),
     GoRoute(
       path: Rutas.reporteEnviado,
       // Sin el reporte (por ejemplo, tras un hot restart) no hay nada que mostrar

@@ -9,7 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/campo_texto.dart';
 import '../../incidencia/secciones/barra_acciones.dart';
-import '../../perfil/widgets/aviso_error.dart';
+import '../../core/widgets/aviso_error.dart';
 import 'camara_solucion_screen.dart';
 import 'solucion_viewmodel.dart';
 

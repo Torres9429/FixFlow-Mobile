@@ -6,7 +6,7 @@ import '../../../domain/validators/campos_validators.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/campo_texto.dart';
 import '../nombre_rol.dart';
-import '../widgets/aviso_error.dart';
+import '../../core/widgets/aviso_error.dart';
 import '../../core/widgets/campo_bloqueado.dart';
 import 'editar_datos_viewmodel.dart';
 

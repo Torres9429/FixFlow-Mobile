@@ -17,7 +17,7 @@ class UbicacionDataSource implements UbicacionRepository {
       final posicion = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(timeLimit: Duration(seconds: 10)),
       );
-      return Coordenada(posicion.latitude, posicion.longitude);
+      return Coordenada(posicion.latitude, posicion.longitude, precision: posicion.accuracy);
     } catch (e) {
       debugPrint('[FixFlow] No se pudo leer el GPS: $e');
       return null;
