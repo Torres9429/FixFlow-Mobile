@@ -4,9 +4,11 @@ import '../../core/result.dart';
 import '../../domain/entities/estado_incidencia.dart';
 import '../../domain/entities/evento_historial.dart';
 import '../../domain/entities/incidencia_detalle.dart';
+import '../../domain/errors/falla_red.dart';
 import '../../domain/repositories/direccion_repository.dart';
 import '../../domain/repositories/incidencias_repository.dart';
 import '../../domain/repositories/operativo_repository.dart';
+import '../../domain/repositories/reportes_ciudadano_repository.dart';
 import '../core/estado_consulta.dart';
 import '../core/mensajes.dart';
 import '../core/notificador_seguro.dart';
@@ -26,6 +28,7 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
     required this._incidenciasRepository,
     required this._direccionRepository,
     required this._operativoRepository,
+    required this._reportesRepository,
   });
 
   /// Con más eventos que estos se muestran los 3 más recientes y «Ver todo» (design.md §7).
@@ -37,6 +40,7 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   final IncidenciasRepository _incidenciasRepository;
   final DireccionRepository _direccionRepository;
   final OperativoRepository _operativoRepository;
+  final ReportesCiudadanoRepository _reportesRepository;
 
   EstadoConsulta<DetalleConHistorial> estado = const Cargando();
 
@@ -44,6 +48,7 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   String? direccion;
   bool verTodo = false;
   bool iniciando = false;
+  bool confirmando = false;
 
   /// Solo el admin ve quién reportó (RNF-04). Al ciudadano no le sirve ver su propio nombre.
   bool get mostrarCiudadano => vista == VistaDetalle.admin;
@@ -85,6 +90,28 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
     notifyListeners();
     final res = await _operativoRepository.iniciarAtencion(id);
     iniciando = false;
+    if (res is Ok) {
+      await iniciar();
+    } else {
+      notifyListeners();
+    }
+    return res;
+  }
+
+  /// El ciudadano confirma la solución de su reporte cuando está Resuelta (HU-13 / RN-14 / #71).
+  bool get puedeConfirmarResolucion => switch (estado) {
+    Listo(:final datos) =>
+      vista == VistaDetalle.ciudadano && datos.detalle.resumen.estado == EstadoIncidencia.resuelta,
+    _ => false,
+  };
+
+  /// Confirma la resolución (Resuelta → Cerrada) y recarga la ficha. Devuelve el texto del servidor.
+  Future<Result<String>> confirmarResolucion() async {
+    if (confirmando) return const Result.error(Conflicto('Ya se está confirmando'));
+    confirmando = true;
+    notifyListeners();
+    final res = await _reportesRepository.confirmarResolucion(id);
+    confirmando = false;
     if (res is Ok) {
       await iniciar();
     } else {

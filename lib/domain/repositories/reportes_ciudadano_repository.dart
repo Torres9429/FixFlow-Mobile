@@ -12,4 +12,8 @@ abstract interface class ReportesCiudadanoRepository {
 
   /// `POST /incidencias` con la foto ya en Cloudinary. Un 422 llega como `EvidenciaInvalida` (RN-12).
   Future<Result<ReporteCreado>> crear(ReporteNuevo reporte, String fotoUrl);
+
+  /// `POST /incidencias/{id}/confirmacion`: el ciudadano confirma la solución y la incidencia pasa
+  /// de Resuelta a Cerrada (HU-13, RN-14). Devuelve el texto del servidor; 409 si ya no está Resuelta.
+  Future<Result<String>> confirmarResolucion(int id);
 }

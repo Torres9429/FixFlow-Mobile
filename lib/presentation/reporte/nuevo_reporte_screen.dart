@@ -328,21 +328,14 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: const BoxDecoration(color: AppColors.surface, boxShadow: AppTheme.sombraBarraInferior),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-            child: FilledButton(
+            // La acción va al final del formulario, no fija abajo
+            const SizedBox(height: 24),
+            FilledButton(
               key: const Key('reporte_revisar_enviar'),
               onPressed: _continuar,
               child: const Text('Continuar a captura'),
             ),
-          ),
+          ],
         ),
       ),
     );

@@ -231,6 +231,7 @@ void main() {
           incidenciasRepository: mockIncidenciasRepo,
           direccionRepository: mockDireccionRepo,
           operativoRepository: mockOperativoRepo,
+          reportesRepository: MockReportesCiudadanoRepository(),
         );
         await vmOp.iniciar();
         expect(vmOp.puedeRegistrarSolucion, estado == EstadoIncidencia.enProceso);
@@ -246,6 +247,7 @@ void main() {
           incidenciasRepository: mockIncidenciasRepo,
           direccionRepository: mockDireccionRepo,
           operativoRepository: mockOperativoRepo,
+          reportesRepository: MockReportesCiudadanoRepository(),
         );
         await vmOtro.iniciar();
         expect(vmOtro.puedeRegistrarSolucion, isFalse);
