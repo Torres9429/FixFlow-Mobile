@@ -1,10 +1,56 @@
 import '../../../domain/entities/estado_incidencia.dart';
 import '../../../domain/entities/incidencia_resumen.dart';
 import '../../../domain/entities/prioridad.dart';
+import '../../../domain/entities/tipo_incidencia.dart';
 
 /// Datos de ejemplo de design.md §9, iguales en todas las pantallas del modo mock.
 abstract final class DatosDemo {
   static final _ahora = DateTime.now();
+
+  /// Los umbrales de RN-11 que manda el servidor: suelo ≥ +45°, arriba ≤ −20°.
+  static (double, double) angulos(OrientacionFoto o) => switch (o) {
+    OrientacionFoto.suelo => (45, 90),
+    OrientacionFoto.arriba => (-90, -20),
+    OrientacionFoto.sinRestriccion => (-90, 90),
+  };
+
+  static TipoIncidencia tipo(
+    String id,
+    String nombre,
+    String codigo,
+    OrientacionFoto orientacion,
+    Prioridad prioridad,
+    int incidencias, {
+    bool activo = true,
+  }) {
+    final (min, max) = angulos(orientacion);
+    return TipoIncidencia(
+      id: id,
+      nombre: nombre,
+      codigo: codigo,
+      orientacion: orientacion,
+      prioridadBase: prioridad,
+      activo: activo,
+      incidencias: incidencias,
+      anguloMin: min,
+      anguloMax: max,
+    );
+  }
+
+  /// Los 9 tipos de RN-07 con su orientación y prioridad base, más Grafiti inactivo (design.md, E10).
+  /// Una sola lista para el catálogo (E10), B2 y el filtro por tipo de E2.
+  static final tipos = <TipoIncidencia>[
+    tipo('1', 'Bache', 'BACHE', OrientacionFoto.suelo, Prioridad.media, 142),
+    tipo('2', 'Luminaria apagada o dañada', 'LUMINARIA', OrientacionFoto.arriba, Prioridad.media, 87),
+    tipo('3', 'Fuga de agua', 'FUGA_AGUA', OrientacionFoto.sinRestriccion, Prioridad.alta, 64),
+    tipo('4', 'Coladera sin tapa u obstruida', 'COLADERA', OrientacionFoto.suelo, Prioridad.alta, 31),
+    tipo('5', 'Árbol o rama caída', 'ARBOL_CAIDO', OrientacionFoto.sinRestriccion, Prioridad.alta, 22),
+    tipo('6', 'Señalamiento vial dañado', 'SENALAMIENTO', OrientacionFoto.sinRestriccion, Prioridad.media, 18),
+    tipo('7', 'Banqueta dañada', 'BANQUETA', OrientacionFoto.suelo, Prioridad.baja, 40),
+    tipo('8', 'Basura acumulada', 'BASURA', OrientacionFoto.sinRestriccion, Prioridad.baja, 55),
+    tipo('9', 'Otro', 'OTRO', OrientacionFoto.sinRestriccion, Prioridad.baja, 12),
+    tipo('10', 'Grafiti', 'GRAFITI', OrientacionFoto.sinRestriccion, Prioridad.baja, 3, activo: false),
+  ];
 
   static IncidenciaResumen _incidencia({
     required int id,

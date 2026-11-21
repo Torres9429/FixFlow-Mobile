@@ -52,4 +52,11 @@ class FakeReportesCiudadanoRepository implements ReportesCiudadanoRepository {
       ReporteCreado(id: id, folio: folio, tipo: reporte.tipo.nombre, prioridad: Prioridad.media, fechaCreacion: ahora),
     );
   }
+
+  /// En el modo mock solo responde como el back; el detalle de demo sigue en Resuelta al recargar.
+  @override
+  Future<Result<String>> confirmarResolucion(int id) async {
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    return const Result.ok('Solución confirmada; la incidencia quedó cerrada');
+  }
 }

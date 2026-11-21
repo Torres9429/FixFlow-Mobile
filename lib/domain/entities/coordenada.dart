@@ -1,10 +1,13 @@
 import 'dart:math';
 
 class Coordenada {
-  const Coordenada(this.latitud, this.longitud);
+  const Coordenada(this.latitud, this.longitud, {this.precision});
 
   final double latitud;
   final double longitud;
+
+  /// Precisión del GPS en metros, si se conoce; la cámara la muestra («GPS listo · precisión 12 m»).
+  final double? precision;
 
   /// Distancia en línea recta (haversine), en km. Sirve para «a 1.2 km» en D1 y D5.
   double distanciaKm(Coordenada otra) {

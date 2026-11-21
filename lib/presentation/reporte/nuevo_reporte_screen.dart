@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/result.dart';
-import '../../domain/entities/reporte_nuevo.dart';
 import '../../domain/entities/tipo_incidencia.dart';
 import '../../domain/repositories/evidencia_repository.dart';
-import '../../domain/repositories/incidence_type_repository.dart';
-import '../../domain/repositories/inclinacion_repository.dart';
 import '../../domain/repositories/reportes_ciudadano_repository.dart';
-import '../core/mensajes.dart';
+import '../core/estado_consulta.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import 'camara/camara_orientacion_screen.dart';
 import 'camara/resultado_captura.dart';
+import 'nuevo_reporte_viewmodel.dart';
 import 'revision/revision_reporte_screen.dart';
 import 'revision/revision_reporte_viewmodel.dart';
 
 /// B2 Nuevo reporte, paso 1 de 2: tipo y descripción. La foto se toma al continuar.
+/// El estado vive en [NuevoReporteViewModel]; aquí solo quedan el formulario y la navegación.
 class NuevoReporteScreen extends StatefulWidget {
   const NuevoReporteScreen({super.key});
 
@@ -32,35 +28,6 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
 
   final _formKey = GlobalKey<FormState>();
   final _descripcion = TextEditingController();
-  final _picker = ImagePicker();
-  List<TipoIncidencia> _tipos = const [];
-  TipoIncidencia? _tipo;
-  XFile? _foto;
-  DateTime? _capturadaEn;
-  Position? _posicion;
-  double? _inclinacion;
-
-  /// El teléfono no tiene acelerómetro: se avisa y la foto va sin validar el ángulo (RN-11, B3e).
-  bool _sinSensor = false;
-  bool _cargandoTipos = true;
-  bool _cargandoUbicacion = true;
-  String? _errorTipos;
-  String? _errorUbicacion;
-
-  @override
-  void initState() {
-    super.initState();
-    _cargarTipos();
-    _cargarUbicacion();
-    _revisarSensor();
-    _recuperarFotoPerdida();
-  }
-
-  Future<void> _revisarSensor() async {
-    final disponible = await context.read<InclinacionRepository>().sensorDisponible();
-    if (!mounted || disponible) return;
-    setState(() => _sinSensor = true);
-  }
 
   @override
   void dispose() {
@@ -68,148 +35,46 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     super.dispose();
   }
 
-  Future<void> _cargarTipos() async {
-    setState(() {
-      _cargandoTipos = true;
-      _errorTipos = null;
-    });
-    final res = await context.read<IncidenceTypeRepository>().obtenerTipos();
-    if (!mounted) return;
-    setState(() {
-      _cargandoTipos = false;
-      switch (res) {
-        case Ok(:final value):
-          _tipos = value;
-        case Error(error: final falla):
-          _errorTipos = mensajePara(falla);
-      }
-    });
-  }
-
-  Future<void> _cargarUbicacion() async {
-    try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        throw const FormatException('GPS desactivado');
-      }
-      var permiso = await Geolocator.checkPermission();
-      if (permiso == LocationPermission.denied) {
-        permiso = await Geolocator.requestPermission();
-      }
-      if (permiso == LocationPermission.denied || permiso == LocationPermission.deniedForever) {
-        throw const FormatException('Permiso de ubicación denegado');
-      }
-      final posicion = await Geolocator.getCurrentPosition();
-      if (!mounted) return;
-      setState(() {
-        _posicion = posicion;
-        _cargandoUbicacion = false;
-        _errorUbicacion = null;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _cargandoUbicacion = false;
-        _errorUbicacion = 'No se pudo obtener la ubicación GPS.';
-      });
-    }
-  }
-
-  Future<XFile?> _capturarFoto() async {
-    final tipo = _tipo;
-    if (tipo == null) {
-      _mostrarAviso('Selecciona primero el tipo de incidencia.');
-      return null;
-    }
-
-    // Cámara en vivo con guía visual de orientación (RN-11 / HU-06 / #23)
-    final resultado = await Navigator.of(context).push<ResultadoCaptura>(
-      MaterialPageRoute(
-        builder: (_) => CamaraOrientacionScreen(
-          tipo: tipo,
-          precisionGps: _posicion?.accuracy,
-          sinSensor: _sinSensor,
-        ),
-      ),
-    );
-
-    if (!mounted || resultado == null) return null;
-    final archivo = XFile(resultado.rutaFoto);
-    setState(() {
-      _foto = archivo;
-      _inclinacion = resultado.inclinacion;
-      _capturadaEn = resultado.capturadaEn;
-      // El respaldo de la cámara puede descubrir que el sensor no responde
-      _sinSensor = _sinSensor || resultado.sinSensor;
-    });
-    return archivo;
-  }
-
-  /// Si Android cerró la app mientras la cámara estaba abierta, recupera la foto tomada.
-  Future<void> _recuperarFotoPerdida() async {
-    try {
-      final respuesta = await _picker.retrieveLostData();
-      if (!mounted || respuesta.isEmpty) return;
-      final archivos = respuesta.files;
-      if (archivos != null && archivos.isNotEmpty) {
-        final recuperada = archivos.first;
-        final fecha = await recuperada.lastModified();
-        if (!mounted) return;
-        setState(() {
-          _foto = recuperada;
-          _capturadaEn = fecha;
-        });
-        return;
-      }
-      if (respuesta.exception != null) {
-        _mostrarAviso('No se pudo recuperar la captura de la cámara.');
-      }
-    } catch (_) {
-      if (mounted) _mostrarAviso('No se pudo recuperar la captura de la cámara.');
-    }
-  }
-
   void _mostrarAviso(String mensaje) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
   }
 
-  /// Valida el paso 1, abre la cámara (o usa la foto recuperada) y pasa a revisar.
+  /// Cámara en vivo con guía visual de orientación (RN-11 / HU-06 / #23). `false` si se canceló.
+  Future<bool> _capturarFoto(NuevoReporteViewModel vm, TipoIncidencia tipo) async {
+    final resultado = await Navigator.of(context).push<ResultadoCaptura>(
+      MaterialPageRoute(
+        builder: (_) => CamaraOrientacionScreen(
+          tipo: tipo,
+          precisionGps: vm.posicion?.precision,
+          sinSensor: vm.sinSensor,
+        ),
+      ),
+    );
+    if (!mounted || resultado == null) return false;
+    vm.guardarCaptura(resultado);
+    return true;
+  }
+
+  /// Valida el paso 1, abre la cámara y pasa a revisar.
   Future<void> _continuar() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    final tipo = _tipo;
+    final vm = context.read<NuevoReporteViewModel>();
+    final tipo = vm.tipo;
     if (tipo == null) return;
 
-    final posicion = _posicion;
-    if (posicion == null) {
-      _mostrarAviso(
-        _cargandoUbicacion
-            ? 'Todavía estamos obteniendo tu ubicación. Intenta en un momento.'
-            : 'La ubicación GPS es obligatoria para enviar el reporte. Actívala e intenta de nuevo.',
-      );
-      if (_errorUbicacion != null) _cargarUbicacion();
+    if (vm.motivoSinUbicacion() case final motivo?) {
+      _mostrarAviso(motivo);
       return;
     }
 
     // Se leen antes de los await para no usar el context después
-    final inclinacionRepository = context.read<InclinacionRepository>();
     final evidenciaRepository = context.read<EvidenciaRepository>();
     final reportesRepository = context.read<ReportesCiudadanoRepository>();
 
-    final foto = _foto ?? await _capturarFoto();
-    if (!mounted || foto == null) return;
-    // Inclinación del disparo (RN-11); sin acelerómetro no hay lectura
-    final inclinacion = _sinSensor ? null : _inclinacion ?? await inclinacionRepository.leerInclinacion();
+    if (vm.captura == null && !await _capturarFoto(vm, tipo)) return;
+    final reporte = await vm.armarReporte(_descripcion.text);
     if (!mounted) return;
 
-    final reporte = ReporteNuevo(
-      tipo: tipo,
-      descripcion: _descripcion.text.trim(),
-      latitud: posicion.latitude,
-      longitud: posicion.longitude,
-      inclinacion: inclinacion,
-      sinSensor: _sinSensor,
-      rutaFoto: foto.path,
-      capturadaEn: _capturadaEn ?? DateTime.now(),
-    );
     final repetirFoto = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ChangeNotifierProvider(
@@ -224,16 +89,14 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     );
     if (!mounted) return;
     // Al regresar de revisar, la siguiente vez se toma una foto nueva
-    setState(() {
-      _foto = null;
-      _inclinacion = null;
-    });
+    vm.limpiarCaptura();
     // «Repetir foto» en B4: se vuelve a abrir la cámara con el mismo tipo y descripción
     if (repetirFoto == true) await _continuar();
   }
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<NuevoReporteViewModel>();
     final texto = Theme.of(context).textTheme;
     final tituloSeccion = texto.titleMedium?.copyWith(fontSize: 17, height: 24 / 17, fontWeight: FontWeight.w700);
     final meta = texto.bodySmall?.copyWith(
@@ -268,28 +131,30 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
               style: texto.bodyLarge?.copyWith(fontSize: 15, height: 22 / 15, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
-            if (_cargandoTipos)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_errorTipos != null)
-              _ErrorRow(mensaje: _errorTipos!, onRetry: _cargarTipos)
-            else ...[
-              if (_sinSensor) ...[const _AvisoSinSensor(), const SizedBox(height: 12)],
-              _TipoElegido(tipo: _tipo, sinSensor: _sinSensor),
-              const SizedBox(height: 12),
-              _CuadriculaTipos(tipos: _tipos, elegido: _tipo, onElegir: (tipo) => setState(() => _tipo = tipo)),
-              FormField<TipoIncidencia>(
-                validator: (_) => _tipo == null ? 'Selecciona un tipo de incidencia' : null,
-                builder: (field) => field.hasError
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(field.errorText!, style: meta?.copyWith(color: AppColors.error)),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
+            ...switch (vm.tipos) {
+              Cargando() => const [
+                Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+              ConError(:final mensaje) => [_ErrorRow(mensaje: mensaje, onRetry: vm.cargarTipos)],
+              Listo(datos: final tipos) => [
+                if (vm.sinSensor) ...[const _AvisoSinSensor(), const SizedBox(height: 12)],
+                _TipoElegido(tipo: vm.tipo, sinSensor: vm.sinSensor),
+                const SizedBox(height: 12),
+                _CuadriculaTipos(tipos: tipos, elegido: vm.tipo, onElegir: vm.elegirTipo),
+                FormField<TipoIncidencia>(
+                  validator: (_) => vm.tipo == null ? 'Selecciona un tipo de incidencia' : null,
+                  builder: (field) => field.hasError
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(field.errorText!, style: meta?.copyWith(color: AppColors.error)),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            },
             const SizedBox(height: 32),
             Row(
               children: [
@@ -320,7 +185,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    _sinSensor
+                    vm.sinSensor
                         ? 'Al continuar se abre la cámara con GPS, sin guía de inclinación.'
                         : 'Al continuar se abre la cámara con guía de inclinación y GPS.',
                     style: meta,
@@ -328,21 +193,14 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: const BoxDecoration(color: AppColors.surface, boxShadow: AppTheme.sombraBarraInferior),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-            child: FilledButton(
+            // La acción va al final del formulario, no fija abajo
+            const SizedBox(height: 24),
+            FilledButton(
               key: const Key('reporte_revisar_enviar'),
               onPressed: _continuar,
               child: const Text('Continuar a captura'),
             ),
-          ),
+          ],
         ),
       ),
     );

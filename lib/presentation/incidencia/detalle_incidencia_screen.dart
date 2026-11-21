@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../ciudadano/confirmar_resolucion.dart';
 import '../core/estado_consulta.dart';
 import '../core/widgets/esqueleto_tarjetas.dart';
 import '../core/widgets/estado_vacio.dart';
@@ -13,6 +14,7 @@ import 'secciones/encabezado_detalle.dart';
 import 'secciones/fotos_detalle.dart';
 import 'secciones/historial_detalle.dart';
 import 'secciones/personas_detalle.dart';
+import 'secciones/seccion.dart';
 import 'secciones/solucion_detalle.dart';
 import 'secciones/ubicacion_detalle.dart';
 
@@ -22,68 +24,101 @@ class DetalleIncidenciaScreen extends StatelessWidget {
 
   static const _separacion = SizedBox(height: 24);
 
+  /// La acción que sirve en el estado actual, o `null` si no hay ninguna (design.md §7).
+  /// Va al final del contenido, no fija abajo.
+  Widget? _acciones(BuildContext context, DetalleIncidenciaViewModel vm) {
+    if (vm.puedeAsignar) {
+      return BarraAcciones(
+        primario: FilledButton(
+          key: const Key('detalle_asignar'),
+          onPressed: () async {
+            await context.push(Rutas.asignarAdmin(vm.id));
+            // Al volver de E5 la incidencia ya puede estar Asignada
+            await vm.iniciar();
+          },
+          child: Text(vm.tieneResponsable ? 'Reasignar' : 'Asignar'),
+        ),
+      );
+    }
+    if (vm.puedeIniciarAtencion) {
+      return BarraAcciones(
+        primario: FilledButton(
+          key: const Key('detalle_iniciar_atencion'),
+          onPressed: vm.iniciando
+              ? null
+              : () => confirmarInicioAtencion(context, vm.iniciarAtencion),
+          child: vm.iniciando
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Iniciar atención'),
+        ),
+      );
+    }
+    if (vm.puedeRegistrarSolucion) {
+      return BarraAcciones(
+        primario: FilledButton(
+          key: const Key('detalle_registrar_solucion'),
+          onPressed: () async {
+            final resuelta = await context.push<bool>(Rutas.solucionOperativo(vm.id));
+            if (!context.mounted) return;
+            if (resuelta == true) {
+              if (context.canPop()) {
+                context.pop(true);
+              } else {
+                context.go(Rutas.homeOperativo);
+              }
+              return;
+            }
+            await vm.iniciar();
+          },
+          child: const Text('Registrar solución'),
+        ),
+      );
+    }
+    if (vm.puedeConfirmarResolucion) {
+      return BarraAcciones(
+        primario: FilledButton(
+          key: const Key('detalle_confirmar_resolucion'),
+          onPressed: vm.confirmando
+              ? null
+              : () => confirmarResolucion(context, vm.confirmarResolucion),
+          child: vm.confirmando
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Confirmar resolución'),
+        ),
+        // Quitar el texto y activar el botón con C3 (#72)
+        secundario: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const OutlinedButton(
+              key: Key('detalle_problema_sigue'),
+              onPressed: null,
+              child: Text('El problema sigue'),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Reabrir el reporte todavía no está disponible.',
+              textAlign: TextAlign.center,
+              style: estiloMeta(context),
+            ),
+          ],
+        ),
+      );
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.read<DetalleIncidenciaViewModel>();
 
     return Scaffold(
       appBar: AppBar(title: Text(vm.vista.titulo)),
-      // Sin acción válida no hay barra (design.md §7)
-      bottomNavigationBar: Consumer<DetalleIncidenciaViewModel>(
-        builder: (context, vm, _) {
-          if (vm.puedeAsignar) {
-            return BarraAcciones(
-              primario: FilledButton(
-                key: const Key('detalle_asignar'),
-                onPressed: () async {
-                  await context.push(Rutas.asignarAdmin(vm.id));
-                  // Al volver de E5 la incidencia ya puede estar Asignada
-                  await vm.iniciar();
-                },
-                child: Text(vm.tieneResponsable ? 'Reasignar' : 'Asignar'),
-              ),
-            );
-          }
-          if (vm.puedeIniciarAtencion) {
-            return BarraAcciones(
-              primario: FilledButton(
-                key: const Key('detalle_iniciar_atencion'),
-                onPressed: vm.iniciando
-                    ? null
-                    : () => confirmarInicioAtencion(context, vm.iniciarAtencion),
-                child: vm.iniciando
-                    ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Iniciar atención'),
-              ),
-            );
-          }
-          if (vm.puedeRegistrarSolucion) {
-            return BarraAcciones(
-              primario: FilledButton(
-                key: const Key('detalle_registrar_solucion'),
-                onPressed: () async {
-                  final resuelta = await context.push<bool>(Rutas.solucionOperativo(vm.id));
-                  if (!context.mounted) return;
-                  if (resuelta == true) {
-                    if (context.canPop()) {
-                      context.pop(true);
-                    } else {
-                      context.go(Rutas.homeOperativo);
-                    }
-                    return;
-                  }
-                  await vm.iniciar();
-                },
-                child: const Text('Registrar solución'),
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
-      ),
       body: Consumer<DetalleIncidenciaViewModel>(
         builder: (context, vm, _) => switch (vm.estado) {
           Cargando() => const Padding(padding: EdgeInsets.all(20), child: EsqueletoTarjetas()),
@@ -120,6 +155,11 @@ class DetalleIncidenciaScreen extends StatelessWidget {
                     fecha: datos.detalle.fechaResolucion,
                   ),
                 ],
+                // C2 en Resuelta: la pregunta que responden los botones de abajo (design.md, C2)
+                if (vm.puedeConfirmarResolucion) ...[
+                  _separacion,
+                  const TituloSeccion('¿Se solucionó el problema?'),
+                ],
                 if (datos.detalle.motivoReapertura case final motivo?) ...[
                   _separacion,
                   ReaperturaDetalle(motivo: motivo, veces: datos.detalle.numReaperturas),
@@ -131,6 +171,7 @@ class DetalleIncidenciaScreen extends StatelessWidget {
                 ),
                 _separacion,
                 HistorialDetalle(eventos: vm.eventosVisibles, hayMas: vm.hayMas, onVerTodo: vm.mostrarTodo),
+                if (_acciones(context, vm) case final acciones?) ...[_separacion, acciones],
               ],
             ),
           ),

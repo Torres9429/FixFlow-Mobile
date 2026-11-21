@@ -1,23 +1,21 @@
 // Test tipo Interfaz: se prueba una pantalla, lo que se ve y se toca
 
-import 'dart:io';
-
 // ignore: depend_on_referenced_packages
 import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:fix_flow/core/result.dart';
 import 'package:fix_flow/data/repositories/fake_incidence_type_repository.dart';
+import 'package:fix_flow/domain/entities/coordenada.dart';
 import 'package:fix_flow/domain/repositories/evidencia_repository.dart';
 import 'package:fix_flow/domain/repositories/incidence_type_repository.dart';
 import 'package:fix_flow/domain/repositories/inclinacion_repository.dart';
 import 'package:fix_flow/domain/repositories/reportes_ciudadano_repository.dart';
+import 'package:fix_flow/domain/repositories/ubicacion_repository.dart';
 import 'package:fix_flow/presentation/core/theme/app_theme.dart';
 import 'package:fix_flow/presentation/reporte/camara/camara_orientacion_screen.dart';
 import 'package:fix_flow/presentation/reporte/nuevo_reporte_screen.dart';
+import 'package:fix_flow/presentation/reporte/nuevo_reporte_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:geolocator/geolocator.dart';
-// ignore: depend_on_referenced_packages
-import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:mocktail/mocktail.dart';
 // ignore: depend_on_referenced_packages
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -25,62 +23,21 @@ import 'package:provider/provider.dart';
 
 import '../mocks.dart';
 
-class MockGeolocatorPlatform extends Mock
-    with MockPlatformInterfaceMixin
-    implements GeolocatorPlatform {}
-
-class MockImagePickerPlatform extends Mock
-    with MockPlatformInterfaceMixin
-    implements ImagePickerPlatform {}
-
-class FakeImagePickerOptions extends Fake implements ImagePickerOptions {}
-
 /// En pruebas no hay cámara física: responde como un teléfono que negó el permiso (B6).
 class MockCameraPlatform extends Mock
     with MockPlatformInterfaceMixin
     implements CameraPlatform {}
 
 void main() {
-  late MockGeolocatorPlatform mockGeolocator;
-  late MockImagePickerPlatform mockImagePicker;
+  late MockUbicacionRepository mockUbicacion;
   late MockInclinacionRepository mockInclinacion;
   late MockEvidenciaRepository mockEvidencia;
   late MockReportesCiudadanoRepository mockReportes;
-  late File archivoFotoTemp;
-
-  final posicionValida = Position(
-    latitude: 18.9220,
-    longitude: -99.2340,
-    timestamp: DateTime(2026, 11, 4),
-    accuracy: 5.0,
-    altitude: 0.0,
-    altitudeAccuracy: 0.0,
-    heading: 0.0,
-    headingAccuracy: 0.0,
-    speed: 0.0,
-    speedAccuracy: 0.0,
-  );
-
-  setUpAll(() {
-    archivoFotoTemp = File('${Directory.systemTemp.path}/test_foto_nuevo_reporte.jpg')
-      ..writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46]);
-    registerFallbackValue(ImageSource.camera);
-    registerFallbackValue(FakeImagePickerOptions());
-  });
-
-  tearDownAll(() {
-    if (archivoFotoTemp.existsSync()) {
-      archivoFotoTemp.deleteSync();
-    }
-  });
+  // El GPS lo da UbicacionRepository (regla 3): la pantalla ya no llama a geolocator
+  const posicionValida = Coordenada(18.9220, -99.2340, precision: 5);
 
   setUp(() {
-    mockGeolocator = MockGeolocatorPlatform();
-    GeolocatorPlatform.instance = mockGeolocator;
-
-    mockImagePicker = MockImagePickerPlatform();
-    ImagePickerPlatform.instance = mockImagePicker;
-    when(() => mockImagePicker.getLostData()).thenAnswer((_) async => LostDataResponse.empty());
+    mockUbicacion = MockUbicacionRepository();
 
     final mockCamara = MockCameraPlatform();
     CameraPlatform.instance = mockCamara;
@@ -106,10 +63,19 @@ void main() {
         Provider<InclinacionRepository>.value(value: mockInclinacion),
         Provider<EvidenciaRepository>.value(value: mockEvidencia),
         Provider<ReportesCiudadanoRepository>.value(value: mockReportes),
+        Provider<UbicacionRepository>.value(value: mockUbicacion),
       ],
+      // Igual que la ruta de B2: el VM se registra arriba de la pantalla
       child: MaterialApp(
         theme: AppTheme.light,
-        home: const NuevoReporteScreen(),
+        home: ChangeNotifierProvider(
+          create: (context) => NuevoReporteViewModel(
+            tiposRepository: context.read<IncidenceTypeRepository>(),
+            ubicacionRepository: context.read<UbicacionRepository>(),
+            inclinacionRepository: context.read<InclinacionRepository>(),
+          )..iniciar(),
+          child: const NuevoReporteScreen(),
+        ),
       ),
     );
   }
@@ -124,16 +90,12 @@ void main() {
   }
 
   void stubGpsConcedido() {
-    when(() => mockGeolocator.isLocationServiceEnabled()).thenAnswer((_) async => true);
-    when(() => mockGeolocator.checkPermission()).thenAnswer((_) async => LocationPermission.whileInUse);
-    when(() => mockGeolocator.getCurrentPosition(locationSettings: any(named: 'locationSettings')))
-        .thenAnswer((_) async => posicionValida);
+    when(() => mockUbicacion.posicionActual()).thenAnswer((_) async => posicionValida);
   }
 
+  /// Sin permiso o con el GPS apagado, el repositorio devuelve `null`.
   void stubGpsRechazado() {
-    when(() => mockGeolocator.isLocationServiceEnabled()).thenAnswer((_) async => true);
-    when(() => mockGeolocator.checkPermission()).thenAnswer((_) async => LocationPermission.denied);
-    when(() => mockGeolocator.requestPermission()).thenAnswer((_) async => LocationPermission.denied);
+    when(() => mockUbicacion.posicionActual()).thenAnswer((_) async => null);
   }
 
   group('HU-03: Enviar formulario de reporte sin completar campos obligatorios (CA-1, CA-2)', () {
@@ -221,7 +183,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verificar que el GPS se consultó con éxito
-      verify(() => mockGeolocator.getCurrentPosition(locationSettings: any(named: 'locationSettings'))).called(1);
+      verify(() => mockUbicacion.posicionActual()).called(1);
 
       // Llenar formulario y continuar
       await tester.tap(find.byKey(const Key('tipo_1')));

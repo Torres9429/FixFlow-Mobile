@@ -6,7 +6,7 @@ import '../../../domain/validators/campos_validators.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/campo_texto.dart';
-import '../widgets/aviso_error.dart';
+import '../../core/widgets/aviso_error.dart';
 import 'cambiar_password_viewmodel.dart';
 
 class CambiarPasswordScreen extends StatefulWidget {

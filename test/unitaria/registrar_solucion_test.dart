@@ -231,6 +231,7 @@ void main() {
           incidenciasRepository: mockIncidenciasRepo,
           direccionRepository: mockDireccionRepo,
           operativoRepository: mockOperativoRepo,
+          reportesRepository: MockReportesCiudadanoRepository(),
         );
         await vmOp.iniciar();
         expect(vmOp.puedeRegistrarSolucion, estado == EstadoIncidencia.enProceso);
@@ -246,6 +247,7 @@ void main() {
           incidenciasRepository: mockIncidenciasRepo,
           direccionRepository: mockDireccionRepo,
           operativoRepository: mockOperativoRepo,
+          reportesRepository: MockReportesCiudadanoRepository(),
         );
         await vmOtro.iniciar();
         expect(vmOtro.puedeRegistrarSolucion, isFalse);
@@ -304,6 +306,8 @@ void main() {
       );
 
       vm.establecerFoto('/tmp/sol.jpg');
+      // El GPS se pide al tomar la foto, no al enviar
+      verify(() => mockUbicacionRepo.posicionActual()).called(1);
       vm.cambiarDescripcion('  Bache reparado  ');
       final ok = await vm.enviar();
 
@@ -311,6 +315,8 @@ void main() {
       expect(vm.enviada, isTrue);
       expect(vm.enviando, isFalse);
       expect(vm.errorGeneral, isNull);
+      // Al enviar se usa esa misma lectura: no se vuelve a pedir
+      verifyNever(() => mockUbicacionRepo.posicionActual());
     });
 
     test('SolucionViewModel no re-sube foto al reintentar (RNF-08) salvo EvidenciaInvalida o cambio de foto',
@@ -364,6 +370,8 @@ void main() {
       final completer = Completer<Result<String>>();
       when(() => mockEvidenciaRepo.subirFoto('/tmp/sol.jpg', tipo: TipoEvidencia.solucion))
           .thenAnswer((_) => completer.future);
+      // El GPS se pide al tomar la foto
+      when(() => mockUbicacionRepo.posicionActual()).thenAnswer((_) async => null);
 
       final vm = SolucionViewModel(
         id: 123,
