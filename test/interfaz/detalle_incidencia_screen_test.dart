@@ -91,6 +91,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       await tester.pumpWidget(montarPantalla(vista: VistaDetalle.ciudadano, vm: vm));
@@ -120,6 +121,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       await tester.pumpWidget(montarPantalla(vista: VistaDetalle.operativo, vm: vm));
@@ -142,6 +144,68 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockOperativo.iniciarAtencion(101)).called(1);
+    });
+  });
+
+  group('HU-13: Confirmar resolución en C2 (CA-2, CA-3, CA-4)', () {
+    DetalleIncidenciaViewModel crearVm(MockReportesCiudadanoRepository reportes) => DetalleIncidenciaViewModel(
+      id: 101,
+      vista: VistaDetalle.ciudadano,
+      incidenciasRepository: mockIncidencias,
+      direccionRepository: mockDireccion,
+      operativoRepository: mockOperativo,
+      reportesRepository: reportes,
+    );
+
+    testWidgets('En Resuelta: pregunta, «Confirmar resolución» con diálogo y «El problema sigue» desactivado', (tester) async {
+      configurarPantallaGrande(tester);
+      final reportes = MockReportesCiudadanoRepository();
+      when(() => mockIncidencias.detalle(101)).thenAnswer(
+        (_) async => Result.ok(crearDetalle(estado: EstadoIncidencia.resuelta)),
+      );
+      when(() => mockIncidencias.historial(101)).thenAnswer((_) async => const Result.ok([]));
+      when(() => mockDireccion.direccion(any(), any())).thenAnswer((_) async => null);
+      when(() => reportes.confirmarResolucion(101))
+          .thenAnswer((_) async => const Result.ok('Solución confirmada; la incidencia quedó cerrada'));
+
+      final vm = crearVm(reportes);
+      await tester.pumpWidget(montarPantalla(vista: VistaDetalle.ciudadano, vm: vm));
+      await vm.iniciar();
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Se solucionó el problema?'), findsOneWidget);
+      // Reabrir llega con C3 (#72): el botón se ve pero no hace nada
+      final problemaSigue = tester.widget<OutlinedButton>(find.byKey(const Key('detalle_problema_sigue')));
+      expect(problemaSigue.onPressed, isNull);
+      expect(find.text('Reabrir el reporte todavía no está disponible.'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('detalle_confirmar_resolucion')));
+      await tester.pumpAndSettle();
+      expect(find.text('¿Confirmar resolución?'), findsOneWidget);
+
+      await tester.tap(find.text('Confirmar resolución').last);
+      await tester.pumpAndSettle();
+
+      verify(() => reportes.confirmarResolucion(101)).called(1);
+      expect(find.text('Solución confirmada; la incidencia quedó cerrada'), findsOneWidget);
+    });
+
+    testWidgets('En Cerrada no hay barra de acciones', (tester) async {
+      configurarPantallaGrande(tester);
+      when(() => mockIncidencias.detalle(101)).thenAnswer(
+        (_) async => Result.ok(crearDetalle(estado: EstadoIncidencia.cerrada)),
+      );
+      when(() => mockIncidencias.historial(101)).thenAnswer((_) async => const Result.ok([]));
+      when(() => mockDireccion.direccion(any(), any())).thenAnswer((_) async => null);
+
+      final vm = crearVm(MockReportesCiudadanoRepository());
+      await tester.pumpWidget(montarPantalla(vista: VistaDetalle.ciudadano, vm: vm));
+      await vm.iniciar();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('detalle_confirmar_resolucion')), findsNothing);
+      expect(find.byKey(const Key('detalle_problema_sigue')), findsNothing);
+      expect(find.text('¿Se solucionó el problema?'), findsNothing);
     });
   });
 
@@ -169,6 +233,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       await tester.pumpWidget(montarPantalla(vista: VistaDetalle.ciudadano, vm: vm));

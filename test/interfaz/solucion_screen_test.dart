@@ -82,6 +82,8 @@ void main() {
       expect(find.text('La incidencia pasará a Resuelta'), findsOneWidget);
       expect(find.text('Enviar solución'), findsOneWidget);
 
+      // El botón va al final del formulario, no fijo abajo
+      await tester.ensureVisible(find.byKey(const Key('solucion_enviar')));
       await tester.tap(find.byKey(const Key('solucion_enviar')));
       await tester.pumpAndSettle();
 
@@ -120,6 +122,7 @@ void main() {
       await tester.pump();
       expect(find.text('30/500'), findsOneWidget);
 
+      await tester.ensureVisible(find.byKey(const Key('solucion_enviar')));
       await tester.tap(find.byKey(const Key('solucion_enviar')));
       await tester.pumpAndSettle();
 
@@ -160,6 +163,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.byKey(const Key('solucion_descripcion')));
       await tester.enterText(find.byKey(const Key('solucion_descripcion')), 'Reparación lista');
+      await tester.ensureVisible(find.byKey(const Key('solucion_enviar')));
       await tester.tap(find.byKey(const Key('solucion_enviar')));
       await tester.pumpAndSettle();
 
@@ -207,6 +211,7 @@ void main() {
               incidenciasRepository: mockIncidencias,
               direccionRepository: mockDireccion,
               operativoRepository: mockOperativoRepo,
+              reportesRepository: MockReportesCiudadanoRepository(),
             )..iniciar(),
             child: const DetalleIncidenciaScreen(),
           ),
@@ -214,6 +219,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // La acción va al final del detalle: hay que desplazarse hasta ella
+      await tester.scrollUntilVisible(find.byKey(const Key('detalle_registrar_solucion')), 300);
       expect(find.byKey(const Key('detalle_registrar_solucion')), findsOneWidget);
       expect(find.text('Registrar solución'), findsOneWidget);
     });

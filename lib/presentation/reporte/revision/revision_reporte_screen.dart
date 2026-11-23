@@ -135,14 +135,16 @@ class RevisionReporteScreen extends StatelessWidget {
               ],
             ),
           ),
+          // La acción va al final del contenido, no fija abajo
+          const SizedBox(height: 24),
+          _BarraEnvio(vm: vm, onEnviar: () => _enviar(context, vm)),
         ],
       ),
-      bottomNavigationBar: _BarraEnvio(vm: vm, onEnviar: () => _enviar(context, vm)),
     );
   }
 }
 
-/// Barra fija de abajo: el motivo o error en rojo y la única acción que sirve en ese momento.
+/// Al final de la revisión: el motivo o error en rojo y la única acción que sirve en ese momento.
 class _BarraEnvio extends StatelessWidget {
   const _BarraEnvio({required this.vm, required this.onEnviar});
 
@@ -156,45 +158,36 @@ class _BarraEnvio extends StatelessWidget {
     final volverACapturar = problema != null || vm.pideRepetir;
     final aviso = problema ?? vm.error;
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: AppColors.surface, boxShadow: AppTheme.sombraBarraInferior),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (aviso != null) ...[
-                Text(
-                  aviso,
-                  key: const Key('reporte_aviso'),
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(fontSize: 13, height: 18 / 13, color: AppColors.error),
-                ),
-                const SizedBox(height: 12),
-              ],
-              if (volverACapturar)
-                FilledButton(
-                  key: const Key('reporte_volver_a_capturar'),
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Volver a capturar'),
-                )
-              else
-                FilledButton(
-                  key: const Key('reporte_confirmar'),
-                  onPressed: vm.ocupado ? null : onEnviar,
-                  child: switch (vm.paso) {
-                    PasoEnvio.listo => Text(vm.error == null ? 'Enviar reporte' : 'Reintentar'),
-                    PasoEnvio.subiendoFoto => const _Progreso(texto: 'Subiendo foto…'),
-                    PasoEnvio.enviando => const _Progreso(texto: 'Enviando…'),
-                  },
-                ),
-            ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (aviso != null) ...[
+          Text(
+            aviso,
+            key: const Key('reporte_aviso'),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(fontSize: 13, height: 18 / 13, color: AppColors.error),
           ),
-        ),
-      ),
+          const SizedBox(height: 12),
+        ],
+        if (volverACapturar)
+          FilledButton(
+            key: const Key('reporte_volver_a_capturar'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Volver a capturar'),
+          )
+        else
+          FilledButton(
+            key: const Key('reporte_confirmar'),
+            onPressed: vm.ocupado ? null : onEnviar,
+            child: switch (vm.paso) {
+              PasoEnvio.listo => Text(vm.error == null ? 'Enviar reporte' : 'Reintentar'),
+              PasoEnvio.subiendoFoto => const _Progreso(texto: 'Subiendo foto…'),
+              PasoEnvio.enviando => const _Progreso(texto: 'Enviando…'),
+            },
+          ),
+      ],
     );
   }
 }

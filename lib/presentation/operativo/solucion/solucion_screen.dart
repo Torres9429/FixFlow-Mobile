@@ -9,7 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/campo_texto.dart';
 import '../../incidencia/secciones/barra_acciones.dart';
-import '../../perfil/widgets/aviso_error.dart';
+import '../../core/widgets/aviso_error.dart';
 import 'camara_solucion_screen.dart';
 import 'solucion_viewmodel.dart';
 
@@ -35,7 +35,8 @@ class _SolucionScreenState extends State<SolucionScreen> {
 
   Future<void> _tomarFoto(BuildContext context, SolucionViewModel vm) async {
     final capturador = widget.onTomarFoto ??
-        (ctx) => Navigator.of(ctx).push<String>(
+        // Navegador raíz: la cámara ocupa toda la pantalla, sin la barra de navegación del operativo
+        (ctx) => Navigator.of(ctx, rootNavigator: true).push<String>(
           MaterialPageRoute(builder: (_) => const CamaraSolucionScreen()),
         );
     final ruta = await capturador(context);
@@ -141,19 +142,21 @@ class _SolucionScreenState extends State<SolucionScreen> {
                 const SizedBox(height: 16),
                 AvisoError(key: const Key('solucion_error'), mensaje: error),
               ],
+              // La acción va al final del formulario, no fija abajo
+              const SizedBox(height: 24),
+              BarraAcciones(
+                primario: FilledButton(
+                  key: const Key('solucion_enviar'),
+                  onPressed: vm.enviando ? null : () => _enviar(context, vm),
+                  child: vm.enviando
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Enviar solución'),
+                ),
+              ),
             ],
-          ),
-        ),
-        bottomNavigationBar: BarraAcciones(
-          primario: FilledButton(
-            key: const Key('solucion_enviar'),
-            onPressed: vm.enviando ? null : () => _enviar(context, vm),
-            child: vm.enviando
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Enviar solución'),
           ),
         ),
       ),

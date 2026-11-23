@@ -15,7 +15,7 @@ import '../../core/notificador_seguro.dart';
 class CamaraOrientacionViewModel extends ChangeNotifier with NotificadorSeguro {
   CamaraOrientacionViewModel({
     required this.tipo,
-    required this.inclinacionRepository,
+    required this._inclinacionRepository,
     this.precisionGps,
     this._sinSensor = false,
   }) {
@@ -26,7 +26,7 @@ class CamaraOrientacionViewModel extends ChangeNotifier with NotificadorSeguro {
   static const esperaPrimeraLectura = Duration(milliseconds: 1500);
 
   final TipoIncidencia tipo;
-  final InclinacionRepository inclinacionRepository;
+  final InclinacionRepository _inclinacionRepository;
   final double? precisionGps;
 
   /// Ventana del promedio al disparar (RN-11).
@@ -153,7 +153,7 @@ class CamaraOrientacionViewModel extends ChangeNotifier with NotificadorSeguro {
       if (_anguloActual == null) _pasarASinSensor();
     });
     try {
-      _subscripcion = inclinacionRepository.observarInclinacion().listen(
+      _subscripcion = _inclinacionRepository.observarInclinacion().listen(
         (angulo) {
           _anguloActual = angulo;
           _guardarLectura(angulo);

@@ -112,6 +112,7 @@ void main() {
         incidenciasRepository: mockIncidenciasRepo,
         direccionRepository: mockDireccionRepo,
         operativoRepository: mockOperativoRepo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       when(() => mockIncidenciasRepo.detalle(131)).thenAnswer(
@@ -132,6 +133,7 @@ void main() {
         incidenciasRepository: mockIncidenciasRepo,
         direccionRepository: mockDireccionRepo,
         operativoRepository: mockOperativoRepo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       when(() => mockIncidenciasRepo.detalle(97)).thenAnswer(
@@ -153,6 +155,7 @@ void main() {
         incidenciasRepository: mockIncidenciasRepo,
         direccionRepository: mockDireccionRepo,
         operativoRepository: mockOperativoRepo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
       when(() => mockIncidenciasRepo.detalle(131)).thenAnswer(
         (_) async => Result.ok(crearDetalle(estado: EstadoIncidencia.asignada)),
@@ -172,6 +175,7 @@ void main() {
         incidenciasRepository: mockIncidenciasRepo,
         direccionRepository: mockDireccionRepo,
         operativoRepository: mockOperativoRepo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
       when(() => mockIncidenciasRepo.detalle(123)).thenAnswer(
         (_) async => Result.ok(crearDetalle(estado: EstadoIncidencia.enProceso, id: 123)),
@@ -191,6 +195,7 @@ void main() {
         incidenciasRepository: mockIncidenciasRepo,
         direccionRepository: mockDireccionRepo,
         operativoRepository: mockOperativoRepo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       when(() => mockIncidenciasRepo.detalle(131)).thenAnswer(

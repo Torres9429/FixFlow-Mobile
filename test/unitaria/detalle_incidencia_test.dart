@@ -78,6 +78,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       await vm.iniciar();
@@ -98,6 +99,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
       final vmOperativo = DetalleIncidenciaViewModel(
         id: 101,
@@ -105,6 +107,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
       final vmCiudadano = DetalleIncidenciaViewModel(
         id: 101,
@@ -112,6 +115,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       expect(vmAdmin.mostrarCiudadano, isTrue);
@@ -129,6 +133,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       await vm.iniciar();
@@ -173,6 +178,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       await vm.iniciar();
@@ -204,6 +210,7 @@ void main() {
         incidenciasRepository: mockIncidencias,
         direccionRepository: mockDireccion,
         operativoRepository: mockOperativo,
+        reportesRepository: MockReportesCiudadanoRepository(),
       );
 
       await vm.iniciar();

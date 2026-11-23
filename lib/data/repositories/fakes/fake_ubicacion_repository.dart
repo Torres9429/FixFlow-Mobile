@@ -4,5 +4,5 @@ import '../../../domain/repositories/ubicacion_repository.dart';
 /// GPS del modo mock: siempre en el centro de Cuernavaca.
 class FakeUbicacionRepository implements UbicacionRepository {
   @override
-  Future<Coordenada?> posicionActual() async => const Coordenada(18.9220, -99.2340);
+  Future<Coordenada?> posicionActual() async => const Coordenada(18.9220, -99.2340, precision: 12);
 }

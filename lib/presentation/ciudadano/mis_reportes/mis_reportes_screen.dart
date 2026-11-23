@@ -97,7 +97,11 @@ class MisReportesScreen extends StatelessWidget {
           (r) => IncidenciaCard(
             incidencia: r,
             meta: '${r.folio} · ${formatearFechaCorta(r.ultimaActualizacion)}',
-            onTap: () => context.push(Rutas.detalleCiudadano(r.id)),
+            // Al volver se recarga: el reporte pudo cambiar de estado en C2 (por ejemplo, Resuelta → Cerrada)
+            onTap: () async {
+              await context.push(Rutas.detalleCiudadano(r.id));
+              if (context.mounted) await vm.cargar();
+            },
           ),
         ),
       ),
