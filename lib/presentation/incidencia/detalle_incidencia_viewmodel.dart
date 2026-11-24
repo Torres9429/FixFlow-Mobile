@@ -34,6 +34,7 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   /// Con más eventos que estos se muestran los 3 más recientes y «Ver todo» (design.md §7).
   static const maxSinRecortar = 4;
   static const recortados = 3;
+  static const maxReaperturas = 2;
 
   final int id;
   final VistaDetalle vista;
@@ -102,6 +103,15 @@ class DetalleIncidenciaViewModel extends ChangeNotifier with NotificadorSeguro {
   bool get puedeConfirmarResolucion => switch (estado) {
     Listo(:final datos) =>
       vista == VistaDetalle.ciudadano && datos.detalle.resumen.estado == EstadoIncidencia.resuelta,
+    _ => false,
+  };
+
+  /// El ciudadano puede reabrir su reporte Resuelta mientras no haya usado las 2 reaperturas (HU-23 / RN-17).
+  bool get puedeReabrir => switch (estado) {
+    Listo(:final datos) =>
+      vista == VistaDetalle.ciudadano &&
+          datos.detalle.resumen.estado == EstadoIncidencia.resuelta &&
+          datos.detalle.numReaperturas < maxReaperturas,
     _ => false,
   };
 

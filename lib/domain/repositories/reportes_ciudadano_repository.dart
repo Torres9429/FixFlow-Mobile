@@ -16,4 +16,8 @@ abstract interface class ReportesCiudadanoRepository {
   /// `POST /incidencias/{id}/confirmacion`: el ciudadano confirma la solución y la incidencia pasa
   /// de Resuelta a Cerrada (HU-13, RN-14). Devuelve el texto del servidor; 409 si ya no está Resuelta.
   Future<Result<String>> confirmarResolucion(int id);
+
+  /// `POST /incidencias/{id}/reapertura`: el ciudadano reabre su reporte desde Resuelta (HU-23, RN-17).
+  /// Devuelve el texto del servidor; 409 si ya van 2 reaperturas.
+  Future<Result<String>> reabrir(int id, String justificacion);
 }

@@ -5,6 +5,7 @@ import '../../../domain/entities/pagina.dart';
 import '../../../domain/entities/prioridad.dart';
 import '../../../domain/entities/reporte_creado.dart';
 import '../../../domain/entities/reporte_nuevo.dart';
+import '../../../domain/errors/falla_red.dart';
 import '../../../domain/repositories/reportes_ciudadano_repository.dart';
 import 'datos_demo.dart';
 
@@ -58,5 +59,37 @@ class FakeReportesCiudadanoRepository implements ReportesCiudadanoRepository {
   Future<Result<String>> confirmarResolucion(int id) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     return const Result.ok('Solución confirmada; la incidencia quedó cerrada');
+  }
+
+  /// Reabre como el back y actualiza la lista para que B1 muestre el nuevo estado al recargar.
+  /// El fake no lleva la cuenta de las 2 reaperturas (la pantalla de detalle lo impide) y el detalle
+  /// de demo conserva su propio estado.
+  @override
+  Future<Result<String>> reabrir(int id, String justificacion) async {
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    final idx = _reportes.indexWhere((r) => r.id == id);
+    if (idx == -1) return Result.error(const NoEncontrado('La incidencia no existe'));
+
+    final actual = _reportes[idx];
+    if (actual.estado != EstadoIncidencia.resuelta) {
+      return Result.error(const Conflicto('La incidencia ya no está resuelta'));
+    }
+
+    _reportes[idx] = IncidenciaResumen(
+      id: actual.id,
+      folio: actual.folio,
+      tipo: actual.tipo,
+      tipoCodigo: actual.tipoCodigo,
+      estado: EstadoIncidencia.reabierta,
+      prioridad: Prioridad.alta,
+      motivoPrioridad: 'Reabierta por el ciudadano',
+      latitud: actual.latitud,
+      longitud: actual.longitud,
+      fechaCreacion: actual.fechaCreacion,
+      ultimaActualizacion: DateTime.now(),
+      operativo: actual.operativo,
+      fotoUrl: actual.fotoUrl,
+    );
+    return const Result.ok('Reporte reabierto; el personal operativo verá tu motivo');
   }
 }
