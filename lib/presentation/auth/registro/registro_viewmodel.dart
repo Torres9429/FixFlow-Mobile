@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../core/log/bitacora.dart';
 import '../../../core/result.dart';
 import '../../../domain/errors/auth_failure.dart';
 import '../../../domain/repositories/auth_repository.dart';
@@ -39,7 +40,7 @@ class RegistroViewModel extends ChangeNotifier with NotificadorSeguro {
           error = _mensaje(falla);
       }
     } catch (e) {
-      debugPrint('[FixFlow] Error inesperado al registrar: $e');
+      Bitacora.error('Error inesperado al registrar', e);
       error = _mensaje(e);
     } finally {
       cargando = false;

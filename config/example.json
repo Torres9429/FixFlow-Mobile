@@ -1,6 +1,7 @@
 {
-  "ENV": "dev | prod",
+  "ENV": "dev | qa | prod",
   "API_BASE_URL": "https://<url-del-back>/api",
   "USE_MOCKS": "true | false",
-  "LOG_HTTP": "true | false"
+  "LOG_HTTP": "true | false",
+  "FIREBASE": "true | false"
 }

@@ -29,14 +29,23 @@ flutter pub get
 
 ## Correr la app
 
-La app tiene dos modos: **mock**, con un back simulado que no necesita servidor, y **dev**, que usa el back real.
+La configuración se lee de un archivo de `config/` según el ambiente. Hay dos ambientes, **dev** y **prod**, y dev puede usar un back simulado (mock).
 
-| Modo | Cómo | Para qué |
-| --- | --- | --- |
-| **Mock** | Botón ▶ normal, o `flutter run --dart-define-from-file=config/mock.json` | Desarrollar y probar pantallas sin back |
-| **Dev** | `flutter run --dart-define-from-file=config/dev.json` | Probar contra el back corriendo en tu PC. Actualiza `API_BASE_URL` con la IPv4 de tu PC y usa `http://<IPv4>:8080/api` en un teléfono físico. |
+| Modo | Cómo | Para qué | Logs |
+| --- | --- | --- | --- |
+| **Mock** (dev) | Botón ▶ sin argumentos, o `flutter run --dart-define-from-file=config/mock.json` | Desarrollar y probar pantallas sin back | Todo, con detalle |
+| **Dev** | `flutter run --dart-define-from-file=config/dev.json` (emulador) o `config/device.json` (teléfono, con la IPv4 de tu PC) | Probar contra el back corriendo en tu PC, con push (FCM) | Todo, con detalle y peticiones HTTP |
+| **Prod** | `flutter build apk --release --dart-define-from-file=config/prod.json` | El APK de la entrega | Solo el tipo de cada error |
+
+- Fuera de prod, la app muestra una cinta naranja en la esquina (`MOCK` o `DEV`).
+- El APK queda en `build/app/outputs/flutter-apk/app-release.apk`. Se firma con la clave de debug: sirve para la demo, no para publicar en la tienda.
+- `config/prod.json` y `android/app/src/main/res/xml/network_security_config.xml` apuntan a la IP de la laptop del back. **Si cambia la IP, se cambia en los dos y se vuelve a compilar**: en release, Android solo permite `http` hacia esa IP.
 
 En Android Studio, el archivo de configuración se pone en *Run → Edit Configurations → Additional run args*.
+
+### Logs
+
+Todo log pasa por `Bitacora` (`lib/core/log/bitacora.dart`): `Bitacora.debug`, `Bitacora.info` y `Bitacora.error`. **No uses `print` ni `debugPrint`.** El nivel sale del `ENV` del config: dev escribe todo; prod y cualquier build `--release` solo escriben el tipo del error, nunca el mensaje, porque ahí pueden viajar correos o tokens.
 
 ### Cuentas del modo mock
 
@@ -85,7 +94,7 @@ FixFlow-Mobile/
 │   └── presentation/          ← PRESENTACIÓN: pantallas + ViewModels (MVVM), rutas y theme
 ├── test/                      ← pruebas unitarias e interfaz, y mocks
 ├── integration_test/          ← pruebas de integración
-├── config/                    ← mock.json, dev.json, example.json
+├── config/                    ← mock.json, dev.json, device.json, prod.json, example.json
 ├── assets/fonts/              ← tipografía Plus Jakarta Sans
 └── docs/                      ← documentación del proyecto
 ```

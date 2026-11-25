@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../../core/log/bitacora.dart';
 import '../../../domain/entities/coordenada.dart';
 import '../../../domain/repositories/ubicacion_repository.dart';
 
@@ -19,7 +19,7 @@ class UbicacionDataSource implements UbicacionRepository {
       );
       return Coordenada(posicion.latitude, posicion.longitude, precision: posicion.accuracy);
     } catch (e) {
-      debugPrint('[FixFlow] No se pudo leer el GPS: $e');
+      Bitacora.error('No se pudo leer el GPS', e);
       return null;
     }
   }

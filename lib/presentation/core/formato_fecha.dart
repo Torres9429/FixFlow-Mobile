@@ -24,3 +24,17 @@ String formatearFechaSinAnio(DateTime fecha, {DateTime? ahora}) {
   if (corta.startsWith('hoy') || corta.startsWith('ayer')) return corta;
   return '${fecha.day} ${_meses[fecha.month - 1]}, ${_dosDigitos(fecha.hour)}:${_dosDigitos(fecha.minute)}';
 }
+
+/// Meta de los avisos (design.md, Avisos): «ahora», «hace 5 min», «hace 2 h», «ayer» o «hace 3 días»;
+/// después de una semana, la fecha sin año.
+String haceCuanto(DateTime fecha, {DateTime? ahora}) {
+  final referencia = ahora ?? DateTime.now();
+  final diferencia = referencia.difference(fecha);
+  if (diferencia.inMinutes < 1) return 'ahora';
+  if (diferencia.inHours < 1) return 'hace ${diferencia.inMinutes} min';
+  final dias = _soloDia(referencia).difference(_soloDia(fecha)).inDays;
+  if (dias == 0) return 'hace ${diferencia.inHours} h';
+  if (dias == 1) return 'ayer';
+  if (dias < 7) return 'hace $dias días';
+  return '${fecha.day} ${_meses[fecha.month - 1]}';
+}

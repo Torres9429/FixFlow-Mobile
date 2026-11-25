@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "293075094027",
+    "project_id": "fix-flow-mobile",
+    "storage_bucket": "fix-flow-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:293075094027:android:3bae015360cdd5d6d6950e",
+        "android_client_info": {
+          "package_name": "utez.edu.mx.fix_flow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5ff8g39EAbP8GbF0N2Vu-W7TOL_pGac8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../domain/entities/incidencia_resumen.dart';
 import '../../../domain/entities/indicadores.dart';
 import '../../../domain/entities/prioridad.dart';
+import '../../avisos/campana_avisos.dart';
 import '../../core/estado_consulta.dart';
 import '../../core/formato_fecha.dart';
 import '../../core/theme/app_colors.dart';
@@ -26,12 +27,7 @@ class PanelScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: BarraPrincipal(
-        accion: BotonCircular(
-          key: const Key('abrir_avisos'),
-          icono: Icons.notifications_outlined,
-          etiqueta: 'Avisos',
-          onPressed: () => context.push(Rutas.avisosAdmin),
-        ),
+        accion: const CampanaAvisos(),
       ),
       body: Consumer<PanelViewModel>(
         builder: (context, vm, _) => ListaIncidencias(

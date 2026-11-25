@@ -1,0 +1,6 @@
+{
+  "ENV": "prod",
+  "API_BASE_URL": "http://192.168.0.23:8080/api",
+  "LOG_HTTP": "false",
+  "FIREBASE": "true"
+}

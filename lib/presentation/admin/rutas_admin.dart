@@ -1,13 +1,17 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../domain/entities/rol.dart';
+import '../../domain/repositories/avisos_repository.dart';
+import '../avisos/avisos_del_rol.dart';
+import '../avisos/avisos_screen.dart';
+import '../avisos/avisos_viewmodel.dart';
 import '../../domain/repositories/admin_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/tipo_incidencia.dart';
 import '../../domain/repositories/direccion_repository.dart';
 import '../../domain/repositories/incidence_type_repository.dart';
 import '../../domain/repositories/incidencias_repository.dart';
-import '../core/widgets/pestana_pendiente.dart';
 import '../incidencia/ruta_detalle.dart';
 import '../incidencia/vista_detalle.dart';
 import '../perfil/perfil_screen.dart';
@@ -32,7 +36,11 @@ import 'personal/personal_viewmodel.dart';
 /// Rutas del admin. Solo quien trabaja este rol toca este archivo.
 List<RouteBase> rutasAdmin() => [
   StatefulShellRoute.indexedStack(
-    builder: (context, state, shell) => AdminShell(shell: shell),
+    builder: (context, state, shell) => AvisosDelRol(
+      rol: Rol.admin,
+      // El admin no tiene pestaña de avisos: el punto va en la campana (CampanaAvisos)
+      construirShell: (_) => AdminShell(shell: shell),
+    ),
     branches: [
       StatefulShellBranch(
         routes: [
@@ -123,8 +131,10 @@ List<RouteBase> rutasAdmin() => [
   // La campana abre los avisos encima de las pestañas
   GoRoute(
     path: Rutas.avisosAdmin,
-    builder: (context, state) =>
-        const PestanaPendiente(titulo: 'Avisos', codigo: 'E7'),
+    builder: (context, state) => ChangeNotifierProvider(
+      create: (context) => AvisosViewModel(avisosRepository: context.read<AvisosRepository>())..cargar(),
+      child: const AvisosScreen(rol: Rol.admin),
+    ),
   ),
   // E10 → E11 o E12, sin barra inferior (design.md)
   GoRoute(

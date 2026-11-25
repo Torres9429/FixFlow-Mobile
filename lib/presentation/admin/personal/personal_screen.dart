@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/entities/operativo.dart';
+import '../../avisos/campana_avisos.dart';
 import '../../core/estado_consulta.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -18,12 +19,7 @@ class PersonalScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: BarraPrincipal(
-      accion: BotonCircular(
-        key: const Key('abrir_avisos'),
-        icono: Icons.notifications_outlined,
-        etiqueta: 'Avisos',
-        onPressed: () => context.push(Rutas.avisosAdmin),
-      ),
+      accion: const CampanaAvisos(),
     ),
     body: Consumer<PersonalViewModel>(
       builder: (context, vm, _) => RefreshIndicator(

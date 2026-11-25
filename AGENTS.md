@@ -4,7 +4,7 @@
 App Android 8.0+ de reporte ciudadano de incidencias urbanas, con tres roles en la misma app: el ciudadano reporta con foto en vivo, GPS e inclinación; el admin asigna; el operativo resuelve. Alcance, pantallas y criterios por flujo: `docs/prd.md`. Reglas del dominio: `docs/requirements/` (cita HU-XX, RN-XX, RNF-XX; no las copies).
 
 ## Stack
-- Flutter 3.47 / Dart 3.13 · `provider` (MVVM con `ChangeNotifier`) · `go_router` · `dio` · `flutter_secure_storage` · `geolocator` · `image_picker`.
+- Flutter 3.47 / Dart 3.13 · `provider` (MVVM con `ChangeNotifier`) · `go_router` · `dio` · `flutter_secure_storage` · `geolocator` · `image_picker` · `firebase_messaging` (push).
 - Pruebas: `flutter_test`, `mocktail`, `http_mock_adapter`, `integration_test`.
 - Back: Spring Boot 4.1 + MySQL 8 en `FixFlow-Backend`, ya completo. Contrato: `docs/architecture/contrato-api.md`.
 
@@ -14,17 +14,19 @@ App Android 8.0+ de reporte ciudadano de incidencias urbanas, con tres roles en 
 3. Cámara, GPS y acelerómetro van en `data/datasources/device/`, nunca en una pantalla.
 4. Evidencia: solo foto en vivo (`ImageSource.camera`, nunca galería), GPS de la captura e inclinación dentro de `anguloMin`/`anguloMax` del tipo. Sin borradores ni modo offline.
 5. Toda respuesta llega como `{text, type, result}`: decide por el código HTTP y muestra `text`.
-6. Fuera de alcance: micrófono o voz, duplicados por cercanía, votos de urgencia, rechazo de reportes y push.
+6. Fuera de alcance: micrófono o voz, duplicados por cercanía, votos de urgencia y rechazo de reportes. El push (FCM) complementa la bandeja de avisos; no la reemplaza.
 7. Colores y estilos solo desde `presentation/core/theme/`, siguiendo `docs/design.md`. Sin secretos en `config/*.json`.
 8. Cada pantalla trae su fake del modo mock y las pruebas que pide `docs/testing/plan-pruebas-sprint-N.md`.
 9. Si el back no responde como dice el contrato, avisa; no lo rodees en la app.
 10. Rama propia y PR a `develop`. Sprint, Status y Assignee viven en GitHub Projects, no en `docs/`; no marques las casillas de las HU.
+11. Logs solo con `Bitacora` (`core/log/bitacora.dart`), nunca `print` ni `debugPrint`. Errores con `Bitacora.error(etiqueta, e)`: en prod y en release solo sale el tipo del error.
 
 ## Comandos
 ```powershell
 flutter pub get
 flutter run --dart-define-from-file=config/mock.json   # back simulado
 flutter run --dart-define-from-file=config/dev.json    # back en la laptop
+flutter build apk --release --dart-define-from-file=config/prod.json   # APK de la entrega
 flutter analyze                                         # sin advertencias nuevas
 flutter test                                            # unitarias e interfaz
 flutter test integration_test                           # con emulador o teléfono
