@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
+import '../../../core/log/bitacora.dart';
 import '../../../core/result.dart';
 import '../../../domain/errors/auth_failure.dart';
 import '../../models/login_response_model.dart';
@@ -66,7 +66,7 @@ class AuthRemoteDataSource {
         data: {'refreshToken': refreshToken},
       );
     } catch (e) {
-      debugPrint('[FixFlow] No se pudo cerrar sesión en el servidor: $e');
+      Bitacora.error('No se pudo cerrar sesión en el servidor', e);
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../core/log/bitacora.dart';
 import '../../../core/result.dart';
 import '../../../domain/entities/rol.dart';
 import '../../../domain/entities/usuario.dart';
@@ -34,7 +35,7 @@ class LoginViewModel extends ChangeNotifier with NotificadorSeguro {
           error = _mensaje(falla);
       }
     } catch (e) {
-      debugPrint('[FixFlow] Error inesperado al iniciar sesión: $e');
+      Bitacora.error('Error inesperado al iniciar sesión', e);
       // Red de seguridad: el botón nunca debe quedarse cargando
       error = _mensaje(e);
     } finally {

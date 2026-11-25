@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug: http a cualquier IP, para que cada quien use la de su laptop en config/device.json.
+     Reemplaza al de main solo en debug. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

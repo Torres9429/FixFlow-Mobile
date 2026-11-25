@@ -2,26 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'core/config/app_config.dart';
 import 'core/sesion/sesion_expirada.dart';
 import 'data/repositories/fake_incidence_type_repository.dart';
 import 'data/repositories/fakes/fake_admin_repository.dart';
+import 'data/repositories/fakes/fake_avisos_repository.dart';
 import 'data/repositories/fakes/fake_direccion_repository.dart';
 import 'data/repositories/fakes/fake_evidencia_repository.dart';
 import 'data/repositories/fakes/fake_incidencias_repository.dart';
 import 'data/repositories/fakes/fake_inclinacion_repository.dart';
 import 'data/repositories/fakes/fake_operativo_repository.dart';
+import 'data/repositories/fakes/fake_push_repository.dart';
 import 'data/repositories/fakes/fake_reportes_ciudadano_repository.dart';
 import 'data/repositories/fakes/fake_ubicacion_repository.dart';
 import 'domain/repositories/admin_repository.dart';
 import 'domain/repositories/auth_repository.dart';
+import 'domain/repositories/avisos_repository.dart';
 import 'domain/repositories/direccion_repository.dart';
 import 'domain/repositories/evidencia_repository.dart';
 import 'domain/repositories/incidencias_repository.dart';
 import 'domain/repositories/incidence_type_repository.dart';
 import 'domain/repositories/inclinacion_repository.dart';
 import 'domain/repositories/operativo_repository.dart';
+import 'domain/repositories/push_repository.dart';
 import 'domain/repositories/reportes_ciudadano_repository.dart';
 import 'domain/repositories/ubicacion_repository.dart';
+import 'presentation/core/theme/app_colors.dart';
 import 'presentation/core/theme/app_theme.dart';
 import 'presentation/routing/router.dart';
 
@@ -40,6 +46,8 @@ class FixFlowApp extends StatefulWidget {
     this.inclinacionRepository,
     this.incidenciasRepository,
     this.direccionRepository,
+    this.pushRepository,
+    this.avisosRepository,
     this.sesionExpirada,
   });
 
@@ -53,6 +61,8 @@ class FixFlowApp extends StatefulWidget {
   final InclinacionRepository? inclinacionRepository;
   final IncidenciasRepository? incidenciasRepository;
   final DireccionRepository? direccionRepository;
+  final PushRepository? pushRepository;
+  final AvisosRepository? avisosRepository;
 
   /// Avisa cuando la sesión ya no se pudo renovar; sin él (en las pruebas) no se escucha nada.
   final SesionExpirada? sesionExpirada;
@@ -89,12 +99,23 @@ class _FixFlowAppState extends State<FixFlowApp> {
         Provider<InclinacionRepository>(create: (_) => widget.inclinacionRepository ?? FakeInclinacionRepository()),
         Provider<IncidenciasRepository>(create: (_) => widget.incidenciasRepository ?? FakeIncidenciasRepository()),
         Provider<DireccionRepository>(create: (_) => widget.direccionRepository ?? FakeDireccionRepository()),
+        Provider<PushRepository>(create: (_) => widget.pushRepository ?? FakePushRepository()),
+        Provider<AvisosRepository>(create: (_) => widget.avisosRepository ?? FakeAvisosRepository()),
       ],
       child: MaterialApp.router(
         title: 'FixFlow',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         routerConfig: _router,
+        // Fuera de prod, una cinta en la esquina dice contra qué back se está trabajando
+        builder: (context, child) => AppConfig.esProd
+            ? child!
+            : Banner(
+                message: AppConfig.usarMocks ? 'MOCK' : AppConfig.env.toUpperCase(),
+                location: BannerLocation.topEnd,
+                color: AppColors.accent,
+                child: child!,
+              ),
       ),
     );
   }

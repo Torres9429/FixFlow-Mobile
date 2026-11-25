@@ -2,10 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../domain/entities/rol.dart';
+import '../../domain/repositories/avisos_repository.dart';
+import '../avisos/avisos_del_rol.dart';
+import '../avisos/avisos_screen.dart';
+import '../avisos/avisos_viewmodel.dart';
 import '../../domain/entities/incidencia_detalle.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/reportes_ciudadano_repository.dart';
-import '../core/widgets/pestana_pendiente.dart';
 import '../incidencia/ruta_detalle.dart';
 import '../incidencia/vista_detalle.dart';
 import '../routing/rutas.dart';
@@ -18,7 +22,10 @@ import 'reabrir/reabrir_reporte_viewmodel.dart';
 /// Rutas del ciudadano. Solo quien trabaja este rol toca este archivo.
 List<RouteBase> rutasCiudadano() => [
   StatefulShellRoute.indexedStack(
-    builder: (context, state, shell) => CiudadanoShell(shell: shell),
+    builder: (context, state, shell) => AvisosDelRol(
+      rol: Rol.ciudadano,
+      construirShell: (hayNoLeidos) => CiudadanoShell(shell: shell, avisosNoLeidos: hayNoLeidos),
+    ),
     branches: [
       StatefulShellBranch(
         routes: [
@@ -62,7 +69,10 @@ List<RouteBase> rutasCiudadano() => [
         routes: [
           GoRoute(
             path: Rutas.avisosCiudadano,
-            builder: (context, state) => const PestanaPendiente(titulo: 'Avisos', codigo: 'C1'),
+            builder: (context, state) => ChangeNotifierProvider(
+              create: (context) => AvisosViewModel(avisosRepository: context.read<AvisosRepository>())..cargar(),
+              child: const AvisosScreen(rol: Rol.ciudadano),
+            ),
           ),
         ],
       ),

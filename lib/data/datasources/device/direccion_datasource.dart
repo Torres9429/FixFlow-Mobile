@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:geocoding/geocoding.dart';
 
+import '../../../core/log/bitacora.dart';
 import '../../../domain/repositories/direccion_repository.dart';
 
 /// Geocodificación inversa del teléfono con `geocoding`. Sin red o sin resultado devuelve `null`.
@@ -18,7 +19,7 @@ class DireccionDataSource implements DireccionRepository {
       if (lugares.isEmpty) return null;
       return formatear(lugares.first);
     } catch (e) {
-      debugPrint('[FixFlow] No se pudo calcular la dirección: $e');
+      Bitacora.error('No se pudo calcular la dirección', e);
       return null;
     }
   }

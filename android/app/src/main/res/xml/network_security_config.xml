@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release: el back de la demo corre en la laptop sin https. Solo se permite http hacia esas IPs;
+     todo lo demás (Cloudinary, Firebase) sigue obligado a https.
+     Si cambia la IP de la laptop, se actualiza aquí y en config/prod.json. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.0.23</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

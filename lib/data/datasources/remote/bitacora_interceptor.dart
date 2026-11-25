@@ -1,6 +1,6 @@
-import 'dart:developer' as developer;
-
 import 'package:dio/dio.dart';
+
+import '../../../core/log/bitacora.dart';
 
 /// Escribe una línea por petición, respuesta o error.
 ///
@@ -13,7 +13,8 @@ class BitacoraInterceptor extends Interceptor {
 
   static const _llaveCronometro = 'bitacora.cronometro';
 
-  static void _alLog(String linea) => developer.log(linea, name: 'http');
+  // Nivel info: en prod y en release no se escribe (core/log/bitacora.dart)
+  static void _alLog(String linea) => Bitacora.info('http', linea);
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {

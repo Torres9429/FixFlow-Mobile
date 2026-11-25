@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+import '../../../core/log/bitacora.dart';
 import '../../../domain/errors/sensor_no_disponible.dart';
 import '../../../domain/repositories/inclinacion_repository.dart';
 
@@ -29,7 +29,7 @@ class InclinacionDataSource implements InclinacionRepository {
       final info = await _deviceInfo.androidInfo;
       return info.systemFeatures.contains(_featureAcelerometro);
     } catch (e) {
-      debugPrint('[FixFlow] No se pudo consultar systemFeatures; se prueba el sensor: $e');
+      Bitacora.error('No se pudo consultar systemFeatures; se prueba el sensor', e);
       return _respondeElSensor();
     }
   }
@@ -52,13 +52,13 @@ class InclinacionDataSource implements InclinacionRepository {
           .transform(
             StreamTransformer<double, double>.fromHandlers(
               handleError: (error, stack, sink) {
-                debugPrint('[FixFlow] Acelerómetro no disponible: $error');
+                Bitacora.error('Acelerómetro no disponible', error);
                 sink.addError(const SensorNoDisponible());
               },
             ),
           );
     } catch (e) {
-      debugPrint('[FixFlow] Error al iniciar el acelerómetro: $e');
+      Bitacora.error('Error al iniciar el acelerómetro', e);
       return Stream<double>.error(const SensorNoDisponible());
     }
   }
@@ -77,11 +77,11 @@ class InclinacionDataSource implements InclinacionRepository {
           sumaZ += e.z;
           muestras++;
         },
-        onError: (Object e) => debugPrint('[FixFlow] No se pudo leer el acelerómetro: $e'),
+        onError: (Object e) => Bitacora.error('No se pudo leer el acelerómetro', e),
       );
       await Future<void>.delayed(_ventana);
     } catch (e) {
-      debugPrint('[FixFlow] No se pudo leer el acelerómetro: $e');
+      Bitacora.error('No se pudo leer el acelerómetro', e);
     } finally {
       await suscripcion?.cancel();
     }

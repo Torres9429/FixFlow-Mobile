@@ -1,6 +1,11 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../domain/entities/rol.dart';
+import '../../domain/repositories/avisos_repository.dart';
+import '../avisos/avisos_del_rol.dart';
+import '../avisos/avisos_screen.dart';
+import '../avisos/avisos_viewmodel.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/evidencia_repository.dart';
 import '../../domain/repositories/operativo_repository.dart';
@@ -18,7 +23,10 @@ import 'solucion/solucion_viewmodel.dart';
 /// Rutas del operativo. Solo quien trabaja este rol toca este archivo.
 List<RouteBase> rutasOperativo() => [
   StatefulShellRoute.indexedStack(
-    builder: (context, state, shell) => OperativoShell(shell: shell),
+    builder: (context, state, shell) => AvisosDelRol(
+      rol: Rol.operativo,
+      construirShell: (hayNoLeidos) => OperativoShell(shell: shell, avisosNoLeidos: hayNoLeidos),
+    ),
     branches: [
       StatefulShellBranch(
         routes: [
@@ -67,7 +75,10 @@ List<RouteBase> rutasOperativo() => [
         routes: [
           GoRoute(
             path: Rutas.avisosOperativo,
-            builder: (context, state) => const PestanaPendiente(titulo: 'Avisos', codigo: 'D6'),
+            builder: (context, state) => ChangeNotifierProvider(
+              create: (context) => AvisosViewModel(avisosRepository: context.read<AvisosRepository>())..cargar(),
+              child: const AvisosScreen(rol: Rol.operativo),
+            ),
           ),
         ],
       ),

@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
+import '../../../core/log/bitacora.dart';
 import '../../../domain/errors/falla_red.dart';
 
 /// Traduce cualquier error de una petición al back a una [FallaRed], para que nada de Dio salga de `data/`.
 /// Decide por el tipo de error y el código HTTP, y conserva el `text` del back (contrato-api, Acuerdos).
 FallaRed traducirError(Object e) {
   if (e is! DioException) {
-    debugPrint('[FixFlow] Respuesta con otra forma: $e');
+    Bitacora.error('Respuesta con otra forma', e);
     // Un cast fallido (TypeError) o un JSON roto (FormatException) al leer la respuesta
     return const RespuestaInvalida();
   }

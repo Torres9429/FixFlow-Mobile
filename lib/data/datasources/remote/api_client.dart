@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../core/log/bitacora.dart';
 import '../local/session_storage.dart';
 import 'bitacora_interceptor.dart';
 
@@ -19,7 +19,7 @@ class ApiClient {
             final token = await session.leerToken();
             if (token != null) options.headers['Authorization'] = 'Bearer $token';
           } catch (e) {
-            debugPrint('[FixFlow] No se pudo leer el token: $e');
+            Bitacora.error('No se pudo leer el token', e);
             // Sin token la petición sigue; el back responderá 401 si lo necesita
           }
           // Siempre hay que llamar al handler o la petición se queda colgada
@@ -82,7 +82,7 @@ class ApiClient {
       await _session.guardarSesion(r['jwt'] as String, r['refreshToken'] as String);
       return r['jwt'] as String;
     } catch (e) {
-      debugPrint('[FixFlow] No se pudo renovar la sesión: $e');
+      Bitacora.error('No se pudo renovar la sesión', e);
       return null;
     }
   }
