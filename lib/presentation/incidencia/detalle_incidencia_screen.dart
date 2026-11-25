@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../domain/entities/incidencia_detalle.dart';
 import '../ciudadano/confirmar_resolucion.dart';
 import '../core/estado_consulta.dart';
 import '../core/widgets/esqueleto_tarjetas.dart';
@@ -26,7 +27,7 @@ class DetalleIncidenciaScreen extends StatelessWidget {
 
   /// La acción que sirve en el estado actual, o `null` si no hay ninguna (design.md §7).
   /// Va al final del contenido, no fija abajo.
-  Widget? _acciones(BuildContext context, DetalleIncidenciaViewModel vm) {
+  Widget? _acciones(BuildContext context, DetalleIncidenciaViewModel vm, IncidenciaDetalle detalle) {
     if (vm.puedeAsignar) {
       return BarraAcciones(
         primario: FilledButton(
@@ -91,21 +92,31 @@ class DetalleIncidenciaScreen extends StatelessWidget {
                 )
               : const Text('Confirmar resolución'),
         ),
-        // Quitar el texto y activar el botón con C3 (#72)
         secundario: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const OutlinedButton(
-              key: Key('detalle_problema_sigue'),
-              onPressed: null,
-              child: Text('El problema sigue'),
+            OutlinedButton(
+              key: const Key('detalle_problema_sigue'),
+              onPressed: vm.puedeReabrir
+                  ? () async {
+                      final reabierta = await context.push<bool>(
+                        Rutas.reabrirCiudadano(vm.id),
+                        extra: detalle,
+                      );
+                      if (!context.mounted) return;
+                      if (reabierta == true) await vm.iniciar();
+                    }
+                  : null,
+              child: const Text('El problema sigue'),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Reabrir el reporte todavía no está disponible.',
-              textAlign: TextAlign.center,
-              style: estiloMeta(context),
-            ),
+            if (!vm.puedeReabrir) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Ya usaste las 2 reaperturas de este reporte; crea uno nuevo.',
+                textAlign: TextAlign.center,
+                style: estiloMeta(context),
+              ),
+            ],
           ],
         ),
       );
@@ -171,7 +182,7 @@ class DetalleIncidenciaScreen extends StatelessWidget {
                 ),
                 _separacion,
                 HistorialDetalle(eventos: vm.eventosVisibles, hayMas: vm.hayMas, onVerTodo: vm.mostrarTodo),
-                if (_acciones(context, vm) case final acciones?) ...[_separacion, acciones],
+                if (_acciones(context, vm, datos.detalle) case final acciones?) ...[_separacion, acciones],
               ],
             ),
           ),

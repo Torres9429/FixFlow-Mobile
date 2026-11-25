@@ -5,9 +5,16 @@ import 'seccion.dart';
 
 /// La solución que registró el operativo (C2 la muestra antes de confirmar).
 class SolucionDetalle extends StatelessWidget {
-  const SolucionDetalle({super.key, required this.descripcion, this.operativo, this.fecha});
+  const SolucionDetalle({
+    super.key,
+    required this.descripcion,
+    this.titulo = 'Solución',
+    this.operativo,
+    this.fecha,
+  });
 
   final String descripcion;
+  final String titulo;
   final String? operativo;
   final DateTime? fecha;
 
@@ -18,7 +25,7 @@ class SolucionDetalle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const TituloSeccion('Solución'),
+        TituloSeccion(titulo),
         BloqueSeccion(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

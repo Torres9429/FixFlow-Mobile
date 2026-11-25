@@ -66,3 +66,12 @@ String? validarDescripcionSolucion(String? valor) {
   if (valor.trim().length > 500) return 'Máximo 500 caracteres';
   return null;
 }
+
+/// Justificación de la reapertura: obligatoria, de 10 a 500 caracteres (HU-23 / RN-17).
+String? validarJustificacionReapertura(String? valor) {
+  final texto = valor?.trim() ?? '';
+  if (texto.isEmpty) return 'Campo obligatorio';
+  if (texto.length < 10) return 'Mínimo 10 caracteres';
+  if (texto.length > 500) return 'Máximo 500 caracteres';
+  return null;
+}

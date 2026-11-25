@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../domain/entities/incidencia_detalle.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/reportes_ciudadano_repository.dart';
 import '../core/widgets/pestana_pendiente.dart';
@@ -11,6 +12,8 @@ import '../routing/rutas.dart';
 import 'ciudadano_shell.dart';
 import 'mis_reportes/mis_reportes_screen.dart';
 import 'mis_reportes/mis_reportes_viewmodel.dart';
+import 'reabrir/reabrir_reporte_screen.dart';
+import 'reabrir/reabrir_reporte_viewmodel.dart';
 
 /// Rutas del ciudadano. Solo quien trabaja este rol toca este archivo.
 List<RouteBase> rutasCiudadano() => [
@@ -30,7 +33,28 @@ List<RouteBase> rutasCiudadano() => [
               )..iniciar(),
               child: const MisReportesScreen(),
             ),
-            routes: [rutaDetalle(VistaDetalle.ciudadano)],
+            routes: [
+              rutaDetalle(
+                VistaDetalle.ciudadano,
+                acciones: [
+                  GoRoute(
+                    path: 'reabrir',
+                    // Sin la ficha cargada (deep link o hot restart) no hay nada que reabrir
+                    redirect: (context, state) => state.extra is IncidenciaDetalle ? null : Rutas.homeCiudadano,
+                    builder: (context, state) {
+                      final detalle = state.extra! as IncidenciaDetalle;
+                      return ChangeNotifierProvider(
+                        create: (context) => ReabrirReporteViewModel(
+                          id: detalle.resumen.id,
+                          reportesRepository: context.read<ReportesCiudadanoRepository>(),
+                        ),
+                        child: ReabrirReporteScreen(detalle: detalle),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),

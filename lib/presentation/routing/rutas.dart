@@ -33,6 +33,7 @@ abstract final class Rutas {
 
   // Detalle de la incidencia, dentro de la pestaña de donde se abre
   static String detalleCiudadano(int id) => '$homeCiudadano/$id'; // C2
+  static String reabrirCiudadano(int id) => '${detalleCiudadano(id)}/reabrir'; // C3, desde el detalle
   static String detalleOperativo(int id) => '$homeOperativo/$id'; // D2
   static String solucionOperativo(int id) =>
       '${detalleOperativo(id)}/solucion'; // D3, desde el detalle

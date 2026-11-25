@@ -65,4 +65,17 @@ class ReportesCiudadanoRepositoryImpl implements ReportesCiudadanoRepository {
       return Result.error(traducirError(e));
     }
   }
+
+  @override
+  Future<Result<String>> reabrir(int id, String justificacion) async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/incidencias/$id/reapertura',
+        data: {'justificacion': justificacion},
+      );
+      return Result.ok(res.data!['text'] as String);
+    } catch (e) {
+      return Result.error(traducirError(e));
+    }
+  }
 }

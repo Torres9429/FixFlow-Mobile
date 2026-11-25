@@ -35,6 +35,7 @@ void main() {
     int id = 101,
     EstadoIncidencia estado = EstadoIncidencia.asignada,
     String? fotoUrl,
+    int numReaperturas = 0,
   }) =>
       IncidenciaDetalle(
         resumen: IncidenciaResumen(
@@ -52,7 +53,7 @@ void main() {
           fotoUrl: fotoUrl,
         ),
         descripcion: 'Bache profundo en el pavimento.',
-        numReaperturas: 0,
+        numReaperturas: numReaperturas,
         ciudadano: 'Ana López',
         operativoAsignado: 'Luis Ramírez',
       );
@@ -157,7 +158,7 @@ void main() {
       reportesRepository: reportes,
     );
 
-    testWidgets('En Resuelta: pregunta, «Confirmar resolución» con diálogo y «El problema sigue» desactivado', (tester) async {
+    testWidgets('En Resuelta: pregunta, «Confirmar resolución» con diálogo y «El problema sigue» habilitado', (tester) async {
       configurarPantallaGrande(tester);
       final reportes = MockReportesCiudadanoRepository();
       when(() => mockIncidencias.detalle(101)).thenAnswer(
@@ -174,10 +175,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('¿Se solucionó el problema?'), findsOneWidget);
-      // Reabrir llega con C3 (#72): el botón se ve pero no hace nada
+      // C3 (#72): «El problema sigue» ya está activo desde el detalle
       final problemaSigue = tester.widget<OutlinedButton>(find.byKey(const Key('detalle_problema_sigue')));
-      expect(problemaSigue.onPressed, isNull);
-      expect(find.text('Reabrir el reporte todavía no está disponible.'), findsOneWidget);
+      expect(problemaSigue.onPressed, isNotNull);
+      expect(find.text('Reabrir el reporte todavía no está disponible.'), findsNothing);
 
       await tester.tap(find.byKey(const Key('detalle_confirmar_resolucion')));
       await tester.pumpAndSettle();
@@ -188,6 +189,28 @@ void main() {
 
       verify(() => reportes.confirmarResolucion(101)).called(1);
       expect(find.text('Solución confirmada; la incidencia quedó cerrada'), findsOneWidget);
+    });
+
+    testWidgets('Con 2 reaperturas: «El problema sigue» desactivado y aviso de límite', (tester) async {
+      configurarPantallaGrande(tester);
+      final reportes = MockReportesCiudadanoRepository();
+      when(() => mockIncidencias.detalle(101)).thenAnswer(
+        (_) async => Result.ok(crearDetalle(estado: EstadoIncidencia.resuelta, numReaperturas: 2)),
+      );
+      when(() => mockIncidencias.historial(101)).thenAnswer((_) async => const Result.ok([]));
+      when(() => mockDireccion.direccion(any(), any())).thenAnswer((_) async => null);
+
+      final vm = crearVm(reportes);
+      await tester.pumpWidget(montarPantalla(vista: VistaDetalle.ciudadano, vm: vm));
+      await vm.iniciar();
+      await tester.pumpAndSettle();
+
+      final problemaSigue = tester.widget<OutlinedButton>(find.byKey(const Key('detalle_problema_sigue')));
+      expect(problemaSigue.onPressed, isNull);
+      expect(
+        find.text('Ya usaste las 2 reaperturas de este reporte; crea uno nuevo.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('En Cerrada no hay barra de acciones', (tester) async {
